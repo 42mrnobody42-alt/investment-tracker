@@ -27,3 +27,29 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 7. Calculadora de venta óptima para ganancias objetivo
 
 ### Estructura del Proyecto
+investment-tracker/
+├── docker/
+│ ├── docker-compose.yml
+│ ├── postgres/
+│ │ └── init.sql
+│ └── Dockerfile.backend
+├── database/
+│ ├── sql/
+│ │ ├── 01_schema.sql
+│ │ ├── 02_functions.sql
+│ │ ├── 03_procedures.sql
+│ │ └── 04_seed.sql
+│ └── MER/
+│ └── diagram.md
+├── backend/
+│ ├── src/
+│ ├── pom.xml
+│ └── README.md
+├── frontend/
+│ ├── src/
+│ ├── package.json
+│ └── README.md
+└── docs/
+├── README.md
+└── prompts/
+└── prompt_inicial.md
