@@ -53,3 +53,134 @@ investment-tracker/
 ├── README.md
 └── prompts/
 └── prompt_inicial.md
+
+
+
+# Investment Tracker Pro - Documentación Completa
+
+## ÍNDICE
+1. [Arquitectura del Sistema](#1-arquitectura-del-sistema)
+2. [Modelo Entidad-Relación (MER)](#2-modelo-entidad-relación)
+3. [Configuración del Entorno de Desarrollo](#3-configuración-del-entorno)
+4. [Base de Datos](#4-base-de-datos)
+5. [Backend (Java Spring Boot)](#5-backend)
+6. [Frontend (React)](#6-frontend)
+7. [Seguridad JWT y HTTPS](#7-seguridad)
+8. [Despliegue con Docker](#8-despliegue)
+9. [Calculadora de Venta Óptima](#9-calculadora)
+10. [Pruebas y Debugging](#10-pruebas)
+
+---
+
+## 1. ARQUITECTURA DEL SISTEMA
+
+### Diagrama de Arquitectura
+┌───────────────────────────────────────┐
+│ CLIENTE (HTTPS)                       │
+└────────┬──────────────────────────────┘
+         │
+┌────────▼─────────┐
+│ NGINX (443)      │ ← SSL/TLS
+│ Reverse Proxy    │
+└────────┬─────────┘
+         │
+┌────────▼─────────┐
+│ React App        │ ← Frontend (SPA)
+│ (Nginx/Alpine)   │
+└────────┬─────────┘
+         │ HTTP/2
+┌────────▼──────────────┐
+│ Spring Boot 3.x       │ ← Backend API REST
+│ (Tomcat Embedido)     │ JWT Authentication
+│ Java 21 LTS           │
+└────────┬──────────────┘
+         │ JDBC
+┌────────▼─────────┐
+│ PostgreSQL 16    │ ← Base de Datos
+│ + PL/SQL         │
+└──────────────────┘
+
+
+
+### Contenedores Docker
+┌─────────────────────────────────────┐
+│ DOCKER COMPOSE NETWORK              │
+│ ┌──────────┐  ┌──────────┐          │
+│ │ POSTGRES │  │ BACKEND  │          │
+│ │ :5432    │◄─┤ :8080    │          │
+│ └──────────┘  └─────┬────┘          │
+│                     │               │
+│ ┌──────▼──────┐                     │
+│ │ FRONTEND    │                     │
+│ │ :3000       │                     │
+│ └─────────────┘                     │
+└─────────────────────────────────────┘
+
+
+
+## 2. MODELO ENTIDAD-RELACIÓN (MER)
+
+### Diagrama MER
+┌──────────────┐ ┌──────────────┐
+│ USUARIOS     │ │ ROLES        │
+├──────────────┤ ├──────────────┤
+│ PK id        │──┐ │ PK id │
+│ username     │ │ │ nombre │
+│ password     │ │ │ desc │
+│ email        │ │ └──────────────┘
+│ created_at   │ │ ▲
+└──────────────┘ │ │
+│ │ ┌──────┴──────┐
+│ └────┤USUARIO_ROLES│
+│ ├──────────────┤
+│ │ FK usuario_id│
+│ │ FK rol_id │
+│ └──────────────┘
+│
+│ ┌──────────────┐
+├──┤ PLATAFORMAS │
+│ ├──────────────┤
+│ │ PK id │
+│ │ nombre │
+│ │ desc │
+│ │ FK usuario_id│
+│ └──────┬───────┘
+│ │
+│ ┌──────▼──────────┐
+│ │ COMISIONES │
+│ ├─────────────────┤
+│ │ PK id │
+│ │ porcentaje │
+│ │ valor_fijo │
+│ │ fecha_inicio │
+│ │ fecha_fin │
+│ │ FK plataforma_id│
+│ └─────────────────┘
+│
+│ ┌──────────────┐
+├──┤ TRANSACCIONES│
+│ ├──────────────┤
+│ │ PK id │
+│ │ tipo │ ← COMPRA/VENTA
+│ │ simbolo │ ← AAPL, TSLA...
+│ │ cantidad │
+│ │ precio_uni│
+│ │ comision │
+│ │ total │
+│ │ fecha │
+│ │ FK usuario_id│
+│ │ FK plataforma│
+│ └──────────────┘
+│
+│ ┌──────────────┐
+└──┤ CALCULOS_HIST│
+├──────────────┤
+│ PK id │
+│ precio_min│
+│ cant_opt │
+│ ganancia │
+│ created_at│
+│ FK usuario_id│
+└──────────────┘
+
+
