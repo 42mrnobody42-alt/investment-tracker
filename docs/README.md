@@ -184,3 +184,37 @@ investment-tracker/
 └──────────────┘
 
 
+
+
+
+## 3. CONFIGURACIÓN DEL ENTORNO DE DESARROLLO (Pop OS)
+
+### 3.1 Instalación de Dependencias
+Ejecutar el paso a paso del documento docs/serverConfig/popOS22.04.md
+
+Docker version 29.5.2, build 79eb04c
+docker-compose version 1.29.2, build unknown
+
+openjdk 21.0.11 2026-04-21
+OpenJDK Runtime Environment (build 21.0.11+10-1-22.04.2-Ubuntu)
+OpenJDK 64-Bit Server VM (build 21.0.11+10-1-22.04.2-Ubuntu, mixed mode, sharing)
+
+node --version && npm --version
+v20.20.2
+10.8.2
+
+Apache Maven 3.6.3
+Maven home: /usr/share/maven
+Java version: 21.0.11, vendor: Ubuntu, runtime: /usr/lib/jvm/java-21-openjdk-amd64
+Default locale: es_CO, platform encoding: UTF-8
+OS name: "linux", version: "6.17.9-76061709-generic", arch: "amd64", family: "unix"
+
+code --install-extension vscjava.vscode-java-pack
+code --install-extension ms-azuretools.vscode-docker
+code --install-extension ms-ossdata.vscode-postgresql
+code --install-extension dbaeumer.vscode-eslint
+code --install-extension esbenp.prettier-vscode
+
+
+### 3.2 Configurar VS Code para Desarrollo
+
