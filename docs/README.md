@@ -1,12 +1,15 @@
 # PROMPT INICIAL - Sistema de Gestión de Inversiones
 
 ## Fecha: 2026-06-23
+
 ## Proyecto: Investment Tracker Pro
 
 ### Descripción General
+
 Aplicación web para seguimiento de inversiones con arquitectura de microservicios usando Docker.
 
 ### Stack Tecnológico
+
 - **Backend**: Java LTS 21 (Spring Boot 3.x)
 - **Base de datos**: PostgreSQL 16
 - **Frontend**: React 18+ con CSS moderno
@@ -18,6 +21,7 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 - **IDE**: Visual Studio Code
 
 ### Requisitos Funcionales
+
 1. Sistema de autenticación con JWT
 2. Roles de usuario
 3. Registro de inversiones en múltiples plataformas
@@ -27,6 +31,7 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 7. Calculadora de venta óptima para ganancias objetivo
 
 ### Estructura del Proyecto
+
 investment-tracker/
 ├── docker/
 │ ├── docker-compose.yml
@@ -54,11 +59,10 @@ investment-tracker/
 └── prompts/
 └── prompt_inicial.md
 
-
-
 # Investment Tracker Pro - Documentación Completa
 
 ## ÍNDICE
+
 1. [Arquitectura del Sistema](#1-arquitectura-del-sistema)
 2. [Modelo Entidad-Relación (MER)](#2-modelo-entidad-relación)
 3. [Configuración del Entorno de Desarrollo](#3-configuración-del-entorno)
@@ -75,60 +79,59 @@ investment-tracker/
 ## 1. ARQUITECTURA DEL SISTEMA
 
 ### Diagrama de Arquitectura
+
 ┌───────────────────────────────────────┐
-│ CLIENTE (HTTPS)                       │
+│ CLIENTE (HTTPS) │
 └────────┬──────────────────────────────┘
-         │
+│
 ┌────────▼─────────┐
-│ NGINX (443)      │ ← SSL/TLS
-│ Reverse Proxy    │
+│ NGINX (443) │ ← SSL/TLS
+│ Reverse Proxy │
 └────────┬─────────┘
-         │
+│
 ┌────────▼─────────┐
-│ React App        │ ← Frontend (SPA)
-│ (Nginx/Alpine)   │
+│ React App │ ← Frontend (SPA)
+│ (Nginx/Alpine) │
 └────────┬─────────┘
-         │ HTTP/2
+│ HTTP/2
 ┌────────▼──────────────┐
-│ Spring Boot 3.x       │ ← Backend API REST
-│ (Tomcat Embedido)     │ JWT Authentication
-│ Java 21 LTS           │
+│ Spring Boot 3.x │ ← Backend API REST
+│ (Tomcat Embedido) │ JWT Authentication
+│ Java 21 LTS │
 └────────┬──────────────┘
-         │ JDBC
+│ JDBC
 ┌────────▼─────────┐
-│ PostgreSQL 16    │ ← Base de Datos
-│ + PL/SQL         │
+│ PostgreSQL 16 │ ← Base de Datos
+│ + PL/SQL │
 └──────────────────┘
 
-
-
 ### Contenedores Docker
+
 ┌─────────────────────────────────────┐
-│ DOCKER COMPOSE NETWORK              │
-│ ┌──────────┐  ┌──────────┐          │
-│ │ POSTGRES │  │ BACKEND  │          │
-│ │ :5432    │◄─┤ :8080    │          │
-│ └──────────┘  └─────┬────┘          │
-│                     │               │
-│ ┌──────▼──────┐                     │
-│ │ FRONTEND    │                     │
-│ │ :3000       │                     │
-│ └─────────────┘                     │
+│ DOCKER COMPOSE NETWORK │
+│ ┌──────────┐ ┌──────────┐ │
+│ │ POSTGRES │ │ BACKEND │ │
+│ │ :5432 │◄─┤ :8080 │ │
+│ └──────────┘ └─────┬────┘ │
+│ │ │
+│ ┌──────▼──────┐ │
+│ │ FRONTEND │ │
+│ │ :3000 │ │
+│ └─────────────┘ │
 └─────────────────────────────────────┘
-
-
 
 ## 2. MODELO ENTIDAD-RELACIÓN (MER)
 
 ### Diagrama MER
+
 ┌──────────────┐ ┌──────────────┐
-│ USUARIOS     │ │ ROLES        │
+│ USUARIOS │ │ ROLES │
 ├──────────────┤ ├──────────────┤
-│ PK id        │──┐ │ PK id │
-│ username     │ │ │ nombre │
-│ password     │ │ │ desc │
-│ email        │ │ └──────────────┘
-│ created_at   │ │ ▲
+│ PK id │──┐ │ PK id │
+│ username │ │ │ nombre │
+│ password │ │ │ desc │
+│ email │ │ └──────────────┘
+│ created_at │ │ ▲
 └──────────────┘ │ │
 │ │ ┌──────┴──────┐
 │ └────┤USUARIO_ROLES│
@@ -183,13 +186,10 @@ investment-tracker/
 │ FK usuario_id│
 └──────────────┘
 
-
-
-
-
 ## 3. CONFIGURACIÓN DEL ENTORNO DE DESARROLLO (Pop OS)
 
 ### 3.1 Instalación de Dependencias
+
 Ejecutar el paso a paso del documento docs/serverConfig/popOS22.04.md
 
 Docker version 29.5.2, build 79eb04c
@@ -215,6 +215,21 @@ code --install-extension ms-ossdata.vscode-postgresql
 code --install-extension dbaeumer.vscode-eslint
 code --install-extension esbenp.prettier-vscode
 
-
 ### 3.2 Configurar VS Code para Desarrollo
 
+Abre tu proyecto en VS Code.
+Crea una carpeta llamada .vscode en la raíz del proyecto si no existe.
+Dentro de esa carpeta, crea un archivo llamado settings.json.
+Copia y pega el contenido:
+{
+"java.configuration.updateBuildConfiguration": "automatic",
+"java.compile.nullAnalysis.mode": "automatic",
+"editor.formatOnSave": true,
+"editor.codeActionsOnSave": {
+"source.organizeImports": "explicit"
+}
+}
+
+## 4. BASE DE DATOS - FUNCIONES PL/SQL
+
+### 4.1 Función: Calcular Comisión Actual
