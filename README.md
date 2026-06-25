@@ -32,6 +32,8 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 
 ### Estructura del Proyecto
 
+#### Estructura de directorios
+
 investment-tracker/
 ├── docker/
 │ ├── docker-compose.yml
@@ -58,6 +60,228 @@ investment-tracker/
 ├── README.md
 └── prompts/
 └── prompt_inicial.md
+
+#### Estructura de archivos
+
+investment-tracker/
+│
+├── .vscode/
+│ └── settings.json # Configuración de VS Code
+│
+├── .gitignore # Archivos ignorados por Git
+├── README.md # Documentación principal del proyecto
+│
+├── docker/
+│ ├── docker-compose.yml # Orquestación de servicios
+│ ├── Dockerfile.backend # Imagen para Spring Boot
+│ ├── Dockerfile.frontend # Imagen para React
+│ ├── nginx/
+│ │ ├── default.conf # Configuración de Nginx reverse proxy
+│ │ └── ssl/
+│ │ ├── localhost.crt # Certificado SSL autofirmado
+│ │ └── localhost.key # Llave privada SSL
+│ └── postgres/
+│ └── init.sql # Script de inicialización de BD
+│
+├── database/
+│ ├── sql/
+│ │ ├── 01_schema.sql # Creación de tablas y esquemas
+│ │ ├── 02_functions.sql # Funciones PL/pgSQL
+│ │ │ ├── calcular_comision() # Cálculo de comisiones
+│ │ │ └── get_resumen_usuario() # Resumen de inversiones
+│ │ ├── 03_procedures.sql # Procedimientos almacenados
+│ │ │ └── calcular_venta_optima() # Lógica de venta óptima
+│ │ ├── 04_seed.sql # Datos de prueba
+│ │ │ ├── Roles predeterminados
+│ │ │ ├── Usuario demo
+│ │ │ └── Plataformas de ejemplo
+│ │ └── 05_indexes.sql # Índices de optimización
+│ └── MER/
+│ ├── diagram.md # Documentación del MER
+│ ├── diagram.png # Imagen del diagrama
+│ └── diagram.drawio # Archivo editable del diagrama
+│
+├── backend/
+│ ├── pom.xml # Dependencias Maven
+│ ├── README.md # Documentación del backend
+│ ├── src/
+│ │ ├── main/
+│ │ │ ├── java/com/investmenttracker/
+│ │ │ │ ├── InvestmentTrackerApplication.java # Clase principal
+│ │ │ │ ├── config/
+│ │ │ │ │ ├── SecurityConfig.java # Configuración Spring Security
+│ │ │ │ │ ├── JwtConfig.java # Configuración JWT
+│ │ │ │ │ ├── CorsConfig.java # Configuración CORS
+│ │ │ │ │ └── SwaggerConfig.java # Documentación API
+│ │ │ │ ├── controller/
+│ │ │ │ │ ├── AuthController.java # Login/Registro
+│ │ │ │ │ ├── UsuarioController.java # CRUD usuarios
+│ │ │ │ │ ├── PlataformaController.java # Gestión plataformas
+│ │ │ │ │ ├── ComisionController.java # Gestión comisiones
+│ │ │ │ │ ├── TransaccionController.java # Compras/Ventas
+│ │ │ │ │ └── CalculadoraController.java # Cálculos óptimos
+│ │ │ │ ├── model/
+│ │ │ │ │ ├── entity/
+│ │ │ │ │ │ ├── Usuario.java
+│ │ │ │ │ │ ├── Rol.java
+│ │ │ │ │ │ ├── Plataforma.java
+│ │ │ │ │ │ ├── Comision.java
+│ │ │ │ │ │ ├── Transaccion.java
+│ │ │ │ │ │ └── CalculoHistorico.java
+│ │ │ │ │ └── dto/
+│ │ │ │ │ ├── LoginRequest.java
+│ │ │ │ │ ├── RegisterRequest.java
+│ │ │ │ │ ├── AuthResponse.java
+│ │ │ │ │ ├── TransaccionRequest.java
+│ │ │ │ │ ├── TransaccionDTO.java
+│ │ │ │ │ ├── ResumenInversionesDTO.java
+│ │ │ │ │ ├── CalculoOptimoDTO.java
+│ │ │ │ │ └── ComisionDTO.java
+│ │ │ │ ├── repository/
+│ │ │ │ │ ├── UsuarioRepository.java
+│ │ │ │ │ ├── RolRepository.java
+│ │ │ │ │ ├── PlataformaRepository.java
+│ │ │ │ │ ├── ComisionRepository.java
+│ │ │ │ │ ├── TransaccionRepository.java
+│ │ │ │ │ └── CalculoHistoricoRepository.java
+│ │ │ │ ├── service/
+│ │ │ │ │ ├── AuthService.java
+│ │ │ │ │ ├── JwtService.java
+│ │ │ │ │ ├── UserService.java
+│ │ │ │ │ ├── PlataformaService.java
+│ │ │ │ │ ├── ComisionService.java
+│ │ │ │ │ ├── TransaccionService.java
+│ │ │ │ │ └── CalculadoraVentaService.java
+│ │ │ │ ├── security/
+│ │ │ │ │ ├── JwtAuthFilter.java
+│ │ │ │ │ ├── JwtTokenProvider.java
+│ │ │ │ │ └── UserDetailsServiceImpl.java
+│ │ │ │ └── exception/
+│ │ │ │ ├── GlobalExceptionHandler.java
+│ │ │ │ ├── NoPositionException.java
+│ │ │ │ └── CustomExceptions.java
+│ │ │ └── resources/
+│ │ │ ├── application.yml # Configuración principal
+│ │ │ ├── application-dev.yml # Config desarrollo
+│ │ │ ├── application-prod.yml # Config producción
+│ │ │ └── db/migration/ # Flyway migrations
+│ │ │ └── V1\_\_init_schema.sql
+│ │ └── test/
+│ │ └── java/com/investmenttracker/
+│ │ ├── controller/
+│ │ │ ├── AuthControllerTest.java
+│ │ │ └── TransaccionControllerTest.java
+│ │ ├── service/
+│ │ │ ├── CalculadoraVentaServiceTest.java
+│ │ │ └── TransaccionServiceTest.java
+│ │ └── repository/
+│ │ └── TransaccionRepositoryTest.java
+│
+├── frontend/
+│ ├── package.json # Dependencias npm
+│ ├── package-lock.json # Lock file npm
+│ ├── README.md # Documentación frontend
+│ ├── .env.development # Variables entorno desarrollo
+│ ├── .env.production # Variables entorno producción
+│ ├── public/
+│ │ ├── index.html # HTML principal
+│ │ ├── favicon.ico # Favicon
+│ │ └── manifest.json # PWA manifest
+│ └── src/
+│ ├── index.js # Punto de entrada React
+│ ├── App.js # Componente principal
+│ ├── App.test.js # Tests de App
+│ ├── context/
+│ │ └── AuthContext.js # Contexto de autenticación
+│ ├── hooks/
+│ │ ├── useAuth.js # Hook de autenticación
+│ │ ├── useTransacciones.js # Hook de transacciones
+│ │ └── useCalculadora.js # Hook de calculadora
+│ ├── services/
+│ │ ├── api.js # Configuración Axios
+│ │ ├── authService.js # Servicios auth
+│ │ ├── transaccionService.js # Servicios transacciones
+│ │ └── calculadoraService.js # Servicios calculadora
+│ ├── components/
+│ │ ├── common/
+│ │ │ ├── Navbar.jsx # Barra de navegación
+│ │ │ ├── Sidebar.jsx # Menú lateral
+│ │ │ ├── Footer.jsx # Pie de página
+│ │ │ ├── LoadingSpinner.jsx # Indicador de carga
+│ │ │ ├── ErrorMessage.jsx # Mensaje de error
+│ │ │ ├── PrivateRoute.jsx # Ruta protegida
+│ │ │ └── Notification.jsx # Notificaciones
+│ │ ├── dashboard/
+│ │ │ ├── Dashboard.jsx # Panel principal
+│ │ │ ├── ResumenInversiones.jsx # Resumen de inversiones
+│ │ │ ├── GraficoRendimiento.jsx # Gráficos de rendimiento
+│ │ │ ├── UltimasTransacciones.jsx # Lista de últimas transacciones
+│ │ │ └── RendimientoPorSimbolo.jsx # Rendimiento por acción
+│ │ ├── transacciones/
+│ │ │ ├── Transacciones.jsx # Lista de transacciones
+│ │ │ ├── TransaccionForm.jsx # Formulario de transacción
+│ │ │ ├── TransaccionCard.jsx # Tarjeta de transacción
+│ │ │ └── FiltrosTransacciones.jsx # Filtros de búsqueda
+│ │ ├── calculadora/
+│ │ │ ├── CalculadoraVenta.jsx # Calculadora de venta óptima
+│ │ │ ├── ResultadosCalculo.jsx # Resultados del cálculo
+│ │ │ └── ConfigCalculadora.jsx # Configuración de cálculo
+│ │ ├── plataformas/
+│ │ │ ├── Plataformas.jsx # Gestión de plataformas
+│ │ │ ├── PlataformaForm.jsx # Formulario de plataforma
+│ │ │ └── ComisionesManager.jsx # Gestión de comisiones
+│ │ └── auth/
+│ │ ├── Login.jsx # Página de login
+│ │ ├── Register.jsx # Página de registro
+│ │ └── PasswordReset.jsx # Recuperar contraseña
+│ ├── pages/
+│ │ ├── Home.jsx # Página principal
+│ │ ├── Dashboard.jsx # Dashboard completo
+│ │ ├── Transacciones.jsx # Página de transacciones
+│ │ ├── Calculadora.jsx # Página de calculadora
+│ │ ├── Plataformas.jsx # Página de plataformas
+│ │ ├── Perfil.jsx # Perfil de usuario
+│ │ └── Configuracion.jsx # Configuración
+│ ├── styles/
+│ │ ├── global.css # Estilos globales
+│ │ ├── variables.css # Variables CSS
+│ │ ├── animations.css # Animaciones
+│ │ ├── components/
+│ │ │ ├── navbar.css
+│ │ │ ├── dashboard.css
+│ │ │ ├── transacciones.css
+│ │ │ ├── calculadora.css
+│ │ │ └── forms.css
+│ │ └── themes/
+│ │ ├── light.css # Tema claro
+│ │ └── dark.css # Tema oscuro
+│ └── utils/
+│ ├── formatters.js # Formateo de moneda/fechas
+│ ├── validators.js # Validaciones
+│ └── constants.js # Constantes
+│
+└── docs/
+├── README.md # Documentación del proyecto
+├── CHANGELOG.md # Historial de cambios
+├── CONTRIBUTING.md # Guía de contribución
+├── prompts/
+│ ├── prompt_inicial.md # Prompt original
+│ ├── prompt_mejoras.md # Mejoras solicitadas
+│ └── prompt_historial.md # Historial de cambios
+├── diagrams/
+│ ├── architecture.png # Diagrama de arquitectura
+│ ├── data-flow.png # Diagrama de flujo de datos
+│ ├── sequence/
+│ │ ├── login-sequence.png # Secuencia de login
+│ │ └── calculo-sequence.png # Secuencia de cálculo
+│ └── components/
+│ └── component-tree.png # Árbol de componentes
+└── guides/
+├── installation.md # Guía de instalación
+├── deployment.md # Guía de despliegue
+├── development.md # Guía de desarrollo
+├── testing.md # Guía de pruebas
+└── security.md # Guía de seguridad
 
 # Investment Tracker Pro - Documentación Completa
 
@@ -233,3 +457,27 @@ Copia y pega el contenido:
 ## 4. BASE DE DATOS - FUNCIONES PL/SQL
 
 ### 4.1 Función: Calcular Comisión Actual
+
+database/sql/02_functions.sql
+
+### 4.2 Procedimiento: Calcular Venta Óptima para Ganancia
+
+database/sql/03_procedures.sql
+
+## 5. BACKEND - JAVA SPRING BOOT 3.x
+
+### 5.1 Estructura del Proyecto Spring Boot
+
+### 5.1 Estructura del Proyecto Spring Boot
+
+backend/src/main/java/com/investmenttracker/InvestmentTrackerApplication.java
+backend/src/main/java/com/investmenttracker/config/SecurityConfig.java
+
+### 5.2 Controladores REST Clave
+
+backend/src/main/java/com/investmenttracker/controller/AuthController.java
+backend/src/main/java/com/investmenttracker/controller/TransaccionController.java
+
+### 5.3 Configuración application.yml
+
+backend/src/main/java/com/investmenttracker/resources/application.yml

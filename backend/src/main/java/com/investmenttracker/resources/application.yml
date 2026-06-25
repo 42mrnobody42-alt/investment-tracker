@@ -1,0 +1,29 @@
+# backend/src/main/resources/application.yml
+server:
+  port: 8080
+  ssl:
+    enabled: false # En producción usar true con certificados
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/investment_tracker
+    username: ${DB_USER:investor}
+    password: ${DB_PASSWORD:securepass123}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+jwt:
+  secret: ${JWT_SECRET:base64-encoded-secret-key-min-256-bits}
+  expiration: 86400000 # 24 horas en milisegundos
+
+logging:
+  level:
+    com.investmenttracker: DEBUG
+    org.springframework.security: DEBUG
