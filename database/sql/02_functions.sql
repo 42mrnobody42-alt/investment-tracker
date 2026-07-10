@@ -1,28 +1,27 @@
 -- =============================================
 -- INVESTMENT TRACKER - FUNCIONES PL/pgSQL
--- Versión: 1.0.1
--- Descripción: Funciones del sistema (IDEMPOTENTE)
+-- Versión: 2.0.0
+-- Descripción: Funciones con UUID (IDEMPOTENTE)
 -- =============================================
 
--- Verificar si ya se ejecutó este script
 DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM investment_tracker.schema_version 
-        WHERE version = '1.0.1' AND script_name = '02_functions.sql'
+        WHERE version = '2.0.0' AND script_name = '02_functions.sql'
     ) THEN
-        RAISE NOTICE '⚠️  Las funciones v1.0.1 ya están instaladas. Omitiendo.';
+        RAISE NOTICE '⚠️  Las funciones v2.0.0 ya están instaladas. Omitiendo.';
         RETURN;
     END IF;
-    
-    RAISE NOTICE '🚀 Instalando funciones v1.0.1...';
+    RAISE NOTICE '🚀 Instalando funciones v2.0.0 (UUID)...';
 END $$;
 
 -- =============================================
 -- FUNCIÓN: obtener_comision_actual
+-- Parámetro: p_plataforma_id UUID
 -- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.obtener_comision_actual(
-    p_plataforma_id INTEGER
+    p_plataforma_id UUID
 ) RETURNS TABLE(
     porcentaje DECIMAL(5,4),
     valor_fijo DECIMAL(10,2),
@@ -41,13 +40,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-\echo '✅ Función obtener_comision_actual instalada'
+\echo '✅ Función obtener_comision_actual instalada (UUID)'
 
 -- =============================================
 -- FUNCIÓN: calcular_comision
+-- Parámetros: p_plataforma_id UUID, p_valor_transaccion DECIMAL
 -- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.calcular_comision(
-    p_plataforma_id INTEGER,
+    p_plataforma_id UUID,
     p_valor_transaccion DECIMAL
 ) RETURNS DECIMAL AS $$
 DECLARE
@@ -68,7 +68,6 @@ BEGIN
     IF v_porcentaje IS NOT NULL THEN
         v_comision := v_comision + (p_valor_transaccion * v_porcentaje);
     END IF;
-    
     IF v_valor_fijo IS NOT NULL THEN
         v_comision := v_comision + v_valor_fijo;
     END IF;
@@ -77,13 +76,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-\echo '✅ Función calcular_comision instalada'
+\echo '✅ Función calcular_comision instalada (UUID)'
 
 -- =============================================
 -- FUNCIÓN: resumen_inversiones
+-- Parámetro: p_usuario_id UUID
 -- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.resumen_inversiones(
-    p_usuario_id INTEGER
+    p_usuario_id UUID
 ) RETURNS TABLE(
     simbolo VARCHAR(20),
     empresa_nombre VARCHAR(200),
@@ -115,16 +115,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-\echo '✅ Función resumen_inversiones instalada'
+\echo '✅ Función resumen_inversiones instalada (UUID)'
 
 -- =============================================
 -- FUNCIÓN: calcular_venta_optima
+-- Parámetros: p_usuario_id UUID, p_simbolo VARCHAR, p_ganancia_deseada DECIMAL, p_plataforma_id UUID
 -- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.calcular_venta_optima(
-    p_usuario_id INTEGER,
+    p_usuario_id UUID,
     p_simbolo VARCHAR(20),
     p_ganancia_deseada DECIMAL(10,2),
-    p_plataforma_id INTEGER
+    p_plataforma_id UUID
 ) RETURNS TABLE(
     precio_minimo DECIMAL(10,4),
     cantidad_optima INTEGER,
@@ -184,32 +185,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-\echo '✅ Función calcular_venta_optima instalada'
+\echo '✅ Función calcular_venta_optima instalada (UUID)'
 
 -- =============================================
 -- REGISTRAR VERSIÓN
 -- =============================================
--- Asegurar que existe la restricción correcta
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint 
-        WHERE conname = 'uq_schema_version_script' 
-        AND conrelid = 'investment_tracker.schema_version'::regclass
-    ) THEN
-        -- Eliminar restricción simple si existe
-        ALTER TABLE investment_tracker.schema_version 
-        DROP CONSTRAINT IF EXISTS schema_version_version_key;
-        
-        -- Agregar restricción compuesta
-        ALTER TABLE investment_tracker.schema_version 
-        ADD CONSTRAINT uq_schema_version_script UNIQUE (version, script_name);
-    END IF;
-END $$;
-
--- Insertar registro de versión
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('1.0.1', 'Funciones del sistema corregidas', '02_functions.sql')
+VALUES ('2.0.0', 'Funciones con UUID', '02_functions.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
-\echo '✅ Funciones v1.0.1 instaladas exitosamente'
+\echo '✅ Funciones v2.0.0 (UUID) instaladas exitosamente'
