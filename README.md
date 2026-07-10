@@ -16,6 +16,7 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT
 - **Contenedores**: Docker + Docker Compose
+- **Gestion de DB**: pgadmin 4 Latest
 - **Control de versiones**: Git/GitHub
 - **Sistema Operativo**: Pop OS 22.04
 - **IDE**: Visual Studio Code
@@ -36,19 +37,26 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 
 investment-tracker/
 ├── docker/
-│ ├── docker-compose.yml
+│ ├── docker-compose.yml # Orquestación de servicios
+│ ├── Dockerfile.backend # Imagen Spring Boot
+│ ├── Dockerfile.frontend # Imagen React
+│ ├── nginx/
+│ │ └── default.conf # Reverse proxy HTTPS
+│ ├── pgadmin/
+│ │ └── servers.json # Configuración servidores
 │ ├── postgres/
-│ │ └── init.sql
-│ └── Dockerfile.backend
+│ │ └── init.sql # Inicialización BD
+│ └── shellTest/
+│ ├── check-all.sh # Verificación completa
+│ ├── reset-all.sh # Reset BD (mantiene pgadmin)
+│ ├── reset-pgadmin.sh # Reset solo pgadmin
+│ ├── backup-db.sh # Backup BD
+│ └── restore-db.sh # Restaurar BD├── database/
 ├── database/
-│ ├── sql/
-│ │ ├── 01_schema.sql
-│ │ ├── 02_functions.sql
-│ │ ├── 03_procedures.sql
-│ │ └── 04_seed.sql
-│ └── MER/
-│ └── diagram.md
-├── backend/
+│ └── sql/
+│ ├── 01_schema.sql # Esquema v2.1.0 (UUID + Monedas)
+│ ├── 02_functions.sql # Funciones PL/pgSQL v2.0.0
+│ └── 03_seed.sql # Datos iniciales v2.1.0├── backend/
 │ ├── src/
 │ ├── pom.xml
 │ └── README.md
@@ -61,7 +69,7 @@ investment-tracker/
 └── prompts/
 └── prompt_inicial.md
 
-#### Estructura de archivos
+#### Estructura detallada de archivos
 
 investment-tracker/
 │
@@ -73,109 +81,107 @@ investment-tracker/
 │
 ├── docker/
 │ ├── docker-compose.yml # Orquestación de servicios
+│ ├── .env # Variables de entorno Docker
 │ ├── Dockerfile.backend # Imagen para Spring Boot
 │ ├── Dockerfile.frontend # Imagen para React
 │ ├── nginx/
 │ │ ├── default.conf # Configuración de Nginx reverse proxy
+│ │ ├── nginx-frontend.conf # Configuración Nginx frontend
 │ │ └── ssl/
 │ │ ├── localhost.crt # Certificado SSL autofirmado
 │ │ └── localhost.key # Llave privada SSL
-│ └── postgres/
-│ └── init.sql # Script de inicialización de BD
+│ ├── pgadmin/
+│ │ └── servers.json # Configuración servidores pgAdmin
+│ ├── postgres/
+│ │ └── init.sql # Script de inicialización de BD
+│ └── shellTest/
+│ ├── check-all.sh # Verificación completa del sistema
+│ ├── reset-all.sh # Reset BD (mantiene pgadmin)
+│ ├── reset-pgadmin.sh # Reset solo pgadmin
+│ ├── backup-db.sh # Backup de base de datos
+│ └── restore-db.sh # Restaurar desde backup
 │
 ├── database/
-│ ├── sql/
-│ │ ├── 01_schema.sql # Creación de tablas y esquemas
-│ │ ├── 02_functions.sql # Funciones PL/pgSQL
-│ │ │ ├── calcular_comision() # Cálculo de comisiones
-│ │ │ └── get_resumen_usuario() # Resumen de inversiones
-│ │ ├── 03_procedures.sql # Procedimientos almacenados
-│ │ │ └── calcular_venta_optima() # Lógica de venta óptima
-│ │ ├── 04_seed.sql # Datos de prueba
-│ │ │ ├── Roles predeterminados
-│ │ │ ├── Usuario demo
-│ │ │ └── Plataformas de ejemplo
-│ │ └── 05_indexes.sql # Índices de optimización
-│ └── MER/
-│ ├── diagram.md # Documentación del MER
-│ ├── diagram.png # Imagen del diagrama
-│ └── diagram.drawio # Archivo editable del diagrama
+│ └── sql/
+│ ├── 01_schema.sql # Esquema v2.1.0 (UUID + Monedas)
+│ ├── 02_functions.sql # Funciones PL/pgSQL v2.0.0
+│ └── 03_seed.sql # Datos iniciales v2.1.0
 │
 ├── backend/
 │ ├── pom.xml # Dependencias Maven
 │ ├── README.md # Documentación del backend
-│ ├── src/
-│ │ ├── main/
-│ │ │ ├── java/com/investmenttracker/
-│ │ │ │ ├── InvestmentTrackerApplication.java # Clase principal
-│ │ │ │ ├── config/
-│ │ │ │ │ ├── SecurityConfig.java # Configuración Spring Security
-│ │ │ │ │ ├── JwtConfig.java # Configuración JWT
-│ │ │ │ │ ├── CorsConfig.java # Configuración CORS
-│ │ │ │ │ └── SwaggerConfig.java # Documentación API
-│ │ │ │ ├── controller/
-│ │ │ │ │ ├── AuthController.java # Login/Registro
-│ │ │ │ │ ├── UsuarioController.java # CRUD usuarios
-│ │ │ │ │ ├── PlataformaController.java # Gestión plataformas
-│ │ │ │ │ ├── ComisionController.java # Gestión comisiones
-│ │ │ │ │ ├── TransaccionController.java # Compras/Ventas
-│ │ │ │ │ └── CalculadoraController.java # Cálculos óptimos
-│ │ │ │ ├── model/
-│ │ │ │ │ ├── entity/
-│ │ │ │ │ │ ├── Usuario.java
-│ │ │ │ │ │ ├── Rol.java
-│ │ │ │ │ │ ├── Plataforma.java
-│ │ │ │ │ │ ├── Comision.java
-│ │ │ │ │ │ ├── Transaccion.java
-│ │ │ │ │ │ └── CalculoHistorico.java
-│ │ │ │ │ └── dto/
-│ │ │ │ │ ├── LoginRequest.java
-│ │ │ │ │ ├── RegisterRequest.java
-│ │ │ │ │ ├── AuthResponse.java
-│ │ │ │ │ ├── TransaccionRequest.java
-│ │ │ │ │ ├── TransaccionDTO.java
-│ │ │ │ │ ├── ResumenInversionesDTO.java
-│ │ │ │ │ ├── CalculoOptimoDTO.java
-│ │ │ │ │ └── ComisionDTO.java
-│ │ │ │ ├── repository/
-│ │ │ │ │ ├── UsuarioRepository.java
-│ │ │ │ │ ├── RolRepository.java
-│ │ │ │ │ ├── PlataformaRepository.java
-│ │ │ │ │ ├── ComisionRepository.java
-│ │ │ │ │ ├── TransaccionRepository.java
-│ │ │ │ │ └── CalculoHistoricoRepository.java
-│ │ │ │ ├── service/
-│ │ │ │ │ ├── AuthService.java
-│ │ │ │ │ ├── JwtService.java
-│ │ │ │ │ ├── UserService.java
-│ │ │ │ │ ├── PlataformaService.java
-│ │ │ │ │ ├── ComisionService.java
-│ │ │ │ │ ├── TransaccionService.java
-│ │ │ │ │ └── CalculadoraVentaService.java
-│ │ │ │ ├── security/
-│ │ │ │ │ ├── JwtAuthFilter.java
-│ │ │ │ │ ├── JwtTokenProvider.java
-│ │ │ │ │ └── UserDetailsServiceImpl.java
-│ │ │ │ └── exception/
-│ │ │ │ ├── GlobalExceptionHandler.java
-│ │ │ │ ├── NoPositionException.java
-│ │ │ │ └── CustomExceptions.java
-│ │ │ └── resources/
-│ │ │ ├── application.yml # Configuración principal
-│ │ │ ├── application-dev.yml # Config desarrollo
-│ │ │ ├── application-prod.yml # Config producción
-│ │ │ └── db/migration/ # Flyway migrations
-│ │ │ └── V1\_\_init_schema.sql
-│ │ └── test/
-│ │ └── java/com/investmenttracker/
-│ │ ├── controller/
-│ │ │ ├── AuthControllerTest.java
-│ │ │ └── TransaccionControllerTest.java
-│ │ ├── service/
-│ │ │ ├── CalculadoraVentaServiceTest.java
-│ │ │ └── TransaccionServiceTest.java
-│ │ └── repository/
-│ │ └── TransaccionRepositoryTest.java
+│ └── src/
+│ ├── main/
+│ │ ├── java/com/investmenttracker/
+│ │ │ ├── InvestmentTrackerApplication.java # Clase principal
+│ │ │ ├── config/
+│ │ │ │ ├── SecurityConfig.java # Configuración Spring Security
+│ │ │ │ ├── JwtConfig.java # Configuración JWT
+│ │ │ │ ├── CorsConfig.java # Configuración CORS
+│ │ │ │ └── SwaggerConfig.java # Documentación API
+│ │ │ ├── controller/
+│ │ │ │ ├── AuthController.java # Login/Registro
+│ │ │ │ ├── UsuarioController.java # CRUD usuarios
+│ │ │ │ ├── PlataformaController.java # Gestión plataformas
+│ │ │ │ ├── ComisionController.java # Gestión comisiones
+│ │ │ │ ├── TransaccionController.java # Compras/Ventas
+│ │ │ │ └── CalculadoraController.java # Cálculos óptimos
+│ │ │ ├── model/
+│ │ │ │ ├── entity/
+│ │ │ │ │ ├── Usuario.java
+│ │ │ │ │ ├── Rol.java
+│ │ │ │ │ ├── Moneda.java
+│ │ │ │ │ ├── Plataforma.java
+│ │ │ │ │ ├── Comision.java
+│ │ │ │ │ ├── Transaccion.java
+│ │ │ │ │ └── CalculoHistorico.java
+│ │ │ │ └── dto/
+│ │ │ │ ├── LoginRequest.java
+│ │ │ │ ├── RegisterRequest.java
+│ │ │ │ ├── AuthResponse.java
+│ │ │ │ ├── TransaccionRequest.java
+│ │ │ │ ├── TransaccionDTO.java
+│ │ │ │ ├── ResumenInversionesDTO.java
+│ │ │ │ ├── CalculoOptimoDTO.java
+│ │ │ │ └── ComisionDTO.java
+│ │ │ ├── repository/
+│ │ │ │ ├── UsuarioRepository.java
+│ │ │ │ ├── RolRepository.java
+│ │ │ │ ├── MonedaRepository.java
+│ │ │ │ ├── PlataformaRepository.java
+│ │ │ │ ├── ComisionRepository.java
+│ │ │ │ ├── TransaccionRepository.java
+│ │ │ │ └── CalculoHistoricoRepository.java
+│ │ │ ├── service/
+│ │ │ │ ├── AuthService.java
+│ │ │ │ ├── JwtService.java
+│ │ │ │ ├── UserService.java
+│ │ │ │ ├── PlataformaService.java
+│ │ │ │ ├── ComisionService.java
+│ │ │ │ ├── TransaccionService.java
+│ │ │ │ └── CalculadoraVentaService.java
+│ │ │ ├── security/
+│ │ │ │ ├── JwtAuthFilter.java
+│ │ │ │ ├── JwtTokenProvider.java
+│ │ │ │ └── UserDetailsServiceImpl.java
+│ │ │ └── exception/
+│ │ │ ├── GlobalExceptionHandler.java
+│ │ │ ├── NoPositionException.java
+│ │ │ └── CustomExceptions.java
+│ │ └── resources/
+│ │ ├── application.yml # Configuración principal
+│ │ ├── application-dev.yml # Config desarrollo
+│ │ └── application-prod.yml # Config producción
+│ └── test/
+│ └── java/com/investmenttracker/
+│ ├── controller/
+│ │ ├── AuthControllerTest.java
+│ │ └── TransaccionControllerTest.java
+│ ├── service/
+│ │ ├── CalculadoraVentaServiceTest.java
+│ │ └── TransaccionServiceTest.java
+│ └── repository/
+│ └── TransaccionRepositoryTest.java
 │
 ├── frontend/
 │ ├── package.json # Dependencias npm
@@ -215,7 +221,7 @@ investment-tracker/
 │ │ │ ├── Dashboard.jsx # Panel principal
 │ │ │ ├── ResumenInversiones.jsx # Resumen de inversiones
 │ │ │ ├── GraficoRendimiento.jsx # Gráficos de rendimiento
-│ │ │ ├── UltimasTransacciones.jsx # Lista de últimas transacciones
+│ │ │ ├── UltimasTransacciones.jsx # Últimas transacciones
 │ │ │ └── RendimientoPorSimbolo.jsx # Rendimiento por acción
 │ │ ├── transacciones/
 │ │ │ ├── Transacciones.jsx # Lista de transacciones
@@ -294,9 +300,10 @@ investment-tracker/
 5. [Backend (Java Spring Boot)](#5-backend)
 6. [Frontend (React)](#6-frontend)
 7. [Seguridad JWT y HTTPS](#7-seguridad)
-8. [Despliegue con Docker](#8-despliegue)
-9. [Calculadora de Venta Óptima](#9-calculadora)
-10. [Pruebas y Debugging](#10-pruebas)
+8. [🐳 Servicios Docker](#8-🐳-Servicios-Docker)
+9. [🔧 Scripts de Mantenimiento](#9-🔧-Scripts-de-Mantenimiento)
+10. [Calculadora de Venta Óptima](#10-calculadora)
+11. [Pruebas y Debugging](#11-pruebas)
 
 ---
 
@@ -348,14 +355,14 @@ investment-tracker/
 
 ### Diagrama MER
 
-┌──────────────┐ ┌──────────────┐
+──────────────┐ ┌──────────────┐
 │ USUARIOS │ │ ROLES │
 ├──────────────┤ ├──────────────┤
-│ PK id │──┐ │ PK id │
+│ PK id (UUID) │──┐ │ PK id (UUID) │
 │ username │ │ │ nombre │
 │ password │ │ │ desc │
 │ email │ │ └──────────────┘
-│ created_at │ │ ▲
+│ created_at│ │ ▲
 └──────────────┘ │ │
 │ │ ┌──────┴──────┐
 │ └────┤USUARIO_ROLES│
@@ -364,45 +371,48 @@ investment-tracker/
 │ │ FK rol_id │
 │ └──────────────┘
 │
-│ ┌──────────────┐
-├──┤ PLATAFORMAS │
-│ ├──────────────┤
-│ │ PK id │
-│ │ nombre │
-│ │ desc │
-│ │ FK usuario_id│
-│ └──────┬───────┘
+│ ┌──────────────┐ ┌──────────────┐
+├──┤ PLATAFORMAS │ │ MONEDAS │
+│ ├──────────────┤ ├──────────────┤
+│ │ PK id (UUID) │ │ PK id (UUID) │
+│ │ nombre │ ┌──│ codigo │
+│ │ desc │ │ │ nombre │
+│ │ FK usuario_id│ │ │ simbolo │
+│ │ FK moneda_id │───┘ │ pais │
+│ └──────┬───────┘ └──────────────┘
 │ │
 │ ┌──────▼──────────┐
 │ │ COMISIONES │
 │ ├─────────────────┤
-│ │ PK id │
+│ │ PK id (UUID) │
 │ │ porcentaje │
 │ │ valor_fijo │
-│ │ fecha_inicio │
-│ │ fecha_fin │
-│ │ FK plataforma_id│
-│ └─────────────────┘
-│
-│ ┌──────────────┐
-├──┤ TRANSACCIONES│
-│ ├──────────────┤
-│ │ PK id │
-│ │ tipo │ ← COMPRA/VENTA
-│ │ simbolo │ ← AAPL, TSLA...
-│ │ cantidad │
-│ │ precio_uni│
-│ │ comision │
-│ │ total │
-│ │ fecha │
-│ │ FK usuario_id│
-│ │ FK plataforma│
+│ │ FK moneda_id │───┐
+│ │ fecha_inicio │ │
+│ │ fecha_fin │ │
+│ │ FK plataforma_id│ │
+│ └─────────────────┘ │
+│ │
+│ ┌──────────────┐ │
+├──┤ TRANSACCIONES│ │
+│ ├──────────────┤ │
+│ │ PK id (UUID) │ │
+│ │ tipo │ │
+│ │ simbolo │ │
+│ │ cantidad │ │
+│ │ precio_uni│ │
+│ │ comision │ │
+│ │ total │ │
+│ │ fecha │ │
+│ │ FK usuario_id│ │
+│ │ FK plataforma│ │
+│ │ FK moneda_id │──────┘
 │ └──────────────┘
 │
 │ ┌──────────────┐
 └──┤ CALCULOS_HIST│
 ├──────────────┤
-│ PK id │
+│ PK id (UUID) │
 │ precio_min│
 │ cant_opt │
 │ ganancia │
@@ -454,15 +464,42 @@ Copia y pega el contenido:
 }
 }
 
-## 4. BASE DE DATOS - FUNCIONES PL/SQL
+## 4. BASE DE DATOS
 
-### 4.1 Función: Calcular Comisión Actual
+### Tablas del Sistema (v2.1.0)
 
-database/sql/02_functions.sql
+| #   | Tabla            | Descripción                                | PK                    |
+| --- | ---------------- | ------------------------------------------ | --------------------- |
+| 1   | `schema_version` | Control de versiones de scripts ejecutados | UUID                  |
+| 2   | `roles`          | Roles del sistema (ADMIN, USER, PREMIUM)   | UUID                  |
+| 3   | `usuarios`       | Usuarios registrados en el sistema         | UUID                  |
+| 4   | `usuario_roles`  | Relación muchos a muchos usuarios-roles    | Compuesta (UUID+UUID) |
+| 5   | `monedas`        | Catálogo de divisas internacionales        | UUID                  |
+| 6   | `plataformas`    | Plataformas de inversión por usuario       | UUID                  |
+| 7   | `comisiones`     | Estructura de comisiones por plataforma    | UUID                  |
+| 8   | `transacciones`  | Registro de compras y ventas de acciones   | UUID                  |
+| 9   | `calculos_hist`  | Historial de cálculos de venta óptima      | UUID                  |
 
-### 4.2 Procedimiento: Calcular Venta Óptima para Ganancia
+### Catálogo de Monedas
 
-database/sql/03_procedures.sql
+Se incluyen **54 divisas internacionales** organizadas por región: principales (USD, COP, EUR, GBP), Américas (16), Europa (11), Asia-Pacífico (14) y Medio Oriente/África (9). Cada moneda tiene código ISO de 3 letras, nombre, símbolo y país asociado.
+
+### Funciones PL/pgSQL Disponibles
+
+| Función                   | Descripción                                   |
+| ------------------------- | --------------------------------------------- |
+| `obtener_comision_actual` | Retorna la comisión vigente de una plataforma |
+| `calcular_comision`       | Calcula la comisión total para un monto dado  |
+| `resumen_inversiones`     | Retorna las posiciones actuales por símbolo   |
+| `calcular_venta_optima`   | Calcula precio mínimo para ganancia deseada   |
+
+> Las funciones reciben y retornan UUIDs. Ver `database/sql/02_functions.sql` para detalles de parámetros.
+
+### Datos de Prueba
+
+- **3 usuarios**: demo_user, admin, incognito (con roles USER, ADMIN y PREMIUM)
+- **5 plataformas**: eToro, Interactive Brokers, Robinhood, Binance (USD) y Trii (COP)
+- **11 transacciones** de ejemplo en USD y COP con fechas en UTC
 
 ## 5. BACKEND - JAVA SPRING BOOT 3.x
 
@@ -481,3 +518,35 @@ backend/src/main/java/com/investmenttracker/controller/TransaccionController.jav
 ### 5.3 Configuración application.yml
 
 backend/src/main/java/com/investmenttracker/resources/application.yml
+
+## 🐳 Servicios Docker
+
+| Servicio    | Puerto | URL                   |
+| ----------- | ------ | --------------------- |
+| PostgreSQL  | 5432   | localhost:5432        |
+| pgAdmin     | 5050   | http://localhost:5050 |
+| Backend     | 8081   | http://localhost:8081 |
+| Frontend    | 3000   | http://localhost:3000 |
+| Nginx HTTPS | 443    | https://localhost     |
+
+## 🔧 Scripts de Mantenimiento
+
+### Verificar sistema completo
+
+./docker/shellTest/check-all.sh
+
+### Reset base de datos (mantiene configuración pgadmin)
+
+./docker/shellTest/reset-all.sh
+
+### Reset solo pgadmin
+
+./docker/shellTest/reset-pgadmin.sh
+
+### Backup base de datos
+
+./docker/shellTest/backup-db.sh
+
+### Restaurar backup
+
+./docker/shellTest/restore-db.sh <archivo.sql>
