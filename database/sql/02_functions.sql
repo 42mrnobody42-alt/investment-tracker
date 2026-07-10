@@ -4,6 +4,7 @@
 -- Descripción: Funciones del sistema (IDEMPOTENTE)
 -- =============================================
 
+-- Verificar si ya se ejecutó este script
 DO $$
 BEGIN
     IF EXISTS (
@@ -13,10 +14,13 @@ BEGIN
         RAISE NOTICE '⚠️  Las funciones v1.0.1 ya están instaladas. Omitiendo.';
         RETURN;
     END IF;
+    
     RAISE NOTICE '🚀 Instalando funciones v1.0.1...';
 END $$;
 
--- Función: obtener_comision_actual
+-- =============================================
+-- FUNCIÓN: obtener_comision_actual
+-- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.obtener_comision_actual(
     p_plataforma_id INTEGER
 ) RETURNS TABLE(
@@ -37,7 +41,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Función: calcular_comision
+\echo '✅ Función obtener_comision_actual instalada'
+
+-- =============================================
+-- FUNCIÓN: calcular_comision
+-- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.calcular_comision(
     p_plataforma_id INTEGER,
     p_valor_transaccion DECIMAL
@@ -60,6 +68,7 @@ BEGIN
     IF v_porcentaje IS NOT NULL THEN
         v_comision := v_comision + (p_valor_transaccion * v_porcentaje);
     END IF;
+    
     IF v_valor_fijo IS NOT NULL THEN
         v_comision := v_comision + v_valor_fijo;
     END IF;
@@ -68,7 +77,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Función: resumen_inversiones (CORREGIDA)
+\echo '✅ Función calcular_comision instalada'
+
+-- =============================================
+-- FUNCIÓN: resumen_inversiones
+-- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.resumen_inversiones(
     p_usuario_id INTEGER
 ) RETURNS TABLE(
@@ -102,7 +115,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Función: calcular_venta_optima
+\echo '✅ Función resumen_inversiones instalada'
+
+-- =============================================
+-- FUNCIÓN: calcular_venta_optima
+-- =============================================
 CREATE OR REPLACE FUNCTION investment_tracker.calcular_venta_optima(
     p_usuario_id INTEGER,
     p_simbolo VARCHAR(20),
@@ -167,9 +184,32 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Registrar versión
+\echo '✅ Función calcular_venta_optima instalada'
+
+-- =============================================
+-- REGISTRAR VERSIÓN
+-- =============================================
+-- Asegurar que existe la restricción correcta
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'uq_schema_version_script' 
+        AND conrelid = 'investment_tracker.schema_version'::regclass
+    ) THEN
+        -- Eliminar restricción simple si existe
+        ALTER TABLE investment_tracker.schema_version 
+        DROP CONSTRAINT IF EXISTS schema_version_version_key;
+        
+        -- Agregar restricción compuesta
+        ALTER TABLE investment_tracker.schema_version 
+        ADD CONSTRAINT uq_schema_version_script UNIQUE (version, script_name);
+    END IF;
+END $$;
+
+-- Insertar registro de versión
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
 VALUES ('1.0.1', 'Funciones del sistema corregidas', '02_functions.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
-\echo '✅ Funciones v1.0.1 instaladas'
+\echo '✅ Funciones v1.0.1 instaladas exitosamente'
