@@ -1,12 +1,11 @@
 -- =============================================
 -- INVESTMENT TRACKER - ESQUEMA DE BASE DE DATOS
--- Versión: 2.0.0
+-- Versión: 2.1.0
 -- Descripción: Creación de tablas con UUID (IDEMPOTENTE)
 -- =============================================
 
 DO $$ BEGIN RAISE NOTICE '🔍 Verificando configuración existente...'; END $$;
 
--- Extensiones necesarias
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA IF NOT EXISTS investment_tracker;
 
@@ -21,24 +20,22 @@ CREATE TABLE IF NOT EXISTS investment_tracker.schema_version (
     CONSTRAINT uq_schema_version_script UNIQUE (version, script_name)
 );
 
--- Verificar si ya se ejecutó este script
 DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM investment_tracker.schema_version 
-        WHERE version = '2.0.0' AND script_name = '01_schema.sql'
+        WHERE version = '2.1.0' AND script_name = '01_schema.sql'
     ) THEN
-        RAISE NOTICE '⚠️  El esquema v2.0.0 ya está instalado. Omitiendo.';
+        RAISE NOTICE '⚠️  El esquema v2.1.0 ya está instalado. Omitiendo.';
         RETURN;
     END IF;
-    RAISE NOTICE '🚀 Iniciando instalación del esquema v2.0.0 (UUID)...';
+    RAISE NOTICE '🚀 Iniciando instalación del esquema v2.1.0 (UUID + Monedas)...';
 END $$;
 
 -- =============================================
 -- TABLA: roles
 -- =============================================
-DO $$
-BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'roles') THEN
         CREATE TABLE investment_tracker.roles (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -46,17 +43,14 @@ BEGIN
             descripcion TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        RAISE NOTICE '✅ Tabla roles creada (UUID)';
-    ELSE 
-        RAISE NOTICE '⏭️ Tabla roles ya existe'; 
-    END IF;
+        RAISE NOTICE '✅ Tabla roles creada';
+    ELSE RAISE NOTICE '⏭️ Tabla roles ya existe'; END IF;
 END $$;
 
 -- =============================================
 -- TABLA: usuarios
 -- =============================================
-DO $$
-BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'usuarios') THEN
         CREATE TABLE investment_tracker.usuarios (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -69,17 +63,14 @@ BEGIN
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        RAISE NOTICE '✅ Tabla usuarios creada (UUID)';
-    ELSE 
-        RAISE NOTICE '⏭️ Tabla usuarios ya existe'; 
-    END IF;
+        RAISE NOTICE '✅ Tabla usuarios creada';
+    ELSE RAISE NOTICE '⏭️ Tabla usuarios ya existe'; END IF;
 END $$;
 
 -- =============================================
 -- TABLA: usuario_roles
 -- =============================================
-DO $$
-BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'usuario_roles') THEN
         CREATE TABLE investment_tracker.usuario_roles (
             usuario_id UUID REFERENCES investment_tracker.usuarios(id) ON DELETE CASCADE,
@@ -87,17 +78,32 @@ BEGIN
             asignado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (usuario_id, rol_id)
         );
-        RAISE NOTICE '✅ Tabla usuario_roles creada (UUID)';
-    ELSE 
-        RAISE NOTICE '⏭️ Tabla usuario_roles ya existe'; 
-    END IF;
+        RAISE NOTICE '✅ Tabla usuario_roles creada';
+    ELSE RAISE NOTICE '⏭️ Tabla usuario_roles ya existe'; END IF;
+END $$;
+
+-- =============================================
+-- TABLA: monedas (catálogo de divisas)
+-- =============================================
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'monedas') THEN
+        CREATE TABLE investment_tracker.monedas (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            codigo VARCHAR(3) UNIQUE NOT NULL,
+            nombre VARCHAR(100) NOT NULL,
+            simbolo VARCHAR(10),
+            pais VARCHAR(100),
+            activo BOOLEAN DEFAULT true,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        RAISE NOTICE '✅ Tabla monedas creada';
+    ELSE RAISE NOTICE '⏭️ Tabla monedas ya existe'; END IF;
 END $$;
 
 -- =============================================
 -- TABLA: plataformas
 -- =============================================
-DO $$
-BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'plataformas') THEN
         CREATE TABLE investment_tracker.plataformas (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -105,27 +111,26 @@ BEGIN
             nombre VARCHAR(100) NOT NULL,
             descripcion TEXT,
             tipo VARCHAR(50),
+            moneda_id UUID REFERENCES investment_tracker.monedas(id),
             activo BOOLEAN DEFAULT true,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(usuario_id, nombre)
         );
-        RAISE NOTICE '✅ Tabla plataformas creada (UUID)';
-    ELSE 
-        RAISE NOTICE '⏭️ Tabla plataformas ya existe'; 
-    END IF;
+        RAISE NOTICE '✅ Tabla plataformas creada';
+    ELSE RAISE NOTICE '⏭️ Tabla plataformas ya existe'; END IF;
 END $$;
 
 -- =============================================
 -- TABLA: comisiones
 -- =============================================
-DO $$
-BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'comisiones') THEN
         CREATE TABLE investment_tracker.comisiones (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             plataforma_id UUID REFERENCES investment_tracker.plataformas(id) ON DELETE CASCADE,
             porcentaje DECIMAL(5,4),
             valor_fijo DECIMAL(10,2),
+            moneda_id UUID REFERENCES investment_tracker.monedas(id),
             descripcion VARCHAR(200),
             fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             fecha_fin TIMESTAMP,
@@ -133,22 +138,20 @@ BEGIN
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT chk_comision CHECK (porcentaje IS NOT NULL OR valor_fijo IS NOT NULL)
         );
-        RAISE NOTICE '✅ Tabla comisiones creada (UUID)';
-    ELSE 
-        RAISE NOTICE '⏭️ Tabla comisiones ya existe'; 
-    END IF;
+        RAISE NOTICE '✅ Tabla comisiones creada';
+    ELSE RAISE NOTICE '⏭️ Tabla comisiones ya existe'; END IF;
 END $$;
 
 -- =============================================
 -- TABLA: transacciones
 -- =============================================
-DO $$
-BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'transacciones') THEN
         CREATE TABLE investment_tracker.transacciones (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
             usuario_id UUID REFERENCES investment_tracker.usuarios(id) ON DELETE CASCADE,
             plataforma_id UUID REFERENCES investment_tracker.plataformas(id),
+            moneda_id UUID REFERENCES investment_tracker.monedas(id),
             tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('COMPRA', 'VENTA')),
             simbolo VARCHAR(20) NOT NULL,
             empresa_nombre VARCHAR(200),
@@ -160,17 +163,14 @@ BEGIN
             notas TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        RAISE NOTICE '✅ Tabla transacciones creada (UUID)';
-    ELSE 
-        RAISE NOTICE '⏭️ Tabla transacciones ya existe'; 
-    END IF;
+        RAISE NOTICE '✅ Tabla transacciones creada';
+    ELSE RAISE NOTICE '⏭️ Tabla transacciones ya existe'; END IF;
 END $$;
 
 -- =============================================
 -- TABLA: calculos_hist
 -- =============================================
-DO $$
-BEGIN
+DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'investment_tracker' AND table_name = 'calculos_hist') THEN
         CREATE TABLE investment_tracker.calculos_hist (
             id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -185,10 +185,8 @@ BEGIN
             parametros_json JSONB,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-        RAISE NOTICE '✅ Tabla calculos_hist creada (UUID)';
-    ELSE 
-        RAISE NOTICE '⏭️ Tabla calculos_hist ya existe'; 
-    END IF;
+        RAISE NOTICE '✅ Tabla calculos_hist creada';
+    ELSE RAISE NOTICE '⏭️ Tabla calculos_hist ya existe'; END IF;
 END $$;
 
 -- =============================================
@@ -204,15 +202,15 @@ DECLARE
         ARRAY['idx_transacciones_usuario_simbolo', 'investment_tracker.transacciones(usuario_id, simbolo)'],
         ARRAY['idx_comisiones_plataforma', 'investment_tracker.comisiones(plataforma_id)'],
         ARRAY['idx_comisiones_fecha', 'investment_tracker.comisiones(fecha_inicio, fecha_fin)'],
-        ARRAY['idx_comisiones_activas', 'investment_tracker.comisiones(plataforma_id, activo)']
+        ARRAY['idx_comisiones_activas', 'investment_tracker.comisiones(plataforma_id, activo)'],
+        ARRAY['idx_monedas_codigo', 'investment_tracker.monedas(codigo)']
     ];
     i INTEGER;
 BEGIN
     FOR i IN 1..array_length(idx_defs, 1) LOOP
         IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = idx_defs[i][1]) THEN
             IF idx_defs[i][1] = 'idx_comisiones_activas' THEN
-                EXECUTE format('CREATE INDEX %I ON %s WHERE activo = true', 
-                    idx_defs[i][1], 'investment_tracker.comisiones(plataforma_id, activo)');
+                EXECUTE format('CREATE INDEX %I ON investment_tracker.comisiones(plataforma_id, activo) WHERE activo = true', idx_defs[i][1]);
             ELSE
                 EXECUTE format('CREATE INDEX %I ON %s', idx_defs[i][1], idx_defs[i][2]);
             END IF;
@@ -223,7 +221,7 @@ END $$;
 
 -- Registrar versión
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('2.0.0', 'Esquema con UUID', '01_schema.sql')
+VALUES ('2.1.0', 'Esquema con UUID y catálogo de monedas', '01_schema.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
-DO $$ BEGIN RAISE NOTICE '✅ Esquema v2.0.0 (UUID) instalado exitosamente'; END $$;
+DO $$ BEGIN RAISE NOTICE '✅ Esquema v2.1.0 (UUID + Monedas) instalado exitosamente'; END $$;
