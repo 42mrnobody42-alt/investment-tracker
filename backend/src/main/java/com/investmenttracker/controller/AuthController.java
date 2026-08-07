@@ -1,27 +1,23 @@
+package com.investmenttracker.controller;
+
+import com.investmenttracker.model.request.LoginRequest;
+import com.investmenttracker.model.response.LoginResponse;
+import com.investmenttracker.service.LoginService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private UserService userService;
+    private final LoginService loginService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-
-        String token = jwtService.generateToken(authentication);
-        return ResponseEntity.ok(new AuthResponse(token));
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<UserDTO> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(userService.createUser(request));
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = loginService.login(request);
+        return ResponseEntity.ok(response);
     }
 }

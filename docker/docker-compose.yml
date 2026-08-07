@@ -67,7 +67,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
     ports:
-      - "8081:8080"
+      - "7700:7700"
     depends_on:
       postgres:
         condition: service_healthy
