@@ -77,7 +77,7 @@ BEGIN
     -- =============================================
     INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo)
     SELECT v_USER_DEMO, 'demo_user',
-           '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+           '$2a$10$geVB6cZUm027Tw0.suctIOtzL4CkbAQ6XNsxTNzsbjX8ADtgUWPDS',
            'demo@investment-tracker.com', 'Usuario Demo'
     WHERE NOT EXISTS (SELECT 1 FROM investment_tracker.usuarios WHERE username = 'demo_user');
 
@@ -87,7 +87,7 @@ BEGIN
 
     INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo)
     SELECT v_USER_ADMIN, 'admin',
-           '$2a$10$8K1p/a0dL1LXMIgoEDFrwOfMQkf9RlFP0KxDsF3jkHNGOofQQUmSi',
+           '$2a$10$emTDQhyVPegoeKxfw1lZieRYRyeM5RsWkLB1iXNH15VzhrubbLweq',
            'admin@investment-tracker.com', 'Administrador'
     WHERE NOT EXISTS (SELECT 1 FROM investment_tracker.usuarios WHERE username = 'admin');
 
@@ -98,7 +98,7 @@ BEGIN
 
     INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo)
     SELECT v_USER_INCOGNITO, 'incognito',
-           '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+           '$2a$10$Rw3wbbs1gphl3cS3eJ1r2Oh2kSHSqCWJGqPRLs7/snc8OcgayZCYq',
            '42mrnobody42@gmail.com', 'Usuario Premium incognito'
     WHERE NOT EXISTS (SELECT 1 FROM investment_tracker.usuarios WHERE username = 'incognito');
 
