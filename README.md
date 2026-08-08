@@ -311,47 +311,107 @@ investment-tracker/
 
 ### Diagrama de Arquitectura
 
-┌───────────────────────────────────────┐
-│ CLIENTE (HTTPS) │
-└────────┬──────────────────────────────┘
-│
-┌────────▼─────────┐
-│ NGINX (443) │ ← SSL/TLS
-│ Reverse Proxy │
-└────────┬─────────┘
-│
-┌────────▼─────────┐
-│ React App │ ← Frontend (SPA)
-│ (Nginx/Alpine) │
-└────────┬─────────┘
-│ HTTP/2
-┌────────▼──────────────┐
-│ Spring Boot 3.x │ ← Backend API REST
-│ (Tomcat Embedido) │ JWT Authentication
-│ Java 21 LTS │
-└────────┬──────────────┘
-│ JDBC
-┌────────▼─────────┐
-│ PostgreSQL 16 │ ← Base de Datos
-│ + PL/SQL │
-└──────────────────┘
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      🌐 CLIENTE (HTTPS)                      │
+│                   React SPA + Axios + JWT                    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   🔒 NGINX Reverse Proxy                     │
+│                      Puerto: 443 (SSL/TLS)                   │
+│                  Redirección: / → Frontend                   │
+│                              /api → Backend                  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+            ┌──────────────┴──────────────┐
+            ▼                             ▼
+┌───────────────────────┐    ┌────────────────────────────────┐
+│   🎨 FRONTEND (3000)   │    │   ⚙️  BACKEND (7700)            │
+│   React 18 + CSS       │    │   Spring Boot 3.x + Java 21   │
+│   Nginx/Alpine         │    │   Tomcat 10 Embedido           │
+│   SPA + React Router   │    │   JWT Authentication           │
+└───────────────────────┘    └──────────────┬─────────────────┘
+                                            │
+                    ┌───────────────────────┴
+                    │
+                    ▼
+┌──────────────────────────────┐    ┌──────────────────────────────┐
+│   🗄️  PostgreSQL 16 (5432)    │◄──│   📊 pgAdmin 4 (5050)        │
+│   Esquema: investment_tracker│    │   Admin DB Web UI            │
+│   PL/pgSQL + UUID + 54 monedas│   │   http://localhost:5050       │
+└──────────────────────────────┘    └──────────────────────────────┘
+```
+
+### Diagrama de Flujo: Login + Restart Password
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        FLUJO DE AUTENTICACIÓN                        │
+└─────────────────────────────────────────────────────────────────────┘
+
+👤 Usuario                    🔒 Backend                     🗄️ PostgreSQL
+   │                             │                              │
+   │  POST /api/auth/login       │                              │
+   │  {username, password}       │                              │
+   │────────────────────────────>│                              │
+   │                             │  Buscar usuario              │
+   │                             │─────────────────────────────>│
+   │                             │  User (username, hash, roles)│
+   │                             │<─────────────────────────────│
+   │                             │                              │
+   │                             │  Validar:                    │
+   │                             │  ┌─ Bloqueo?                 │
+   │                             │  ├─ Activo?                  │
+   │                             │  ├─ BCrypt.verify()          │
+   │                             │  └─ Intentos fallidos        │
+   │                             │                              │
+   │  JWT + datos usuario       │                              │
+   │<────────────────────────────│                              │
+   │                             │                              │
+
+👑 ADMIN                     🔒 Backend                     🗄️ PostgreSQL
+   │                             │                              │
+   │  POST /auth/restart-password│                              │
+   │  Header: Bearer <JWT>      │                              │
+   │  {username, email, nombre,  │                              │
+   │   nuevoPassword, repetir}   │                              │
+   │────────────────────────────>│                              │
+   │                             │  Validar JWT + ROLE_ADMIN    │
+   │                             │  Validar campos + criterios  │
+   │                             │  BCrypt.encode(nuevoPassword)│
+   │                             │  UPDATE password_hash        │
+   │                             │─────────────────────────────>│
+   │                             │  OK                          │
+   │                             │<─────────────────────────────│
+   │                             │  Reset intentos fallidos     │
+   │  200 OK                     │                              │
+   │<────────────────────────────│                              │
+```
 
 ### Contenedores Docker
 
-┌─────────────────────────────────────┐
-│ DOCKER COMPOSE NETWORK │
-│ ┌──────────┐ ┌──────────┐ │
-│ │ POSTGRES │ │ BACKEND │ │
-│ │ :5432 │◄─┤ :8080 │ │
-│ └──────────┘ └─────┬────┘ │
-│ │ │
-│ ┌──────▼──────┐ │
-│ │ FRONTEND │ │
-│ │ :3000 │ │
-│ └─────────────┘ │
-└─────────────────────────────────────┘
-
-## 2. MODELO ENTIDAD-RELACIÓN (MER)
+```
+┌──────────────────────────────────────────────────────────────┐
+│                  DOCKER COMPOSE NETWORK                       │
+│                  investment_network (bridge)                  │
+│                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐                 │
+│  │  investment-db    │  │ investment-backend│                │
+│  │  postgres:16-alp  │  │ spring-boot:3.x  │                 │
+│  │  :5432 → :5432    │◄─┤ :7700 → :7700    │                 │
+│  │  volume: data     │  │ JWT + BCrypt     │                 │
+│  └──────────────────┘  └──────────────────┘                 │
+│                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐                 │
+│  │ investment-pgadmin│  │ investment-nginx  │                 │
+│  │ pgadmin4:latest   │  │ nginx:alpine     │                 │
+│  │ :5050 → :80       │  │ :80, :443        │                 │
+│  │ volume: pgadmin   │  │ SSL + proxy      │                 │
+│  └──────────────────┘  └──────────────────┘                 │
+└──────────────────────────────────────────────────────────────┘
+```
 
 ### Diagrama MER
 
@@ -503,21 +563,54 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 
 ## 5. BACKEND - JAVA SPRING BOOT 3.x
 
-### 5.1 Estructura del Proyecto Spring Boot
+### Servicios Publicados
 
-### 5.1 Estructura del Proyecto Spring Boot
+| Endpoint                     | Método | Auth  | Descripción                                 |
+| ---------------------------- | ------ | ----- | ------------------------------------------- |
+| `/api/auth/login`            | POST   | No    | Login - Retorna JWT                         |
+| `/api/auth/restart-password` | POST   | ADMIN | Restablecer contraseña de cualquier usuario |
+| `/api/test/health`           | GET    | No    | Health check del servicio                   |
 
-backend/src/main/java/com/investmenttracker/InvestmentTrackerApplication.java
-backend/src/main/java/com/investmenttracker/config/SecurityConfig.java
+### Seguridad
 
-### 5.2 Controladores REST Clave
+- **JWT** con firma HMAC-SHA384
+- **BCrypt** para hash de contraseñas
+- **Roles**: ROLE_ADMIN, ROLE_USER, ROLE_PREMIUM
+- Control de intentos fallidos: 3 intentos, bloqueo progresivo (5min → 15min → 30min → 1h → 12h → 24h → permanente)
+- Validaciones de contraseña: 8+ caracteres, 1 mayúscula, 1 carácter especial, sin comillas
+- Validación case-insensitive para email, case-sensitive para contraseñas
 
-backend/src/main/java/com/investmenttracker/controller/AuthController.java
-backend/src/main/java/com/investmenttracker/controller/TransaccionController.java
+### Estructura del Backend
 
-### 5.3 Configuración application.yml
+backend/src/main/java/com/investmenttracker/
+├── controller/
+│ ├── AuthController.java # Login, restart-password
+│ └── TestValidationController.java # Health check
+├── service/
+│ ├── LoginService.java # Lógica de autenticación
+│ ├── JwtService.java # Generación/validación JWT
+│ └── RestartUserPasswordService.java # Restablecimiento de contraseña
+├── component/
+│ ├── LoginComponent.java # Control de intentos y bloqueos
+│ └── SecurityLoginComponent.java # Encriptación y validación
+├── security/
+│ ├── JwtAuthFilter.java # Filtro de autenticación JWT
+│ └── UserDetailsServiceImpl.java # Carga de usuarios desde BD
+├── model/
+│ ├── entity/User.java, Role.java
+│ ├── enums/ErrorCode.java, LockLevel.java, SuccessfulCode.java
+│ ├── request/LoginRequest.java, RestartPasswordRequest.java
+│ └── response/LoginResponse.java, ErrorResponse.java, SuccessResponse.java
+├── repository/UserRepository.java
+└── exception/
+├── AuthenticationException.java
+└── GlobalExceptionHandler.java
 
-backend/src/main/java/com/investmenttracker/resources/application.yml
+### Pruebas
+
+- **32 pruebas automatizadas** (26 integración + 6 unitarias)
+- Cobertura: login, restart-password, validaciones de contraseña, control de roles, bloqueos
+- Ejecutar: `mvn test`
 
 ## 🐳 Servicios Docker
 
