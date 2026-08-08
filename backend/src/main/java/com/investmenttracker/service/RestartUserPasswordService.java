@@ -9,6 +9,7 @@ import com.investmenttracker.model.response.SuccessResponse;
 import com.investmenttracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +25,15 @@ public class RestartUserPasswordService {
 
     /**
      * Procesa el restablecimiento de contraseña
+     * Solo permitido para usuarios autenticados con rol ADMIN
      */
     @Transactional
-    public SuccessResponse restartPassword(RestartPasswordRequest request) {
-        log.info("Procesando restablecimiento de contraseña para usuario: {}", request.getUsername());
+    public SuccessResponse restartPassword(RestartPasswordRequest request, String adminUsername) {
+        log.info("ADMIN {} - Procesando restablecimiento de contraseña para usuario: {}", 
+                 adminUsername, request.getUsername());
+        
+        // 0. Validar que quien ejecuta es ADMIN
+        validateAdminRole(adminUsername);
         
         // 1. Validar campos no vacíos
         validateNotEmptyFields(request);
@@ -38,25 +44,44 @@ public class RestartUserPasswordService {
         // 3. Validar criterios de la contraseña
         validatePasswordCriteria(request.getNuevoPassword());
         
-        // 4. Buscar y validar usuario (username, email, nombreCompleto)
-        User user = findAndValidateUser(request);
+        // 4. Buscar y validar usuario objetivo
+        User targetUser = findAndValidateUser(request);
         
         // 5. Encriptar y actualizar contraseña
         String encryptedPassword = securityLoginComponent.encryptPassword(request.getNuevoPassword());
-        user.setPasswordHash(encryptedPassword);
-        userRepository.save(user);
-        log.info("Contraseña actualizada en BD para usuario: {}", request.getUsername());
+        targetUser.setPasswordHash(encryptedPassword);
+        userRepository.save(targetUser);
+        log.info("ADMIN {} - Contraseña actualizada para usuario: {}", adminUsername, targetUser.getUsername());
         
         // 6. Verificar que se guardó correctamente
-        verifyPasswordUpdate(user.getId(), request.getNuevoPassword());
+        verifyPasswordUpdate(targetUser.getId(), request.getNuevoPassword());
         
-        log.info("Restablecimiento de contraseña exitoso para usuario: {}", request.getUsername());
+        log.info("ADMIN {} - Restablecimiento de contraseña exitoso para: {}", 
+                 adminUsername, targetUser.getUsername());
         
         return SuccessResponse.builder()
             .code("BIZ-0001")
-            .message("Contraseña actualizada exitosamente")
+            .message("Contraseña actualizada exitosamente por administrador")
             .timestamp(LocalDateTime.now())
             .build();
+    }
+
+    /**
+     * Valida que el admin autenticado tenga rol ADMIN
+     */
+    private void validateAdminRole(String adminUsername) {
+        User adminUser = userRepository.findByUsername(adminUsername)
+            .orElseThrow(() -> new AccessDeniedException("Acceso denegado"));
+        
+        boolean isAdmin = adminUser.getRoles().stream()
+            .anyMatch(role -> "ROLE_ADMIN".equals(role.getNombre()));
+        
+        if (!isAdmin) {
+            log.warn("Usuario {} intentó acceder a restart-password sin rol ADMIN", adminUsername);
+            throw new AccessDeniedException("Se requiere rol ADMIN para esta operación");
+        }
+        
+        log.debug("Rol ADMIN verificado para usuario: {}", adminUsername);
     }
 
     /**
@@ -92,35 +117,29 @@ public class RestartUserPasswordService {
     }
 
     /**
-     * Busca el usuario y valida sus datos (username exacto, email y nombre ignorando mayúsculas)
+     * Busca el usuario objetivo y valida sus datos
      */
     private User findAndValidateUser(RestartPasswordRequest request) {
-        // Buscar usuario por username exacto (caseSensitive)
         User user = userRepository.findByUsername(request.getUsername())
             .orElseThrow(() -> {
-                log.warn("Usuario no encontrado: {}", request.getUsername());
+                log.warn("Usuario objetivo no encontrado: {}", request.getUsername());
                 return new AuthenticationException(ErrorCode.USER_NOT_FOUND);
             });
         
-        // Validar email ignorando mayúsculas/minúsculas
         String requestEmail = request.getEmail().toLowerCase().trim();
         String userEmail = user.getEmail().toLowerCase().trim();
         if (!requestEmail.equals(userEmail)) {
-            log.warn("Email no coincide para usuario: {} | Request: {} | BD: {}", 
-                     request.getUsername(), requestEmail, userEmail);
+            log.warn("Email no coincide para usuario: {}", request.getUsername());
             throw new AuthenticationException(ErrorCode.USER_NOT_FOUND);
         }
         
-        // Validar nombre completo ignorando mayúsculas/minúsculas
         String requestNombre = request.getNombreCompleto().toLowerCase().trim();
         String userNombre = user.getNombreCompleto().toLowerCase().trim();
         if (!requestNombre.equals(userNombre)) {
-            log.warn("Nombre completo no coincide para usuario: {} | Request: {} | BD: {}", 
-                     request.getUsername(), requestNombre, userNombre);
+            log.warn("Nombre no coincide para usuario: {}", request.getUsername());
             throw new AuthenticationException(ErrorCode.USER_NOT_FOUND);
         }
         
-        log.debug("Usuario validado correctamente: {}", request.getUsername());
         return user;
     }
 
@@ -132,7 +151,7 @@ public class RestartUserPasswordService {
             .orElseThrow(() -> new AuthenticationException(ErrorCode.UPDATE_VALIDATION_ERROR));
         
         if (!securityLoginComponent.verifyPassword(expectedPassword, updatedUser.getPasswordHash())) {
-            log.error("La contraseña actualizada no coincide con la esperada para usuario ID: {}", userId);
+            log.error("La contraseña actualizada no coincide para usuario ID: {}", userId);
             throw new AuthenticationException(ErrorCode.UPDATE_VALIDATION_ERROR);
         }
         
