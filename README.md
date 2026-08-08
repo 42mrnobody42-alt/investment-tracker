@@ -35,275 +35,161 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 
 #### Estructura de directorios
 
-investment-tracker/
-├── docker/
-│ ├── docker-compose.yml # Orquestación de servicios
-│ ├── Dockerfile.backend # Imagen Spring Boot
-│ ├── Dockerfile.frontend # Imagen React
-│ ├── nginx/
-│ │ └── default.conf # Reverse proxy HTTPS
-│ ├── pgadmin/
-│ │ └── servers.json # Configuración servidores
-│ ├── postgres/
-│ │ └── init.sql # Inicialización BD
-│ └── shellTest/
-│ ├── check-all.sh # Verificación completa
-│ ├── reset-all.sh # Reset BD (mantiene pgadmin)
-│ ├── reset-pgadmin.sh # Reset solo pgadmin
-│ ├── backup-db.sh # Backup BD
-│ └── restore-db.sh # Restaurar BD├── database/
-├── database/
-│ └── sql/
-│ ├── 01_schema.sql # Esquema v2.1.0 (UUID + Monedas)
-│ ├── 02_functions.sql # Funciones PL/pgSQL v2.0.0
-│ └── 03_seed.sql # Datos iniciales v2.1.0├── backend/
-│ ├── src/
-│ ├── pom.xml
-│ └── README.md
-├── frontend/
-│ ├── src/
-│ ├── package.json
-│ └── README.md
-└── docs/
-├── README.md
-└── prompts/
-└── prompt_inicial.md
+- **`investment-tracker/`** - Raíz del proyecto
+  - **`docker/`** - Configuración de contenedores
+    - `docker-compose.yml` - Orquestación de servicios
+    - `Dockerfile.backend` - Imagen Spring Boot
+    - `Dockerfile.frontend` - Imagen React
+    - **`nginx/`** - Reverse proxy
+      - `default.conf` - Configuración HTTPS
+    - **`pgadmin/`** - Admin DB
+      - `servers.json` - Configuración servidores
+    - **`postgres/`** - Base de datos
+      - `init.sql` - Inicialización BD
+    - **`shellTest/`** - Scripts de mantenimiento
+      - `check-all.sh` - Verificación completa
+      - `reset-all.sh` - Reset BD (mantiene pgadmin)
+      - `reset-pgadmin.sh` - Reset solo pgadmin
+      - `backup-db.sh` - Backup BD
+      - `restore-db.sh` - Restaurar BD
+  - **`database/`** - Scripts SQL
+    - **`sql/`**
+      - `01_schema.sql` - Esquema v2.1.0 (UUID + Monedas)
+      - `02_functions.sql` - Funciones PL/pgSQL v2.0.0
+      - `03_seed.sql` - Datos iniciales v2.1.0
+  - **`backend/`** - API REST Spring Boot
+    - `pom.xml` - Dependencias Maven
+    - **`src/`** - Código fuente Java 21
+  - **`frontend/`** - SPA React 18
+    - `package.json` - Dependencias npm
+    - **`src/`** - Código fuente React
+  - **`docs/`** - Documentación
+    - `README.md` - Documento principal
+    - **`prompts/`** - Historial de prompts
 
-#### Estructura detallada de archivos
+#### Estructura detallada de archivos (62 archivos, 46 directorios)
 
-investment-tracker/
-│
-├── .vscode/
-│ └── settings.json # Configuración de VS Code
-│
-├── .gitignore # Archivos ignorados por Git
-├── README.md # Documentación principal del proyecto
-│
-├── docker/
-│ ├── docker-compose.yml # Orquestación de servicios
-│ ├── .env # Variables de entorno Docker
-│ ├── Dockerfile.backend # Imagen para Spring Boot
-│ ├── Dockerfile.frontend # Imagen para React
-│ ├── nginx/
-│ │ ├── default.conf # Configuración de Nginx reverse proxy
-│ │ ├── nginx-frontend.conf # Configuración Nginx frontend
-│ │ └── ssl/
-│ │ ├── localhost.crt # Certificado SSL autofirmado
-│ │ └── localhost.key # Llave privada SSL
-│ ├── pgadmin/
-│ │ └── servers.json # Configuración servidores pgAdmin
-│ ├── postgres/
-│ │ └── init.sql # Script de inicialización de BD
-│ └── shellTest/
-│ ├── check-all.sh # Verificación completa del sistema
-│ ├── reset-all.sh # Reset BD (mantiene pgadmin)
-│ ├── reset-pgadmin.sh # Reset solo pgadmin
-│ ├── backup-db.sh # Backup de base de datos
-│ └── restore-db.sh # Restaurar desde backup
-│
-├── database/
-│ └── sql/
-│ ├── 01_schema.sql # Esquema v2.1.0 (UUID + Monedas)
-│ ├── 02_functions.sql # Funciones PL/pgSQL v2.0.0
-│ └── 03_seed.sql # Datos iniciales v2.1.0
-│
-├── backend/
-│ ├── pom.xml # Dependencias Maven
-│ ├── README.md # Documentación del backend
-│ └── src/
-│ ├── main/
-│ │ ├── java/com/investmenttracker/
-│ │ │ ├── InvestmentTrackerApplication.java # Clase principal
-│ │ │ ├── config/
-│ │ │ │ ├── SecurityConfig.java # Configuración Spring Security
-│ │ │ │ ├── JwtConfig.java # Configuración JWT
-│ │ │ │ ├── CorsConfig.java # Configuración CORS
-│ │ │ │ └── SwaggerConfig.java # Documentación API
-│ │ │ ├── controller/
-│ │ │ │ ├── AuthController.java # Login/Registro
-│ │ │ │ ├── UsuarioController.java # CRUD usuarios
-│ │ │ │ ├── PlataformaController.java # Gestión plataformas
-│ │ │ │ ├── ComisionController.java # Gestión comisiones
-│ │ │ │ ├── TransaccionController.java # Compras/Ventas
-│ │ │ │ └── CalculadoraController.java # Cálculos óptimos
-│ │ │ ├── model/
-│ │ │ │ ├── entity/
-│ │ │ │ │ ├── Usuario.java
-│ │ │ │ │ ├── Rol.java
-│ │ │ │ │ ├── Moneda.java
-│ │ │ │ │ ├── Plataforma.java
-│ │ │ │ │ ├── Comision.java
-│ │ │ │ │ ├── Transaccion.java
-│ │ │ │ │ └── CalculoHistorico.java
-│ │ │ │ └── dto/
-│ │ │ │ ├── LoginRequest.java
-│ │ │ │ ├── RegisterRequest.java
-│ │ │ │ ├── AuthResponse.java
-│ │ │ │ ├── TransaccionRequest.java
-│ │ │ │ ├── TransaccionDTO.java
-│ │ │ │ ├── ResumenInversionesDTO.java
-│ │ │ │ ├── CalculoOptimoDTO.java
-│ │ │ │ └── ComisionDTO.java
-│ │ │ ├── repository/
-│ │ │ │ ├── UsuarioRepository.java
-│ │ │ │ ├── RolRepository.java
-│ │ │ │ ├── MonedaRepository.java
-│ │ │ │ ├── PlataformaRepository.java
-│ │ │ │ ├── ComisionRepository.java
-│ │ │ │ ├── TransaccionRepository.java
-│ │ │ │ └── CalculoHistoricoRepository.java
-│ │ │ ├── service/
-│ │ │ │ ├── AuthService.java
-│ │ │ │ ├── JwtService.java
-│ │ │ │ ├── UserService.java
-│ │ │ │ ├── PlataformaService.java
-│ │ │ │ ├── ComisionService.java
-│ │ │ │ ├── TransaccionService.java
-│ │ │ │ └── CalculadoraVentaService.java
-│ │ │ ├── security/
-│ │ │ │ ├── JwtAuthFilter.java
-│ │ │ │ ├── JwtTokenProvider.java
-│ │ │ │ └── UserDetailsServiceImpl.java
-│ │ │ └── exception/
-│ │ │ ├── GlobalExceptionHandler.java
-│ │ │ ├── NoPositionException.java
-│ │ │ └── CustomExceptions.java
-│ │ └── resources/
-│ │ ├── application.yml # Configuración principal
-│ │ ├── application-dev.yml # Config desarrollo
-│ │ └── application-prod.yml # Config producción
-│ └── test/
-│ └── java/com/investmenttracker/
-│ ├── controller/
-│ │ ├── AuthControllerTest.java
-│ │ └── TransaccionControllerTest.java
-│ ├── service/
-│ │ ├── CalculadoraVentaServiceTest.java
-│ │ └── TransaccionServiceTest.java
-│ └── repository/
-│ └── TransaccionRepositoryTest.java
-│
-├── frontend/
-│ ├── package.json # Dependencias npm
-│ ├── package-lock.json # Lock file npm
-│ ├── README.md # Documentación frontend
-│ ├── .env.development # Variables entorno desarrollo
-│ ├── .env.production # Variables entorno producción
-│ ├── public/
-│ │ ├── index.html # HTML principal
-│ │ ├── favicon.ico # Favicon
-│ │ └── manifest.json # PWA manifest
-│ └── src/
-│ ├── index.js # Punto de entrada React
-│ ├── App.js # Componente principal
-│ ├── App.test.js # Tests de App
-│ ├── context/
-│ │ └── AuthContext.js # Contexto de autenticación
-│ ├── hooks/
-│ │ ├── useAuth.js # Hook de autenticación
-│ │ ├── useTransacciones.js # Hook de transacciones
-│ │ └── useCalculadora.js # Hook de calculadora
-│ ├── services/
-│ │ ├── api.js # Configuración Axios
-│ │ ├── authService.js # Servicios auth
-│ │ ├── transaccionService.js # Servicios transacciones
-│ │ └── calculadoraService.js # Servicios calculadora
-│ ├── components/
-│ │ ├── common/
-│ │ │ ├── Navbar.jsx # Barra de navegación
-│ │ │ ├── Sidebar.jsx # Menú lateral
-│ │ │ ├── Footer.jsx # Pie de página
-│ │ │ ├── LoadingSpinner.jsx # Indicador de carga
-│ │ │ ├── ErrorMessage.jsx # Mensaje de error
-│ │ │ ├── PrivateRoute.jsx # Ruta protegida
-│ │ │ └── Notification.jsx # Notificaciones
-│ │ ├── dashboard/
-│ │ │ ├── Dashboard.jsx # Panel principal
-│ │ │ ├── ResumenInversiones.jsx # Resumen de inversiones
-│ │ │ ├── GraficoRendimiento.jsx # Gráficos de rendimiento
-│ │ │ ├── UltimasTransacciones.jsx # Últimas transacciones
-│ │ │ └── RendimientoPorSimbolo.jsx # Rendimiento por acción
-│ │ ├── transacciones/
-│ │ │ ├── Transacciones.jsx # Lista de transacciones
-│ │ │ ├── TransaccionForm.jsx # Formulario de transacción
-│ │ │ ├── TransaccionCard.jsx # Tarjeta de transacción
-│ │ │ └── FiltrosTransacciones.jsx # Filtros de búsqueda
-│ │ ├── calculadora/
-│ │ │ ├── CalculadoraVenta.jsx # Calculadora de venta óptima
-│ │ │ ├── ResultadosCalculo.jsx # Resultados del cálculo
-│ │ │ └── ConfigCalculadora.jsx # Configuración de cálculo
-│ │ ├── plataformas/
-│ │ │ ├── Plataformas.jsx # Gestión de plataformas
-│ │ │ ├── PlataformaForm.jsx # Formulario de plataforma
-│ │ │ └── ComisionesManager.jsx # Gestión de comisiones
-│ │ └── auth/
-│ │ ├── Login.jsx # Página de login
-│ │ ├── Register.jsx # Página de registro
-│ │ └── PasswordReset.jsx # Recuperar contraseña
-│ ├── pages/
-│ │ ├── Home.jsx # Página principal
-│ │ ├── Dashboard.jsx # Dashboard completo
-│ │ ├── Transacciones.jsx # Página de transacciones
-│ │ ├── Calculadora.jsx # Página de calculadora
-│ │ ├── Plataformas.jsx # Página de plataformas
-│ │ ├── Perfil.jsx # Perfil de usuario
-│ │ └── Configuracion.jsx # Configuración
-│ ├── styles/
-│ │ ├── global.css # Estilos globales
-│ │ ├── variables.css # Variables CSS
-│ │ ├── animations.css # Animaciones
-│ │ ├── components/
-│ │ │ ├── navbar.css
-│ │ │ ├── dashboard.css
-│ │ │ ├── transacciones.css
-│ │ │ ├── calculadora.css
-│ │ │ └── forms.css
-│ │ └── themes/
-│ │ ├── light.css # Tema claro
-│ │ └── dark.css # Tema oscuro
-│ └── utils/
-│ ├── formatters.js # Formateo de moneda/fechas
-│ ├── validators.js # Validaciones
-│ └── constants.js # Constantes
-│
-└── docs/
-├── README.md # Documentación del proyecto
-├── CHANGELOG.md # Historial de cambios
-├── CONTRIBUTING.md # Guía de contribución
-├── prompts/
-│ ├── prompt_inicial.md # Prompt original
-│ ├── prompt_mejoras.md # Mejoras solicitadas
-│ └── prompt_historial.md # Historial de cambios
-├── diagrams/
-│ ├── architecture.png # Diagrama de arquitectura
-│ ├── data-flow.png # Diagrama de flujo de datos
-│ ├── sequence/
-│ │ ├── login-sequence.png # Secuencia de login
-│ │ └── calculo-sequence.png # Secuencia de cálculo
-│ └── components/
-│ └── component-tree.png # Árbol de componentes
-└── guides/
-├── installation.md # Guía de instalación
-├── deployment.md # Guía de despliegue
-├── development.md # Guía de desarrollo
-├── testing.md # Guía de pruebas
-└── security.md # Guía de seguridad
+- **`investment-tracker/`** - Raíz del proyecto
+  - `.gitignore` - Archivos ignorados por Git
+  - `LICENSE` - Licencia del proyecto
+  - `README.md` - Documentación principal
+  - **`.vscode/`**
+    - `settings.json` - Configuración de VS Code
+  - **`docker/`** - Contenedores y orquestación
+    - `.env` - Variables de entorno Docker
+    - `docker-compose.yml` - Orquestación de servicios
+    - `Dockerfile.backend` - Imagen para Spring Boot
+    - `Dockerfile.frontend` - Imagen para React
+    - **`nginx/`**
+      - `default.conf` - Reverse proxy HTTPS
+      - `nginx-frontend.conf` - Servidor frontend
+      - **`ssl/`**
+        - `localhost.crt` - Certificado SSL autofirmado
+        - `localhost.key` - Llave privada SSL
+    - **`pgadmin/`**
+      - `servers.json` - Configuración servidores pgAdmin
+    - **`postgres/`**
+      - `init.sql` - Inicialización de BD
+    - **`shellTest/`** - Scripts de mantenimiento
+      - `check-all.sh` - Verificación completa
+      - `reset-all.sh` - Reset BD (mantiene pgadmin)
+      - `reset-pgadmin.sh` - Reset solo pgadmin
+      - `backup-db.sh` - Backup de BD
+      - `restore-db.sh` - Restaurar desde backup
+      - `final-check-uuid.sh` - Verificación UUID
+  - **`database/`** - Base de datos
+    - **`sql/`**
+      - `01_schema.sql` - Esquema v2.1.0 (UUID + Monedas)
+      - `02_functions.sql` - Funciones PL/pgSQL v2.0.0
+      - `03_seed.sql` - Datos iniciales v2.1.0
+    - **`MER/`**
+      - `diagram.md` - Diagrama entidad-relación
+  - **`backend/`** - API REST Spring Boot 3.x + Java 21
+    - `pom.xml` - Dependencias Maven
+    - **`src/main/java/com/investmenttracker/`**
+      - `InvestmentTrackerApplication.java` - Clase principal (puerto 7700)
+      - **`config/`**
+        - `SecurityConfig.java` - Spring Security + JWT
+      - **`controller/`** - Endpoints REST
+        - `AuthController.java` - Login + restart-password
+        - `TestValidationController.java` - Health check
+      - **`service/`** - Lógica de negocio
+        - `LoginService.java` - Autenticación + control de intentos
+        - `JwtService.java` - Generación/validación JWT
+        - `RestartUserPasswordService.java` - Restablecer contraseña (ADMIN)
+      - **`component/`** - Componentes reutilizables
+        - `LoginComponent.java` - Control de intentos fallidos y bloqueos
+        - `SecurityLoginComponent.java` - Encriptación BCrypt + validación
+      - **`security/`** - Capa de seguridad
+        - `JwtAuthFilter.java` - Filtro de autenticación JWT
+        - `UserDetailsServiceImpl.java` - Carga usuarios desde BD
+      - **`model/`** - Modelo de datos
+        - **`entity/`** - `User.java`, `Role.java`
+        - **`enums/`** - `ErrorCode.java`, `LockLevel.java`, `SuccessfulCode.java`
+        - **`request/`** - `LoginRequest.java`, `RestartPasswordRequest.java`
+        - **`response/`** - `LoginResponse.java`, `ErrorResponse.java`, `SuccessResponse.java`
+        - **`dto/`** - `UserPasswordDTO.java`
+      - **`repository/`** - `UserRepository.java`
+      - **`exception/`** - `AuthenticationException.java`, `GlobalExceptionHandler.java`
+    - **`src/main/resources/`**
+      - `application.yml` - Configuración (DB, JWT, puerto 7700)
+    - **`src/test/java/com/investmenttracker/`** - Pruebas (32 tests)
+      - **`controller/`** - `AuthIntegrationTest.java` (26 pruebas de integración)
+      - **`service/`** - `LoginServiceTest.java` (6 pruebas unitarias)
+  - **`frontend/`** - SPA React 18 (estructura inicial)
+    - `package.json` - Dependencias npm
+    - `README.md` - Documentación frontend
+    - **`src/`**
+      - `App.js` - Componente principal
+      - **`component/`** - `Dashboard.js`
+      - **`services/`** - `api.js` - Configuración Axios
+      - **`styles/`** - `global.css` - Estilos globales
+  - **`docs/`** - Documentación
+    - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
+    - **`prompts/`** - `prompt_inicial.md` - Prompt original
+    - **`serverConfig/`** - `popOS22.04.md` - Guía de instalación
+    - **`sql/`** - `consultasBasicas.sql` - Consultas de referencia
+
+---
 
 # Investment Tracker Pro - Documentación Completa
 
 ## ÍNDICE
 
-1. [Arquitectura del Sistema](#1-arquitectura-del-sistema)
-2. [Modelo Entidad-Relación (MER)](#2-modelo-entidad-relación)
-3. [Configuración del Entorno de Desarrollo](#3-configuración-del-entorno)
-4. [Base de Datos](#4-base-de-datos)
-5. [Backend (Java Spring Boot)](#5-backend)
-6. [Frontend (React)](#6-frontend)
-7. [Seguridad JWT y HTTPS](#7-seguridad)
-8. [🐳 Servicios Docker](#8-🐳-Servicios-Docker)
-9. [🔧 Scripts de Mantenimiento](#9-🔧-Scripts-de-Mantenimiento)
-10. [Calculadora de Venta Óptima](#10-calculadora)
-11. [Pruebas y Debugging](#11-pruebas)
+- [1. Arquitectura del Sistema](#1-arquitectura-del-sistema)
+  - [Diagrama de Arquitectura](#diagrama-de-arquitectura)
+
+  - [Diagrama de Flujo: Login + Restart Password](#diagrama-de-flujo-login--restart-password)
+
+  - [Contenedores Docker](#contenedores-docker)
+
+  - [Diagrama MER (Modelo Entidad-Relación)](#diagrama-mer-modelo-entidad-relación)
+
+  - [Relaciones Clave](#relaciones-clave)
+
+- [2. Base de Datos](#2-base-de-datos)
+  - [Funciones PL/pgSQL Disponibles](#funciones-plpgsql-disponibles)
+
+  - [Datos de Prueba](#datos-de-prueba)
+
+- [3. BACKEND - JAVA SPRING BOOT 3.x](#3-backend---api-rest)
+  - [Servicios Publicados](#servicios-publicados)
+
+  - [Seguridad](#seguridad)
+
+  - [Pruebas](#pruebas)
+
+- [4. Servicios Docker](#4-servicios-docker)
+
+- [5. Scripts de Mantenimiento](#5-scripts-de-mantenimiento)
+
+- [6. Estructura del Proyecto](#6-estructura-del-proyecto)
+
+- [7. Stack Tecnológico](#7-stack-tecnológico)
+
+- [8. Historial de Versiones](#8-historial-de-versiones)
+
+- [9. Requisitos Funcionales](#9-requisitos-funcionales)
 
 ---
 
@@ -413,134 +299,119 @@ investment-tracker/
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Diagrama MER
+### Diagrama MER (Modelo Entidad-Relación)
 
-──────────────┐ ┌──────────────┐
-│ USUARIOS │ │ ROLES │
-├──────────────┤ ├──────────────┤
-│ PK id (UUID) │──┐ │ PK id (UUID) │
-│ username │ │ │ nombre │
-│ password │ │ │ desc │
-│ email │ │ └──────────────┘
-│ created_at│ │ ▲
-└──────────────┘ │ │
-│ │ ┌──────┴──────┐
-│ └────┤USUARIO_ROLES│
-│ ├──────────────┤
-│ │ FK usuario_id│
-│ │ FK rol_id │
-│ └──────────────┘
-│
-│ ┌──────────────┐ ┌──────────────┐
-├──┤ PLATAFORMAS │ │ MONEDAS │
-│ ├──────────────┤ ├──────────────┤
-│ │ PK id (UUID) │ │ PK id (UUID) │
-│ │ nombre │ ┌──│ codigo │
-│ │ desc │ │ │ nombre │
-│ │ FK usuario_id│ │ │ simbolo │
-│ │ FK moneda_id │───┘ │ pais │
-│ └──────┬───────┘ └──────────────┘
-│ │
-│ ┌──────▼──────────┐
-│ │ COMISIONES │
-│ ├─────────────────┤
-│ │ PK id (UUID) │
-│ │ porcentaje │
-│ │ valor_fijo │
-│ │ FK moneda_id │───┐
-│ │ fecha_inicio │ │
-│ │ fecha_fin │ │
-│ │ FK plataforma_id│ │
-│ └─────────────────┘ │
-│ │
-│ ┌──────────────┐ │
-├──┤ TRANSACCIONES│ │
-│ ├──────────────┤ │
-│ │ PK id (UUID) │ │
-│ │ tipo │ │
-│ │ simbolo │ │
-│ │ cantidad │ │
-│ │ precio_uni│ │
-│ │ comision │ │
-│ │ total │ │
-│ │ fecha │ │
-│ │ FK usuario_id│ │
-│ │ FK plataforma│ │
-│ │ FK moneda_id │──────┘
-│ └──────────────┘
-│
-│ ┌──────────────┐
-└──┤ CALCULOS_HIST│
-├──────────────┤
-│ PK id (UUID) │
-│ precio_min│
-│ cant_opt │
-│ ganancia │
-│ created_at│
-│ FK usuario_id│
-└──────────────┘
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                    INVESTMENT TRACKER - MER v2.1.0                  │
+│                    Todas las PK son UUID v4                         │
+└────────────────────────────────────────────────────────────────────┘
 
-## 3. CONFIGURACIÓN DEL ENTORNO DE DESARROLLO (Pop OS)
+┌─────────────────────┐         ┌─────────────────────┐
+│      ROLES          │         │      USUARIOS       │
+├─────────────────────┤         ├─────────────────────┤
+│ 🔑 id        UUID   │         │ 🔑 id        UUID   │
+│    nombre    VARCHAR│         │    username  VARCHAR │
+│    desc      TEXT   │         │    password  VARCHAR │
+│    created_at TIMEST│         │    email     VARCHAR │
+└──────────┬──────────┘         │    nombre    VARCHAR │
+           │                    │    activo    BOOLEAN │
+           │  ┌─────────────────│    ultimo_login TIMEST│
+           │  │                 │    created_at TIMEST │
+           │  │                 │    updated_at TIMEST │
+           │  │                 └──────────────────────┘
+           │  │
+           │  │                 ┌──────────────────────┐
+           │  └─────────────────┤   USUARIO_ROLES      │
+           └────────────────────┤   (N:M)              │
+                                ├──────────────────────┤
+                                │ 🔑 FK usuario_id UUID│
+                                │ 🔑 FK rol_id     UUID│
+                                │    asignado_en TIMEST │
+                                └──────────────────────┘
 
-### 3.1 Instalación de Dependencias
+┌────────────────────────────────────────────────────────────────────┐
+│                        TABLAS DE NEGOCIO                           │
+└────────────────────────────────────────────────────────────────────┘
 
-Ejecutar el paso a paso del documento docs/serverConfig/popOS22.04.md
+┌─────────────────────┐         ┌─────────────────────┐
+│      MONEDAS        │         │    PLATAFORMAS      │
+│  (54 divisas)       │         ├─────────────────────┤
+├─────────────────────┤         │ 🔑 id        UUID   │
+│ 🔑 id        UUID   │         │    nombre    VARCHAR │
+│    codigo    CHAR(3)│         │    desc      TEXT   │
+│    nombre    VARCHAR│         │    tipo      VARCHAR │
+│    simbolo   VARCHAR│         │    activo    BOOLEAN │
+│    pais      VARCHAR│         │    created_at TIMEST │
+│    activo    BOOLEAN │         │ 📎 FK usuario UUID  │
+│    created_at TIMEST │         │ 📎 FK moneda  UUID  │
+└──────────┬──────────┘         └──────────┬───────────┘
+           │                               │
+           │                    ┌──────────┴───────────┐
+           │                    │     COMISIONES       │
+           │                    ├──────────────────────┤
+           │                    │ 🔑 id        UUID   │
+           ├────────────────────│ 📎 FK plataforma UUID│
+           │                    │    porcentaje DECIMAL│
+           │                    │    valor_fijo DECIMAL│
+           │                    │ 📎 FK moneda  UUID   │
+           │                    │    desc      VARCHAR │
+           │                    │    fecha_inicio TIMEST│
+           │                    │    fecha_fin  TIMEST │
+           │                    │    activo    BOOLEAN │
+           │                    │    created_at TIMEST │
+           │                    └──────────────────────┘
+           │
+           │  ┌──────────────────────────────────────┐
+           │  │           TRANSACCIONES              │
+           │  ├──────────────────────────────────────┤
+           │  │ 🔑 id        UUID                    │
+           └──│ 📎 FK usuario UUID                   │
+              │ 📎 FK plataforma UUID                │
+              │ 📎 FK moneda  UUID                   │
+              │    tipo      VARCHAR (COMPRA/VENTA)  │
+              │    simbolo   VARCHAR                 │
+              │    empresa   VARCHAR                 │
+              │    cantidad  INTEGER                 │
+              │    precio_uni DECIMAL                │
+              │    comision  DECIMAL                 │
+              │    valor_total DECIMAL               │
+              │    fecha     TIMESTAMP               │
+              │    notas     TEXT                    │
+              │    created_at TIMESTAMP              │
+              └──────────────────────────────────────┘
 
-Docker version 29.5.2, build 79eb04c
-docker-compose version 1.29.2, build unknown
+              ┌──────────────────────────────────────┐
+              │         CALCULOS_HIST                │
+              ├──────────────────────────────────────┤
+              │ 🔑 id        UUID                    │
+              │ 📎 FK usuario UUID                   │
+              │ 📎 FK plataforma UUID                │
+              │    simbolo   VARCHAR                 │
+              │    ganancia_deseada DECIMAL          │
+              │    precio_minimo DECIMAL             │
+              │    cantidad_optima INTEGER           │
+              │    comision_estimada DECIMAL         │
+              │    ganancia_neta DECIMAL             │
+              │    parametros_json JSONB             │
+              │    created_at TIMESTAMP              │
+              └──────────────────────────────────────┘
+```
 
-openjdk 21.0.11 2026-04-21
-OpenJDK Runtime Environment (build 21.0.11+10-1-22.04.2-Ubuntu)
-OpenJDK 64-Bit Server VM (build 21.0.11+10-1-22.04.2-Ubuntu, mixed mode, sharing)
+### Relaciones Clave
 
-node --version && npm --version
-v20.20.2
-10.8.2
-
-Apache Maven 3.6.3
-Maven home: /usr/share/maven
-Java version: 21.0.11, vendor: Ubuntu, runtime: /usr/lib/jvm/java-21-openjdk-amd64
-Default locale: es_CO, platform encoding: UTF-8
-OS name: "linux", version: "6.17.9-76061709-generic", arch: "amd64", family: "unix"
-
-code --install-extension vscjava.vscode-java-pack
-code --install-extension ms-azuretools.vscode-docker
-code --install-extension ms-ossdata.vscode-postgresql
-code --install-extension dbaeumer.vscode-eslint
-code --install-extension esbenp.prettier-vscode
-
-### 3.2 Configurar VS Code para Desarrollo
-
-Abre tu proyecto en VS Code.
-Crea una carpeta llamada .vscode en la raíz del proyecto si no existe.
-Dentro de esa carpeta, crea un archivo llamado settings.json.
-Copia y pega el contenido:
-{
-"java.configuration.updateBuildConfiguration": "automatic",
-"java.compile.nullAnalysis.mode": "automatic",
-"editor.formatOnSave": true,
-"editor.codeActionsOnSave": {
-"source.organizeImports": "explicit"
-}
-}
-
-## 4. BASE DE DATOS
-
-### Tablas del Sistema (v2.1.0)
-
-| #   | Tabla            | Descripción                                | PK                    |
-| --- | ---------------- | ------------------------------------------ | --------------------- |
-| 1   | `schema_version` | Control de versiones de scripts ejecutados | UUID                  |
-| 2   | `roles`          | Roles del sistema (ADMIN, USER, PREMIUM)   | UUID                  |
-| 3   | `usuarios`       | Usuarios registrados en el sistema         | UUID                  |
-| 4   | `usuario_roles`  | Relación muchos a muchos usuarios-roles    | Compuesta (UUID+UUID) |
-| 5   | `monedas`        | Catálogo de divisas internacionales        | UUID                  |
-| 6   | `plataformas`    | Plataformas de inversión por usuario       | UUID                  |
-| 7   | `comisiones`     | Estructura de comisiones por plataforma    | UUID                  |
-| 8   | `transacciones`  | Registro de compras y ventas de acciones   | UUID                  |
-| 9   | `calculos_hist`  | Historial de cálculos de venta óptima      | UUID                  |
-
-### Catálogo de Monedas
+| Origen      | Destino       | Tipo | Descripción                                   |
+| ----------- | ------------- | ---- | --------------------------------------------- |
+| usuarios    | usuario_roles | 1:N  | Un usuario tiene varios roles                 |
+| roles       | usuario_roles | 1:N  | Un rol pertenece a varios usuarios            |
+| usuarios    | plataformas   | 1:N  | Un usuario registra varias plataformas        |
+| monedas     | plataformas   | 1:N  | Una plataforma opera en una moneda            |
+| plataformas | comisiones    | 1:N  | Una plataforma tiene estructura de comisiones |
+| monedas     | comisiones    | 1:N  | La comisión se cobra en una moneda            |
+| usuarios    | transacciones | 1:N  | Un usuario realiza varias transacciones       |
+| plataformas | transacciones | 1:N  | Una transacción se ejecuta en una plataforma  |
+| monedas     | transacciones | 1:N  | Una transacción se registra en una moneda     |
+| usuarios    | calculos_hist | 1:N  | Historial de cálculos por usuario             |
 
 Se incluyen **54 divisas internacionales** organizadas por región: principales (USD, COP, EUR, GBP), Américas (16), Europa (11), Asia-Pacífico (14) y Medio Oriente/África (9). Cada moneda tiene código ISO de 3 letras, nombre, símbolo y país asociado.
 
@@ -561,7 +432,7 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 - **5 plataformas**: eToro, Interactive Brokers, Robinhood, Binance (USD) y Trii (COP)
 - **11 transacciones** de ejemplo en USD y COP con fechas en UTC
 
-## 5. BACKEND - JAVA SPRING BOOT 3.x
+## 3. BACKEND - JAVA SPRING BOOT 3.x
 
 ### Servicios Publicados
 
@@ -580,39 +451,13 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 - Validaciones de contraseña: 8+ caracteres, 1 mayúscula, 1 carácter especial, sin comillas
 - Validación case-insensitive para email, case-sensitive para contraseñas
 
-### Estructura del Backend
-
-backend/src/main/java/com/investmenttracker/
-├── controller/
-│ ├── AuthController.java # Login, restart-password
-│ └── TestValidationController.java # Health check
-├── service/
-│ ├── LoginService.java # Lógica de autenticación
-│ ├── JwtService.java # Generación/validación JWT
-│ └── RestartUserPasswordService.java # Restablecimiento de contraseña
-├── component/
-│ ├── LoginComponent.java # Control de intentos y bloqueos
-│ └── SecurityLoginComponent.java # Encriptación y validación
-├── security/
-│ ├── JwtAuthFilter.java # Filtro de autenticación JWT
-│ └── UserDetailsServiceImpl.java # Carga de usuarios desde BD
-├── model/
-│ ├── entity/User.java, Role.java
-│ ├── enums/ErrorCode.java, LockLevel.java, SuccessfulCode.java
-│ ├── request/LoginRequest.java, RestartPasswordRequest.java
-│ └── response/LoginResponse.java, ErrorResponse.java, SuccessResponse.java
-├── repository/UserRepository.java
-└── exception/
-├── AuthenticationException.java
-└── GlobalExceptionHandler.java
-
 ### Pruebas
 
 - **32 pruebas automatizadas** (26 integración + 6 unitarias)
 - Cobertura: login, restart-password, validaciones de contraseña, control de roles, bloqueos
 - Ejecutar: `mvn test`
 
-## 🐳 Servicios Docker
+## 4. Servicios Docker
 
 | Servicio    | Puerto | URL                   |
 | ----------- | ------ | --------------------- |
@@ -622,7 +467,7 @@ backend/src/main/java/com/investmenttracker/
 | Frontend    | 3000   | http://localhost:3000 |
 | Nginx HTTPS | 443    | https://localhost     |
 
-## 🔧 Scripts de Mantenimiento
+## 5. Scripts de Mantenimiento
 
 ### Verificar sistema completo
 
