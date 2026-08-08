@@ -9,41 +9,55 @@ import com.investmenttracker.service.RestartUserPasswordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
+    @NonNull
     private final LoginService loginService;
+
+    @NonNull
     private final RestartUserPasswordService restartUserPasswordService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody @NonNull LoginRequest request) {
         LoginResponse response = loginService.login(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/restart-password")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SuccessResponse> restartPassword(@Valid @RequestBody RestartPasswordRequest request) {
+    public ResponseEntity<SuccessResponse> restartPassword(@Valid @RequestBody @NonNull RestartPasswordRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        // Doble verificación de rol ADMIN
-        boolean isAdmin = authentication.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .anyMatch(auth -> auth.equals("ROLE_ADMIN"));
-        
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+
+        boolean isAdmin = false;
+        for (GrantedAuthority authority : authorities) {
+            if ("ROLE_ADMIN".equals(authority.getAuthority())) {
+                isAdmin = true;
+                break;
+            }
+        }
+
         if (!isAdmin) {
             return ResponseEntity.status(403).build();
         }
-        
+
         String adminUsername = authentication.getName();
+        if (adminUsername == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         SuccessResponse response = restartUserPasswordService.restartPassword(request, adminUsername);
         return ResponseEntity.ok(response);
     }

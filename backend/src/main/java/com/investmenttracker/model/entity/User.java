@@ -2,6 +2,7 @@ package com.investmenttracker.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.lang.NonNull;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,18 +21,22 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @NonNull
     @Column(unique = true, nullable = false, length = 100)
     private String username;
 
+    @NonNull
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @NonNull
     @Column(unique = true, nullable = false, length = 255)
     private String email;
 
     @Column(name = "nombre_completo", length = 200)
     private String nombreCompleto;
 
+    @NonNull
     @Column(nullable = false)
     @Builder.Default
     private Boolean activo = true;
@@ -45,6 +50,7 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @NonNull
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "usuario_roles",

@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -43,11 +44,13 @@ class LoginServiceTest {
 
     private User demoUser;
     private User adminUser;
-    private BCryptPasswordEncoder encoder;
 
     @BeforeEach
     void setUp() {
-        encoder = new BCryptPasswordEncoder();
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        String demoPassHash = Objects.requireNonNull(encoder.encode("Demo123!"), "Hash demo no puede ser null");
+        String adminPassHash = Objects.requireNonNull(encoder.encode("Admin123!"), "Hash admin no puede ser null");
 
         Role userRole = Role.builder()
                 .id(UUID.randomUUID())
@@ -59,24 +62,27 @@ class LoginServiceTest {
                 .nombre("ROLE_ADMIN")
                 .build();
 
+        Set<Role> demoRoles = Objects.requireNonNull(Set.of(userRole), "Roles demo no puede ser null");
+        Set<Role> adminRoles = Objects.requireNonNull(Set.of(userRole, adminRole), "Roles admin no puede ser null");
+
         demoUser = User.builder()
                 .id(UUID.randomUUID())
                 .username("demo_user")
-                .passwordHash(encoder.encode("Demo123!"))
+                .passwordHash(demoPassHash)
                 .email("demo@test.com")
                 .nombreCompleto("Usuario Demo")
                 .activo(true)
-                .roles(Set.of(userRole))
+                .roles(demoRoles)
                 .build();
 
         adminUser = User.builder()
                 .id(UUID.randomUUID())
                 .username("admin")
-                .passwordHash(encoder.encode("Admin123!"))
+                .passwordHash(adminPassHash)
                 .email("admin@test.com")
                 .nombreCompleto("Administrador")
                 .activo(true)
-                .roles(Set.of(userRole, adminRole))
+                .roles(adminRoles)
                 .build();
     }
 
@@ -99,13 +105,9 @@ class LoginServiceTest {
         assertEquals("demo_user", response.getUsername());
         assertEquals("jwt-token-demo-user-xyz123456789", response.getToken());
         assertEquals("Bearer", response.getTokenType());
-
         verify(loginComponent).resetFailedAttempts(demoUser);
 
         System.out.println("✅ UT-01: Login demo_user exitoso");
-        System.out.println("   Username: " + response.getUsername());
-        System.out.println(
-                "   Token: " + response.getToken().substring(0, Math.min(20, response.getToken().length())) + "...");
     }
 
     @Test
@@ -126,13 +128,8 @@ class LoginServiceTest {
         assertNotNull(response);
         assertEquals("admin", response.getUsername());
         assertEquals("jwt-token-admin-abc987654321", response.getToken());
-        assertNotEquals("jwt-token-demo-user-xyz123456789", response.getToken(),
-                "El token de admin debe ser diferente al de demo_user");
 
         System.out.println("✅ UT-02: Login admin exitoso");
-        System.out.println("   Token admin: "
-                + response.getToken().substring(0, Math.min(20, response.getToken().length())) + "...");
-        System.out.println("   Token es diferente al de demo_user: ✅");
     }
 
     @Test
@@ -148,15 +145,13 @@ class LoginServiceTest {
         when(loginComponent.getLockInfo("demo_user"))
                 .thenReturn(new LoginComponent.LockInfo(false, 0, 2));
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> {
-            loginService.login(request);
-        });
+        AuthenticationException exception = assertThrows(AuthenticationException.class,
+                () -> loginService.login(request));
 
         assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
         verify(loginComponent).recordFailedAttempt("demo_user");
 
         System.out.println("✅ UT-03: Contraseña incorrecta detectada");
-        System.out.println("   Error: " + exception.getMessage());
     }
 
     @Test
@@ -171,14 +166,12 @@ class LoginServiceTest {
         when(loginComponent.getLockInfo("demo_user"))
                 .thenReturn(new LoginComponent.LockInfo(true, 300, 0));
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> {
-            loginService.login(request);
-        });
+        AuthenticationException exception = assertThrows(AuthenticationException.class,
+                () -> loginService.login(request));
 
         assertEquals(ErrorCode.ACCOUNT_LOCKED, exception.getErrorCode());
 
         System.out.println("✅ UT-04: Usuario bloqueado detectado");
-        System.out.println("   Error: " + exception.getMessage());
     }
 
     @Test
@@ -191,9 +184,8 @@ class LoginServiceTest {
 
         when(loginComponent.findUserByUsername("no_existe")).thenReturn(Optional.empty());
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> {
-            loginService.login(request);
-        });
+        AuthenticationException exception = assertThrows(AuthenticationException.class,
+                () -> loginService.login(request));
 
         assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
 
@@ -219,16 +211,13 @@ class LoginServiceTest {
         LoginResponse adminResponse = loginService.login(
                 LoginRequest.builder().username("admin").password("Admin123!").build());
 
-        assertNotEquals(demoResponse.getToken(), adminResponse.getToken(),
-                "Los tokens de diferentes usuarios DEBEN ser diferentes");
+        assertNotEquals(
+                Objects.requireNonNull(demoResponse.getToken(), "Token demo no puede ser null"),
+                Objects.requireNonNull(adminResponse.getToken(), "Token admin no puede ser null"),
+                "Los tokens deben ser diferentes");
         assertEquals("demo_user", demoResponse.getUsername());
         assertEquals("admin", adminResponse.getUsername());
 
         System.out.println("✅ UT-06: Independencia de tokens verificada");
-        System.out.println("   Token demo_user: "
-                + demoResponse.getToken().substring(0, Math.min(20, demoResponse.getToken().length())) + "...");
-        System.out.println("   Token admin:     "
-                + adminResponse.getToken().substring(0, Math.min(20, adminResponse.getToken().length())) + "...");
-        System.out.println("   Son diferentes: ✅");
     }
 }
