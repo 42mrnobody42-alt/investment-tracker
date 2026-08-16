@@ -1,25 +1,12 @@
 # PROMPT INICIAL - Sistema de Gestión de Inversiones
 
-## Fecha: 2026-06-23
+## Fecha: 2026-08-16
 
 ## Proyecto: Investment Tracker Pro
 
 ### Descripción General
 
 Aplicación web para seguimiento de inversiones con arquitectura de microservicios usando Docker.
-
-### Stack Tecnológico
-
-- **Backend**: Java LTS 21 (Spring Boot 3.x)
-- **Base de datos**: PostgreSQL 16
-- **Frontend**: React 18+ con CSS moderno
-- **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
-- **Seguridad**: HTTPS + JWT
-- **Contenedores**: Docker + Docker Compose
-- **Gestion de DB**: pgadmin 4 Latest
-- **Control de versiones**: Git/GitHub
-- **Sistema Operativo**: Pop OS 22.04
-- **IDE**: Visual Studio Code
 
 ### Requisitos Funcionales
 
@@ -31,43 +18,372 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 6. Dashboard de resultados de inversiones
 7. Calculadora de venta óptima para ganancias objetivo
 
-### Estructura del Proyecto
+---
 
-#### Estructura de directorios
+# Investment Tracker Pro - Documentación Completa
 
-- **`investment-tracker/`** - Raíz del proyecto
-  - **`docker/`** - Configuración de contenedores
-    - `docker-compose.yml` - Orquestación de servicios
-    - `Dockerfile.backend` - Imagen Spring Boot
-    - `Dockerfile.frontend` - Imagen React
-    - **`nginx/`** - Reverse proxy
-      - `default.conf` - Configuración HTTPS
-    - **`pgadmin/`** - Admin DB
-      - `servers.json` - Configuración servidores
-    - **`postgres/`** - Base de datos
-      - `init.sql` - Inicialización BD
-    - **`shellTest/`** - Scripts de mantenimiento
-      - `check-all.sh` - Verificación completa
-      - `reset-all.sh` - Reset BD (mantiene pgadmin)
-      - `reset-pgadmin.sh` - Reset solo pgadmin
-      - `backup-db.sh` - Backup BD
-      - `restore-db.sh` - Restaurar BD
-  - **`database/`** - Scripts SQL
-    - **`sql/`**
-      - `01_schema.sql` - Esquema v2.1.0 (UUID + Monedas)
-      - `02_functions.sql` - Funciones PL/pgSQL v2.0.0
-      - `03_seed.sql` - Datos iniciales v2.1.0
-  - **`backend/`** - API REST Spring Boot
-    - `pom.xml` - Dependencias Maven
-    - **`src/`** - Código fuente Java 21
-  - **`frontend/`** - SPA React 18
-    - `package.json` - Dependencias npm
-    - **`src/`** - Código fuente React
-  - **`docs/`** - Documentación
-    - `README.md` - Documento principal
-    - **`prompts/`** - Historial de prompts
+## ÍNDICE
 
-#### Estructura detallada de archivos (62 archivos, 46 directorios)
+- [1. Arquitectura del Sistema](#1-arquitectura-del-sistema)
+  - [Diagrama de Arquitectura](#diagrama-de-arquitectura)
+
+- [2. Base de Datos](#2-base-de-datos)
+  - [Diagrama MER (Modelo Entidad-Relación)](#diagrama-mer-modelo-entidad-relación)
+    - [Login](#login)
+    - [Negocio](#negocio)
+  - [Relaciones Clave](#relaciones-clave)
+  - [Funciones PL/pgSQL Disponibles](#funciones-plpgsql-disponibles)
+  - [Datos de Prueba](#datos-de-prueba)
+
+- [3. Backend - Java Spring Boot](#3-backend---java-spring-boot-3x)
+  - [Servicios Publicados](#servicios-publicados)
+  - [Diagrama de Secuencia de los Servicios](#diagrama-de-secuencia-de-los-servicios-publicados)
+    - [Login](#login-1)
+    - [Restart Password (solo ADMIN)](#restart-password-solo-admin)
+  - [Seguridad](#seguridad)
+  - [Pruebas](#pruebas)
+
+- [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
+
+- [5. Nginx - publicación](#5-Nginx---publicación)
+
+- [100. Servicios Docker](#100-servicios-docker)
+  - [Servicios](#servicios)
+  - [Scripts de Mantenimiento](#scripts-de-mantenimiento)
+    - [Verificar sistema completo](#verificar-sistema-completo)
+    - [Reset base de datos](#reset-base-de-datos-mantiene-configuración-pgadmin)
+    - [Reset solo pgadmin](#reset-solo-pgadmin)
+    - [Backup base de datos](#backup-base-de-datos)
+    - [Restaurar backup](#restaurar-backup)
+
+- [101. Estructura del Proyecto](#101-estructura-del-proyecto)
+  - [Estructura detallada de archivos](#estructura-detallada-de-archivos)
+
+- [102. Historial de Versiones](#102-historial-de-versiones)
+
+- [103. Requisitos Funcionales](#103-requisitos-funcionales)
+
+- [104. Stack Tecnológico](#104-stack-tecnológico)
+
+---
+
+## 1. ARQUITECTURA DEL SISTEMA
+
+### Diagrama de Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      🌐 CLIENTE (HTTPS)                      │
+│                   React SPA + Axios + JWT                    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   🔒 NGINX Reverse Proxy                     │
+│                      Puerto: 443 (SSL/TLS)                   │
+│                  Redirección: / → Frontend                   │
+│                              /api → Backend                  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+            ┌──────────────┴──────────────┐
+            ▼                             ▼
+┌───────────────────────┐    ┌────────────────────────────────┐
+│   🎨 FRONTEND (3000)   │    │   ⚙️  BACKEND (7700)            │
+│   React 18 + CSS       │    │   Spring Boot 3.x + Java 21   │
+│   Nginx/Alpine         │    │   Tomcat 10 Embedido           │
+│   SPA + React Router   │    │   JWT Authentication           │
+└───────────────────────┘    └──────────────┬─────────────────┘
+                                            │
+                    ┌───────────────────────┴
+                    │
+                    ▼
+┌──────────────────────────────┐    ┌──────────────────────────────┐
+│   🗄️  PostgreSQL 16 (5432)    │◄──│   📊 pgAdmin 4 (5050)        │
+│   Esquema: investment_tracker│    │   Admin DB Web UI            │
+│   PL/pgSQL + UUID + 54 monedas│   │   http://localhost:5050       │
+└──────────────────────────────┘    └──────────────────────────────┘
+```
+
+## 2. BASE DE DATOS
+
+### Diagrama MER (Modelo Entidad-Relación)
+
+#### Login
+
+```mermaid
+erDiagram
+    ROLES {
+        UUID id PK
+        VARCHAR nombre UK
+        TEXT desc
+        TIMESTAMP created_at
+    }
+    USUARIOS {
+        UUID id PK
+        VARCHAR username UK
+        VARCHAR password_hash
+        VARCHAR email UK
+        VARCHAR nombre_completo
+        BOOLEAN activo
+        TIMESTAMP ultimo_login
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    USUARIO_ROLES {
+        UUID usuario_id PK,FK
+        UUID rol_id PK,FK
+        TIMESTAMP asignado_en
+    }
+    USUARIOS ||--o{ USUARIO_ROLES : tiene
+    ROLES ||--o{ USUARIO_ROLES : asigna
+```
+
+#### Negocio
+
+```mermaid
+erDiagram
+    MONEDAS {
+        UUID id PK
+        CHAR codigo UK
+        VARCHAR nombre
+        VARCHAR simbolo
+        VARCHAR pais
+        BOOLEAN activo
+        TIMESTAMP created_at
+    }
+    PLATAFORMAS {
+        UUID id PK
+        VARCHAR nombre
+        TEXT desc
+        VARCHAR tipo
+        BOOLEAN activo
+        TIMESTAMP created_at
+        UUID usuario_id FK
+        UUID moneda_id FK
+    }
+    COMISIONES {
+        UUID id PK
+        DECIMAL porcentaje
+        DECIMAL valor_fijo
+        VARCHAR desc
+        TIMESTAMP fecha_inicio
+        TIMESTAMP fecha_fin
+        BOOLEAN activo
+        TIMESTAMP created_at
+        UUID plataforma_id FK
+        UUID moneda_id FK
+    }
+    TRANSACCIONES {
+        UUID id PK
+        VARCHAR tipo
+        VARCHAR simbolo
+        VARCHAR empresa
+        INTEGER cantidad
+        DECIMAL precio_unitario
+        DECIMAL comision
+        DECIMAL valor_total
+        TIMESTAMP fecha_transaccion
+        TEXT notas
+        TIMESTAMP created_at
+        UUID usuario_id FK
+        UUID plataforma_id FK
+        UUID moneda_id FK
+    }
+    CALCULOS_HIST {
+        UUID id PK
+        VARCHAR simbolo
+        DECIMAL ganancia_deseada
+        DECIMAL precio_minimo
+        INTEGER cantidad_optima
+        DECIMAL comision_estimada
+        DECIMAL ganancia_neta
+        JSONB parametros_json
+        TIMESTAMP created_at
+        UUID usuario_id FK
+        UUID plataforma_id FK
+    }
+    USUARIOS ||--o{ PLATAFORMAS : registra
+    MONEDAS ||--o{ PLATAFORMAS : opera_en
+    PLATAFORMAS ||--o{ COMISIONES : tiene
+    MONEDAS ||--o{ COMISIONES : cobra_en
+    USUARIOS ||--o{ TRANSACCIONES : realiza
+    PLATAFORMAS ||--o{ TRANSACCIONES : ejecuta
+    MONEDAS ||--o{ TRANSACCIONES : registra_en
+    USUARIOS ||--o{ CALCULOS_HIST : consulta
+    PLATAFORMAS ||--o{ CALCULOS_HIST : referencia
+```
+
+### Relaciones Clave
+
+| Origen      | Destino       | Tipo | Descripción                                   |
+| ----------- | ------------- | ---- | --------------------------------------------- |
+| usuarios    | usuario_roles | 1:N  | Un usuario tiene varios roles                 |
+| roles       | usuario_roles | 1:N  | Un rol pertenece a varios usuarios            |
+| usuarios    | plataformas   | 1:N  | Un usuario registra varias plataformas        |
+| monedas     | plataformas   | 1:N  | Una plataforma opera en una moneda            |
+| plataformas | comisiones    | 1:N  | Una plataforma tiene estructura de comisiones |
+| monedas     | comisiones    | 1:N  | La comisión se cobra en una moneda            |
+| usuarios    | transacciones | 1:N  | Un usuario realiza varias transacciones       |
+| plataformas | transacciones | 1:N  | Una transacción se ejecuta en una plataforma  |
+| monedas     | transacciones | 1:N  | Una transacción se registra en una moneda     |
+| usuarios    | calculos_hist | 1:N  | Historial de cálculos por usuario             |
+
+Se incluyen **54 divisas internacionales** organizadas por región: principales (USD, COP, EUR, GBP), Américas (16), Europa (11), Asia-Pacífico (14) y Medio Oriente/África (9). Cada moneda tiene código ISO de 3 letras, nombre, símbolo y país asociado.
+
+### Funciones PL/pgSQL Disponibles
+
+| Función                   | Descripción                                   |
+| ------------------------- | --------------------------------------------- |
+| `obtener_comision_actual` | Retorna la comisión vigente de una plataforma |
+| `calcular_comision`       | Calcula la comisión total para un monto dado  |
+| `resumen_inversiones`     | Retorna las posiciones actuales por símbolo   |
+| `calcular_venta_optima`   | Calcula precio mínimo para ganancia deseada   |
+
+> Las funciones reciben y retornan UUIDs. Ver `database/sql/02_functions.sql` para detalles de parámetros.
+
+### Datos de Prueba
+
+- **3 usuarios**: demo_user, admin, incognito (con roles USER, ADMIN y PREMIUM)
+- **5 plataformas**: eToro, Interactive Brokers, Robinhood, Binance (USD) y Trii (COP)
+- **11 transacciones** de ejemplo en USD y COP con fechas en UTC
+- **54 divisas internacionales** elegidas por las mas destacadas de cada continente
+
+## 3. BACKEND - JAVA SPRING BOOT 3.x
+
+### Servicios Publicados
+
+| Endpoint                     | Método | Auth  | Descripción                                 |
+| ---------------------------- | ------ | ----- | ------------------------------------------- |
+| `/api/auth/login`            | POST   | No    | Login - Retorna JWT                         |
+| `/api/auth/restart-password` | POST   | ADMIN | Restablecer contraseña de cualquier usuario |
+| `/api/test/health`           | GET    | No    | Health check del servicio                   |
+
+### Diagrama de secuencia de Los Servicios publicados:
+
+#### Login
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuario
+    participant B as 🔒 Backend (7700)
+    participant DB as 🗄️ PostgreSQL (5432)
+
+    U->>B: POST /api/auth/login {username, password}
+    B->>DB: SELECT usuario + roles + password_hash
+    DB-->>B: User (id, username, hash, roles, activo)
+    B->>B: Validar: bloqueo? activo? BCrypt.verify()? intentos?
+    alt Login exitoso
+        B->>B: Reset intentos fallidos
+        B->>B: Generar JWT (HMAC-SHA384, expiración 24h)
+        B-->>U: 200 OK {token, username, email, nombreCompleto}
+    else Contraseña incorrecta
+        B->>B: Registrar intento fallido (máx 3)
+        B-->>U: 401 {code: AUTH-001, message: Credenciales inválidas}
+    else Usuario bloqueado
+        B-->>U: 423 {code: AUTH-002, message: Cuenta bloqueada}
+    end
+```
+
+#### Restart Password (solo ADMIN)
+
+```mermaid
+sequenceDiagram
+    participant A as 👑 ADMIN
+    participant B as 🔒 Backend (7700)
+    participant DB as 🗄️ PostgreSQL (5432)
+
+    A->>B: POST /api/auth/restart-password {username, email, nombre, nueva, repetir}
+    Note right of B: Header: Authorization: Bearer <JWT_ADMIN>
+    B->>B: Validar JWT + Verificar ROLE_ADMIN
+    B->>B: Validar campos no vacíos
+    B->>B: Validar contraseñas coinciden (caseSensitive)
+    B->>B: Validar criterios (8+ chars, 1 mayúscula, 1 especial, sin comillas)
+    B->>DB: SELECT usuario objetivo + roles
+    DB-->>B: User objetivo (id, email, nombre, hash)
+    B->>B: Validar email (caseInsensitive) y nombre (caseInsensitive)
+    B->>B: BCrypt.encode(nuevoPassword)
+    B->>DB: UPDATE password_hash WHERE id = usuario_objetivo
+    DB-->>B: OK (1 fila actualizada)
+    B->>B: Reset intentos fallidos del usuario objetivo
+    B->>DB: SELECT password_hash actualizado
+    DB-->>B: Hash actualizado
+    B->>B: BCrypt.verify(nuevoPassword, hash_actualizado)
+    B-->>A: 200 OK {code: BIZ-0001, message: Contraseña actualizada}
+```
+
+### Seguridad
+
+- **JWT** con firma HMAC-SHA384
+- **BCrypt** para hash de contraseñas
+- **Roles**: ROLE_ADMIN, ROLE_USER, ROLE_PREMIUM
+- Control de intentos fallidos: 3 intentos, bloqueo progresivo (5min → 15min → 30min → 1h → 12h → 24h → permanente)
+- Validaciones de contraseña: 8+ caracteres, 1 mayúscula, 1 carácter especial, sin comillas
+- Validación case-insensitive para email, case-sensitive para contraseñas
+
+### Pruebas
+
+- **32 pruebas automatizadas** (26 integración + 6 unitarias)
+- Cobertura: login, restart-password, validaciones de contraseña, control de roles, bloqueos
+- Ejecutar: `mvn test`
+
+## 100. Servicios Docker
+
+### Servicios
+
+| Servicio    | Puerto | URL                   |
+| ----------- | ------ | --------------------- |
+| PostgreSQL  | 5432   | localhost:5432        |
+| pgAdmin     | 5050   | http://localhost:5050 |
+| Backend     | 7700   | http://localhost:7700 |
+| Frontend    | 3000   | http://localhost:3000 |
+| Nginx HTTPS | 443    | https://localhost     |
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                  DOCKER COMPOSE NETWORK                       │
+│                  investment_network (bridge)                  │
+│                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐                 │
+│  │  investment-db    │  │ investment-backend│                │
+│  │  postgres:16-alp  │  │ spring-boot:3.x  │                 │
+│  │  :5432 → :5432    │◄─┤ :7700 → :7700    │                 │
+│  │  volume: data     │  │ JWT + BCrypt     │                 │
+│  └──────────────────┘  └──────────────────┘                 │
+│                                                              │
+│  ┌──────────────────┐  ┌──────────────────┐                 │
+│  │ investment-pgadmin│  │ investment-nginx  │                 │
+│  │ pgadmin4:latest   │  │ nginx:alpine     │                 │
+│  │ :5050 → :80       │  │ :80, :443        │                 │
+│  │ volume: pgadmin   │  │ SSL + proxy      │                 │
+│  └──────────────────┘  └──────────────────┘                 │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Scripts de Mantenimiento
+
+#### Verificar sistema completo
+
+./docker/shellTest/check-all.sh
+
+#### Reset base de datos (mantiene configuración pgadmin)
+
+./docker/shellTest/reset-all.sh
+
+#### Reset solo pgadmin
+
+./docker/shellTest/reset-pgadmin.sh
+
+#### Backup base de datos
+
+./docker/shellTest/backup-db.sh
+
+#### Restaurar backup
+
+./docker/shellTest/restore-db.sh <archivo.sql>
+
+### 101. Estructura del Proyecto
+
+#### Estructura detallada de archivos
 
 - **`investment-tracker/`** - Raíz del proyecto
   - `.gitignore` - Archivos ignorados por Git
@@ -150,341 +466,15 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
     - **`serverConfig/`** - `popOS22.04.md` - Guía de instalación
     - **`sql/`** - `consultasBasicas.sql` - Consultas de referencia
 
----
+### 104. Stack Tecnológico
 
-# Investment Tracker Pro - Documentación Completa
-
-## ÍNDICE
-
-- [1. Arquitectura del Sistema](#1-arquitectura-del-sistema)
-  - [Diagrama de Arquitectura](#diagrama-de-arquitectura)
-
-  - [Diagrama de Flujo: Login + Restart Password](#diagrama-de-flujo-login--restart-password)
-
-  - [Contenedores Docker](#contenedores-docker)
-
-  - [Diagrama MER (Modelo Entidad-Relación)](#diagrama-mer-modelo-entidad-relación)
-
-  - [Relaciones Clave](#relaciones-clave)
-
-- [2. Base de Datos](#2-base-de-datos)
-  - [Funciones PL/pgSQL Disponibles](#funciones-plpgsql-disponibles)
-
-  - [Datos de Prueba](#datos-de-prueba)
-
-- [3. BACKEND - JAVA SPRING BOOT 3.x](#3-backend---api-rest)
-  - [Servicios Publicados](#servicios-publicados)
-
-  - [Seguridad](#seguridad)
-
-  - [Pruebas](#pruebas)
-
-- [4. Servicios Docker](#4-servicios-docker)
-
-- [5. Scripts de Mantenimiento](#5-scripts-de-mantenimiento)
-
-- [6. Estructura del Proyecto](#6-estructura-del-proyecto)
-
-- [7. Stack Tecnológico](#7-stack-tecnológico)
-
-- [8. Historial de Versiones](#8-historial-de-versiones)
-
-- [9. Requisitos Funcionales](#9-requisitos-funcionales)
-
----
-
-## 1. ARQUITECTURA DEL SISTEMA
-
-### Diagrama de Arquitectura
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      🌐 CLIENTE (HTTPS)                      │
-│                   React SPA + Axios + JWT                    │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   🔒 NGINX Reverse Proxy                     │
-│                      Puerto: 443 (SSL/TLS)                   │
-│                  Redirección: / → Frontend                   │
-│                              /api → Backend                  │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-            ┌──────────────┴──────────────┐
-            ▼                             ▼
-┌───────────────────────┐    ┌────────────────────────────────┐
-│   🎨 FRONTEND (3000)   │    │   ⚙️  BACKEND (7700)            │
-│   React 18 + CSS       │    │   Spring Boot 3.x + Java 21   │
-│   Nginx/Alpine         │    │   Tomcat 10 Embedido           │
-│   SPA + React Router   │    │   JWT Authentication           │
-└───────────────────────┘    └──────────────┬─────────────────┘
-                                            │
-                    ┌───────────────────────┴
-                    │
-                    ▼
-┌──────────────────────────────┐    ┌──────────────────────────────┐
-│   🗄️  PostgreSQL 16 (5432)    │◄──│   📊 pgAdmin 4 (5050)        │
-│   Esquema: investment_tracker│    │   Admin DB Web UI            │
-│   PL/pgSQL + UUID + 54 monedas│   │   http://localhost:5050       │
-└──────────────────────────────┘    └──────────────────────────────┘
-```
-
-### Diagrama de Flujo: Login + Restart Password
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        FLUJO DE AUTENTICACIÓN                        │
-└─────────────────────────────────────────────────────────────────────┘
-
-👤 Usuario                    🔒 Backend                     🗄️ PostgreSQL
-   │                             │                              │
-   │  POST /api/auth/login       │                              │
-   │  {username, password}       │                              │
-   │────────────────────────────>│                              │
-   │                             │  Buscar usuario              │
-   │                             │─────────────────────────────>│
-   │                             │  User (username, hash, roles)│
-   │                             │<─────────────────────────────│
-   │                             │                              │
-   │                             │  Validar:                    │
-   │                             │  ┌─ Bloqueo?                 │
-   │                             │  ├─ Activo?                  │
-   │                             │  ├─ BCrypt.verify()          │
-   │                             │  └─ Intentos fallidos        │
-   │                             │                              │
-   │  JWT + datos usuario       │                              │
-   │<────────────────────────────│                              │
-   │                             │                              │
-
-👑 ADMIN                     🔒 Backend                     🗄️ PostgreSQL
-   │                             │                              │
-   │  POST /auth/restart-password│                              │
-   │  Header: Bearer <JWT>      │                              │
-   │  {username, email, nombre,  │                              │
-   │   nuevoPassword, repetir}   │                              │
-   │────────────────────────────>│                              │
-   │                             │  Validar JWT + ROLE_ADMIN    │
-   │                             │  Validar campos + criterios  │
-   │                             │  BCrypt.encode(nuevoPassword)│
-   │                             │  UPDATE password_hash        │
-   │                             │─────────────────────────────>│
-   │                             │  OK                          │
-   │                             │<─────────────────────────────│
-   │                             │  Reset intentos fallidos     │
-   │  200 OK                     │                              │
-   │<────────────────────────────│                              │
-```
-
-### Contenedores Docker
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                  DOCKER COMPOSE NETWORK                       │
-│                  investment_network (bridge)                  │
-│                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐                 │
-│  │  investment-db    │  │ investment-backend│                │
-│  │  postgres:16-alp  │  │ spring-boot:3.x  │                 │
-│  │  :5432 → :5432    │◄─┤ :7700 → :7700    │                 │
-│  │  volume: data     │  │ JWT + BCrypt     │                 │
-│  └──────────────────┘  └──────────────────┘                 │
-│                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐                 │
-│  │ investment-pgadmin│  │ investment-nginx  │                 │
-│  │ pgadmin4:latest   │  │ nginx:alpine     │                 │
-│  │ :5050 → :80       │  │ :80, :443        │                 │
-│  │ volume: pgadmin   │  │ SSL + proxy      │                 │
-│  └──────────────────┘  └──────────────────┘                 │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### Diagrama MER (Modelo Entidad-Relación)
-
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                    INVESTMENT TRACKER - MER v2.1.0                  │
-│                    Todas las PK son UUID v4                         │
-└────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────┐         ┌─────────────────────┐
-│      ROLES          │         │      USUARIOS       │
-├─────────────────────┤         ├─────────────────────┤
-│ 🔑 id        UUID   │         │ 🔑 id        UUID   │
-│    nombre    VARCHAR│         │    username  VARCHAR │
-│    desc      TEXT   │         │    password  VARCHAR │
-│    created_at TIMEST│         │    email     VARCHAR │
-└──────────┬──────────┘         │    nombre    VARCHAR │
-           │                    │    activo    BOOLEAN │
-           │  ┌─────────────────│    ultimo_login TIMEST│
-           │  │                 │    created_at TIMEST │
-           │  │                 │    updated_at TIMEST │
-           │  │                 └──────────────────────┘
-           │  │
-           │  │                 ┌──────────────────────┐
-           │  └─────────────────┤   USUARIO_ROLES      │
-           └────────────────────┤   (N:M)              │
-                                ├──────────────────────┤
-                                │ 🔑 FK usuario_id UUID│
-                                │ 🔑 FK rol_id     UUID│
-                                │    asignado_en TIMEST │
-                                └──────────────────────┘
-
-┌────────────────────────────────────────────────────────────────────┐
-│                        TABLAS DE NEGOCIO                           │
-└────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────┐         ┌─────────────────────┐
-│      MONEDAS        │         │    PLATAFORMAS      │
-│  (54 divisas)       │         ├─────────────────────┤
-├─────────────────────┤         │ 🔑 id        UUID   │
-│ 🔑 id        UUID   │         │    nombre    VARCHAR │
-│    codigo    CHAR(3)│         │    desc      TEXT   │
-│    nombre    VARCHAR│         │    tipo      VARCHAR │
-│    simbolo   VARCHAR│         │    activo    BOOLEAN │
-│    pais      VARCHAR│         │    created_at TIMEST │
-│    activo    BOOLEAN │         │ 📎 FK usuario UUID  │
-│    created_at TIMEST │         │ 📎 FK moneda  UUID  │
-└──────────┬──────────┘         └──────────┬───────────┘
-           │                               │
-           │                    ┌──────────┴───────────┐
-           │                    │     COMISIONES       │
-           │                    ├──────────────────────┤
-           │                    │ 🔑 id        UUID   │
-           ├────────────────────│ 📎 FK plataforma UUID│
-           │                    │    porcentaje DECIMAL│
-           │                    │    valor_fijo DECIMAL│
-           │                    │ 📎 FK moneda  UUID   │
-           │                    │    desc      VARCHAR │
-           │                    │    fecha_inicio TIMEST│
-           │                    │    fecha_fin  TIMEST │
-           │                    │    activo    BOOLEAN │
-           │                    │    created_at TIMEST │
-           │                    └──────────────────────┘
-           │
-           │  ┌──────────────────────────────────────┐
-           │  │           TRANSACCIONES              │
-           │  ├──────────────────────────────────────┤
-           │  │ 🔑 id        UUID                    │
-           └──│ 📎 FK usuario UUID                   │
-              │ 📎 FK plataforma UUID                │
-              │ 📎 FK moneda  UUID                   │
-              │    tipo      VARCHAR (COMPRA/VENTA)  │
-              │    simbolo   VARCHAR                 │
-              │    empresa   VARCHAR                 │
-              │    cantidad  INTEGER                 │
-              │    precio_uni DECIMAL                │
-              │    comision  DECIMAL                 │
-              │    valor_total DECIMAL               │
-              │    fecha     TIMESTAMP               │
-              │    notas     TEXT                    │
-              │    created_at TIMESTAMP              │
-              └──────────────────────────────────────┘
-
-              ┌──────────────────────────────────────┐
-              │         CALCULOS_HIST                │
-              ├──────────────────────────────────────┤
-              │ 🔑 id        UUID                    │
-              │ 📎 FK usuario UUID                   │
-              │ 📎 FK plataforma UUID                │
-              │    simbolo   VARCHAR                 │
-              │    ganancia_deseada DECIMAL          │
-              │    precio_minimo DECIMAL             │
-              │    cantidad_optima INTEGER           │
-              │    comision_estimada DECIMAL         │
-              │    ganancia_neta DECIMAL             │
-              │    parametros_json JSONB             │
-              │    created_at TIMESTAMP              │
-              └──────────────────────────────────────┘
-```
-
-### Relaciones Clave
-
-| Origen      | Destino       | Tipo | Descripción                                   |
-| ----------- | ------------- | ---- | --------------------------------------------- |
-| usuarios    | usuario_roles | 1:N  | Un usuario tiene varios roles                 |
-| roles       | usuario_roles | 1:N  | Un rol pertenece a varios usuarios            |
-| usuarios    | plataformas   | 1:N  | Un usuario registra varias plataformas        |
-| monedas     | plataformas   | 1:N  | Una plataforma opera en una moneda            |
-| plataformas | comisiones    | 1:N  | Una plataforma tiene estructura de comisiones |
-| monedas     | comisiones    | 1:N  | La comisión se cobra en una moneda            |
-| usuarios    | transacciones | 1:N  | Un usuario realiza varias transacciones       |
-| plataformas | transacciones | 1:N  | Una transacción se ejecuta en una plataforma  |
-| monedas     | transacciones | 1:N  | Una transacción se registra en una moneda     |
-| usuarios    | calculos_hist | 1:N  | Historial de cálculos por usuario             |
-
-Se incluyen **54 divisas internacionales** organizadas por región: principales (USD, COP, EUR, GBP), Américas (16), Europa (11), Asia-Pacífico (14) y Medio Oriente/África (9). Cada moneda tiene código ISO de 3 letras, nombre, símbolo y país asociado.
-
-### Funciones PL/pgSQL Disponibles
-
-| Función                   | Descripción                                   |
-| ------------------------- | --------------------------------------------- |
-| `obtener_comision_actual` | Retorna la comisión vigente de una plataforma |
-| `calcular_comision`       | Calcula la comisión total para un monto dado  |
-| `resumen_inversiones`     | Retorna las posiciones actuales por símbolo   |
-| `calcular_venta_optima`   | Calcula precio mínimo para ganancia deseada   |
-
-> Las funciones reciben y retornan UUIDs. Ver `database/sql/02_functions.sql` para detalles de parámetros.
-
-### Datos de Prueba
-
-- **3 usuarios**: demo_user, admin, incognito (con roles USER, ADMIN y PREMIUM)
-- **5 plataformas**: eToro, Interactive Brokers, Robinhood, Binance (USD) y Trii (COP)
-- **11 transacciones** de ejemplo en USD y COP con fechas en UTC
-
-## 3. BACKEND - JAVA SPRING BOOT 3.x
-
-### Servicios Publicados
-
-| Endpoint                     | Método | Auth  | Descripción                                 |
-| ---------------------------- | ------ | ----- | ------------------------------------------- |
-| `/api/auth/login`            | POST   | No    | Login - Retorna JWT                         |
-| `/api/auth/restart-password` | POST   | ADMIN | Restablecer contraseña de cualquier usuario |
-| `/api/test/health`           | GET    | No    | Health check del servicio                   |
-
-### Seguridad
-
-- **JWT** con firma HMAC-SHA384
-- **BCrypt** para hash de contraseñas
-- **Roles**: ROLE_ADMIN, ROLE_USER, ROLE_PREMIUM
-- Control de intentos fallidos: 3 intentos, bloqueo progresivo (5min → 15min → 30min → 1h → 12h → 24h → permanente)
-- Validaciones de contraseña: 8+ caracteres, 1 mayúscula, 1 carácter especial, sin comillas
-- Validación case-insensitive para email, case-sensitive para contraseñas
-
-### Pruebas
-
-- **32 pruebas automatizadas** (26 integración + 6 unitarias)
-- Cobertura: login, restart-password, validaciones de contraseña, control de roles, bloqueos
-- Ejecutar: `mvn test`
-
-## 4. Servicios Docker
-
-| Servicio    | Puerto | URL                   |
-| ----------- | ------ | --------------------- |
-| PostgreSQL  | 5432   | localhost:5432        |
-| pgAdmin     | 5050   | http://localhost:5050 |
-| Backend     | 8081   | http://localhost:8081 |
-| Frontend    | 3000   | http://localhost:3000 |
-| Nginx HTTPS | 443    | https://localhost     |
-
-## 5. Scripts de Mantenimiento
-
-### Verificar sistema completo
-
-./docker/shellTest/check-all.sh
-
-### Reset base de datos (mantiene configuración pgadmin)
-
-./docker/shellTest/reset-all.sh
-
-### Reset solo pgadmin
-
-./docker/shellTest/reset-pgadmin.sh
-
-### Backup base de datos
-
-./docker/shellTest/backup-db.sh
-
-### Restaurar backup
-
-./docker/shellTest/restore-db.sh <archivo.sql>
+- **Backend**: Java LTS 21 (Spring Boot 3.x)
+- **Base de datos**: PostgreSQL 16
+- **Frontend**: React 18+ con CSS moderno
+- **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
+- **Seguridad**: HTTPS + JWT
+- **Contenedores**: Docker + Docker Compose
+- **Gestion de DB**: pgadmin 4 Latest
+- **Control de versiones**: Git/GitHub
+- **Sistema Operativo**: Pop OS 22.04
+- **IDE**: Visual Studio Code
