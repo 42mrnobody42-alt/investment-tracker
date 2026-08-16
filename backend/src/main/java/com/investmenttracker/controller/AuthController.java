@@ -5,11 +5,11 @@ import com.investmenttracker.model.request.RestartPasswordRequest;
 import com.investmenttracker.model.response.LoginResponse;
 import com.investmenttracker.model.response.SuccessResponse;
 import com.investmenttracker.service.LoginService;
+import com.investmenttracker.service.LogoutService;
 import com.investmenttracker.service.RestartUserPasswordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,21 +23,19 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class AuthController {
 
-    @NonNull
     private final LoginService loginService;
-
-    @NonNull
     private final RestartUserPasswordService restartUserPasswordService;
+    private final LogoutService logoutService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody @NonNull LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = loginService.login(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/restart-password")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<SuccessResponse> restartPassword(@Valid @RequestBody @NonNull RestartPasswordRequest request) {
+    public ResponseEntity<SuccessResponse> restartPassword(@Valid @RequestBody RestartPasswordRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
 
@@ -59,6 +57,17 @@ public class AuthController {
         }
 
         SuccessResponse response = restartUserPasswordService.restartPassword(request, adminUsername);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<SuccessResponse> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String token = authHeader.substring(7);
+        SuccessResponse response = logoutService.logout(token);
         return ResponseEntity.ok(response);
     }
 }

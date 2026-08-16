@@ -1,5 +1,6 @@
 package com.investmenttracker.security;
 
+import com.investmenttracker.component.TokenBlacklistComponent;
 import com.investmenttracker.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -32,6 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @NonNull
     private final UserDetailsService userDetailsService;
 
+    @NonNull
+    private final TokenBlacklistComponent tokenBlacklistComponent;
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -48,6 +52,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
+
+        // Verificar si el token está en la blacklist
+        if (tokenBlacklistComponent.isBlacklisted(jwt)) {
+            log.warn("Token en blacklist - acceso denegado");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"code\":\"AUTH-005\",\"message\":\"Token inválido o expirado\"}");
+            return;
+        }
 
         try {
             username = jwtService.extractUsername(jwt);

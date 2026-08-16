@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.investmenttracker.model.request.EncryptionRequest;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.request.RestartPasswordRequest;
 
@@ -430,6 +431,74 @@ class AuthIntegrationTest {
                 printStep("TC-25", "✅");
                 System.out.println("=".repeat(70));
                 System.out.println("  🏁 FIN");
+                System.out.println("=".repeat(70));
+        }
+
+        // =============================================
+        // BLOQUE 4: LOGOUT
+        // =============================================
+        @Test
+        @Order(27)
+        @DisplayName("BLOQUE-4 | TC-26: Login admin para logout")
+        void testLoginForLogout() throws Exception {
+                printBanner("🟣 BLOQUE 4: PRUEBAS DE LOGOUT");
+                printStep("TC-26", "Login admin para obtener token");
+                LoginRequest r = LoginRequest.builder().username("admin").password("Admin123!").build();
+                MockHttpServletRequestBuilder builder = postJson("/api/auth/login", null, r);
+                MvcResult result = mockMvc.perform(Objects.requireNonNull(builder))
+                                .andExpect(status().isOk())
+                                .andReturn();
+                adminToken = extractToken(result);
+                printStep("TC-26", "✅ Token obtenido");
+        }
+
+        @Test
+        @Order(28)
+        @DisplayName("BLOQUE-4 | TC-27: Logout exitoso")
+        void testLogoutSuccess() throws Exception {
+                printStep("TC-27", "Logout con token válido → 200");
+                mockMvc.perform(post("/api/auth/logout")
+                                .header("Authorization", "Bearer " + adminToken))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.message").value("Sesión cerrada exitosamente"));
+                printStep("TC-27", "✅ Logout exitoso");
+        }
+
+        @Test
+        @Order(29)
+        @DisplayName("BLOQUE-4 | TC-28: Token invalidado después de logout")
+        void testTokenInvalidatedAfterLogout() throws Exception {
+                printStep("TC-28", "Usar token después de logout → 401");
+                EncryptionRequest encRequest = EncryptionRequest.builder()
+                                .cadena_string_a_encriptar("TestPostLogout123!")
+                                .build();
+                MockHttpServletRequestBuilder builder = postJson("/api/encryption/encrypt", adminToken, encRequest);
+                mockMvc.perform(Objects.requireNonNull(builder))
+                                .andExpect(status().isUnauthorized());
+                printStep("TC-28", "✅ Token invalidado (401)");
+        }
+
+        @Test
+        @Order(30)
+        @DisplayName("BLOQUE-4 | TC-29: Logout sin token")
+        void testLogoutWithoutToken() throws Exception {
+                printStep("TC-29", "Logout sin token → 400");
+                mockMvc.perform(post("/api/auth/logout"))
+                                .andExpect(status().isBadRequest());
+                printStep("TC-29", "✅ Sin token = 400");
+        }
+
+        @Test
+        @Order(31)
+        @DisplayName("BLOQUE-4 | TC-30: Logout con token inválido")
+        void testLogoutWithInvalidToken() throws Exception {
+                printStep("TC-30", "Logout con token inválido → 4xx");
+                mockMvc.perform(post("/api/auth/logout")
+                                .header("Authorization", "Bearer token-invalido-123"))
+                                .andExpect(status().is4xxClientError());
+                printStep("TC-30", "✅ Token inválido rechazado");
+                System.out.println("=".repeat(70));
+                System.out.println("  🟣 FIN BLOQUE 4: LOGOUT");
                 System.out.println("=".repeat(70));
         }
 }
