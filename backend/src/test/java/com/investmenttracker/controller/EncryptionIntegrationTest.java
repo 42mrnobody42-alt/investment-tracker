@@ -84,7 +84,7 @@ class EncryptionIntegrationTest {
         printStep("EC-01", "Login admin");
         
         MvcResult result = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content("{\"username\":\"admin\",\"password\":\"Admin123!\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists())
@@ -114,9 +114,9 @@ class EncryptionIntegrationTest {
                 .build();
             
             MvcResult result = mockMvc.perform(post("/api/encryption/encrypt")
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                     .header("Authorization", "Bearer " + adminToken)
-                    .content(toJson(request)))
+                    .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                 .andExpect(status().isOk())
                 .andReturn();
             
@@ -148,9 +148,9 @@ class EncryptionIntegrationTest {
                 .build();
             
             MvcResult result = mockMvc.perform(post("/api/encryption/decrypt")
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                     .header("Authorization", "Bearer " + adminToken)
-                    .content(toJson(request)))
+                    .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                 .andExpect(status().isOk())
                 .andReturn();
             
@@ -182,9 +182,9 @@ class EncryptionIntegrationTest {
             .build();
         
         MvcResult result = mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .header("Authorization", "Bearer " + adminToken)
-                .content(toJson(request)))
+                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isOk())
             .andReturn();
         
@@ -212,7 +212,7 @@ class EncryptionIntegrationTest {
     void testEncryptNullText() throws Exception {
         printStep("EC-04", "Encriptar texto null → 400");
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .header("Authorization", "Bearer " + adminToken)
                 .content("{}"))
             .andExpect(status().isBadRequest());
@@ -228,9 +228,9 @@ class EncryptionIntegrationTest {
             .cadena_string_a_encriptar("")
             .build();
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .header("Authorization", "Bearer " + adminToken)
-                .content(toJson(request)))
+                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isBadRequest());
         printStep("EC-05", "✅ Texto vacío rechazado (400)\n");
     }
@@ -244,8 +244,8 @@ class EncryptionIntegrationTest {
             .cadena_string_a_encriptar("Test123!")
             .build();
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(request)))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isForbidden());
         printStep("EC-06", "✅ Sin token = 403\n");
     }
@@ -257,7 +257,7 @@ class EncryptionIntegrationTest {
         printStep("EC-07", "demo_user intenta encriptar → 403");
         
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content("{\"username\":\"demo_user\",\"password\":\"Demo123!\"}"))
             .andExpect(status().isOk())
             .andReturn();
@@ -269,9 +269,9 @@ class EncryptionIntegrationTest {
             .build();
         
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .header("Authorization", "Bearer " + demoToken)
-                .content(toJson(request)))
+                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isForbidden());
         
         printStep("EC-07", "✅ demo_user BLOQUEADO (403)");
