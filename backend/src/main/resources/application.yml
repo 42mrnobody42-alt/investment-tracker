@@ -6,9 +6,9 @@ spring:
     name: investment-tracker-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/investment_tracker
-    username: ${DB_USER:investor}
-    password: ${DB_PASSWORD:Inv3stm3ntS3cur3P@ss2024!}
+    url: ${DB_URL_ENCRYPTED:OvTARXgOmx7KojZYw2hYR6Y5nr1vOgP4UFyrWFHjxxD4dOE2/enG6LwzQR5hp1j2TshWof58jWhvVFG+7IcKeBQS0dBfmgrJa8IHnQeIVw==}
+    username: ${DB_USER_ENCRYPTED:jtTAI1e4q0xiOEWVH1+cR9bESZkmTapl8lL1aLL+TcsZOTPC}
+    password: ${DB_PASSWORD_ENCRYPTED:Fcs1CQGLANx5Q+hekJlUp03ydXoZj8uPxjyK2R3wNLpnshXoHa1FKQ/5epmUFLyy5Gnv+xM=}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -26,7 +26,7 @@ jwt:
   secret: ${JWT_SECRET:mySuperSecretKeyForJWTTokenGeneration2024MinLength256Bits!!}
   expiration: 86400000
 
-# Encryption Configuration (AES-GCM)
+# Encryption Configuration (AES-256-GCM)
 encryption:
   secret-key: ${ENCRYPTION_SECRET:r4d3R1yadBNWB9U3U1H5AG7OyNpA6a2sIyUWJJMPbj4=}
 
