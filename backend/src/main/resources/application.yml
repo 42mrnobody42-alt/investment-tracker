@@ -4,13 +4,13 @@ server:
 spring:
   application:
     name: investment-tracker-backend
-  
+
   datasource:
     url: jdbc:postgresql://localhost:5432/investment_tracker
     username: ${DB_USER:investor}
     password: ${DB_PASSWORD:Inv3stm3ntS3cur3P@ss2024!}
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -25,6 +25,10 @@ spring:
 jwt:
   secret: ${JWT_SECRET:mySuperSecretKeyForJWTTokenGeneration2024MinLength256Bits!!}
   expiration: 86400000
+
+# Encryption Configuration (AES-GCM)
+encryption:
+  secret-key: ${ENCRYPTION_SECRET:r4d3R1yadBNWB9U3U1H5AG7OyNpA6a2sIyUWJJMPbj4=}
 
 # Login Security
 login:

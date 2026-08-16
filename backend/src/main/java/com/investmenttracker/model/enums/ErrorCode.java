@@ -14,20 +14,25 @@ public enum ErrorCode {
     MAX_ATTEMPTS_EXCEEDED("AUTH-004", "Máximo de intentos excedido. Cuenta bloqueada", HttpStatus.LOCKED),
     TOKEN_EXPIRED("AUTH-005", "Token expirado", HttpStatus.UNAUTHORIZED),
     TOKEN_INVALID("AUTH-006", "Token inválido", HttpStatus.UNAUTHORIZED),
+    ACCESS_DENIED("AUTH-007", "Acceso denegado. Se requiere rol ADMIN", HttpStatus.FORBIDDEN),
+    USER_NOT_AUTHENTICATED("AUTH-008", "Usuario no autenticado", HttpStatus.UNAUTHORIZED),
 
     // Errores de validación
     VALIDATION_ERROR("VAL-001", "Error de validación en los datos ingresados", HttpStatus.BAD_REQUEST),
     UPDATE_VALIDATION_ERROR("VAL-002", "Error con el guardado de los datos ingresados", HttpStatus.BAD_REQUEST),
     USERNAME_ALREADY_EXISTS("VAL-003", "El nombre de usuario ya existe", HttpStatus.CONFLICT),
     EMAIL_ALREADY_EXISTS("VAL-004", "El email ya está registrado", HttpStatus.CONFLICT),
-
-    // Errores de campos vacíos
     EMPTY_FIELDS("VAL-005", "Información vacía, digite correctamente todos los campos obligatorios",
             HttpStatus.BAD_REQUEST),
 
     // Errores de contraseña
     PASSWORDS_DO_NOT_MATCH("PWD-001", "El nuevo password y su repetición NO coinciden", HttpStatus.BAD_REQUEST),
     PASSWORD_CRITERIA_NOT_MET("PWD-002", "CONTRASEÑA_NO_CUMPLE_CRITERIOS", HttpStatus.BAD_REQUEST),
+
+    // Errores de encriptación
+    ENCRYPT_ERROR("ENC-001", "Error al encriptar el texto proporcionado", HttpStatus.INTERNAL_SERVER_ERROR),
+    DECRYPT_ERROR("ENC-002", "Error al desencriptar el texto proporcionado", HttpStatus.INTERNAL_SERVER_ERROR),
+    TEXT_CANNOT_BE_NULL("ENC-003", "La cadena de texto no puede ser null o vacía", HttpStatus.BAD_REQUEST),
 
     // Errores de negocio
     USER_NOT_FOUND("BIZ-001", "Usuario no encontrado", HttpStatus.NOT_FOUND),
