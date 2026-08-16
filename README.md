@@ -42,6 +42,7 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
     - [Restart Password (solo ADMIN)](#restart-password-solo-admin)
     - [Encriptar Texto (ADMIN)](#encriptar-texto-admin)
     - [Desencriptar Texto (ADMIN)](#desencriptar-texto-admin)
+    - [Logout (Cerrar Sesión)](#logout-cerrar-sesión)
   - [Seguridad](#seguridad)
   - [Pruebas](#pruebas)
 
@@ -261,6 +262,7 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 | `/api/test/health`           | GET    | No    | Health check del servicio                   |
 | `/api/encryption/encrypt`    | POST   | ADMIN | Encriptar texto con AES-GCM                 |
 | `/api/encryption/decrypt`    | POST   | ADMIN | Desencriptar texto con AES-GCM              |
+| `/api/auth/logout`           | POST   | JWT   | Cerrar sesión - invalida el token           |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
@@ -352,6 +354,29 @@ sequenceDiagram
     E->>E: AES-256-GCM decrypt
     E-->>B: textoDesencriptado
     B-->>A: 200 OK {textoEncriptado, textoDesencriptado}
+```
+
+#### Logout (Cerrar Sesión)
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuario
+    participant B as 🔒 Backend (7700)
+    participant BL as 🚫 Token Blacklist
+
+    U->>B: POST /api/auth/logout
+    Note right of B: Header: Authorization: Bearer <JWT>
+    B->>B: Validar JWT
+    B->>B: Extraer expiración del token
+    B->>BL: Agregar token a blacklist hasta expiración
+    BL-->>B: Token agregado
+    B-->>U: 200 OK {code: AUTH-0001, message: Sesión cerrada exitosamente}
+
+    Note over U,B: Después del logout:
+    U->>B: Cualquier petición con el mismo token
+    B->>BL: Verificar si token está en blacklist
+    BL-->>B: Token encontrado → inválido
+    B-->>U: 401 Unauthorized {message: Token inválido o expirado}
 ```
 
 ### Seguridad
