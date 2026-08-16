@@ -40,6 +40,8 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
   - [Diagrama de Secuencia de los Servicios](#diagrama-de-secuencia-de-los-servicios-publicados)
     - [Login](#login-1)
     - [Restart Password (solo ADMIN)](#restart-password-solo-admin)
+    - [Encriptar Texto (ADMIN)](#encriptar-texto-admin)
+    - [Desencriptar Texto (ADMIN)](#desencriptar-texto-admin)
   - [Seguridad](#seguridad)
   - [Pruebas](#pruebas)
 
@@ -257,6 +259,8 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 | `/api/auth/login`            | POST   | No    | Login - Retorna JWT                         |
 | `/api/auth/restart-password` | POST   | ADMIN | Restablecer contraseña de cualquier usuario |
 | `/api/test/health`           | GET    | No    | Health check del servicio                   |
+| `/api/encryption/encrypt`    | POST   | ADMIN | Encriptar texto con AES-GCM                 |
+| `/api/encryption/decrypt`    | POST   | ADMIN | Desencriptar texto con AES-GCM              |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
@@ -311,9 +315,49 @@ sequenceDiagram
     B-->>A: 200 OK {code: BIZ-0001, message: Contraseña actualizada}
 ```
 
+#### Encriptar Texto (ADMIN)
+
+```mermaid
+sequenceDiagram
+    participant A as 👑 ADMIN
+    participant B as 🔒 Backend (7700)
+    participant E as 🔐 AES-GCM Component
+
+    A->>B: POST /api/encryption/encrypt {cadena_string_a_encriptar}
+    Note right of B: Header: Authorization: Bearer <JWT_ADMIN>
+    B->>B: Validar JWT + Verificar ROLE_ADMIN
+    B->>B: Validar que el texto no sea null/vacío
+    B->>E: encrypt(plainText)
+    E->>E: Generar IV aleatorio (12 bytes)
+    E->>E: AES-256-GCM encrypt
+    E-->>B: textoEncriptado (Base64)
+    B-->>A: 200 OK {textoOriginal, textoEncriptado}
+```
+
+#### Desencriptar Texto (ADMIN)
+
+```mermaid
+sequenceDiagram
+    participant A as 👑 ADMIN
+    participant B as 🔒 Backend (7700)
+    participant E as 🔐 AES-GCM Component
+
+    A->>B: POST /api/encryption/decrypt {cadena_string_a_encriptar: texto_encriptado}
+    Note right of B: Header: Authorization: Bearer <JWT_ADMIN>
+    B->>B: Validar JWT + Verificar ROLE_ADMIN
+    B->>B: Validar que el texto no sea null/vacío
+    B->>E: decrypt(encryptedText)
+    E->>E: Decodificar Base64
+    E->>E: Extraer IV + ciphertext
+    E->>E: AES-256-GCM decrypt
+    E-->>B: textoDesencriptado
+    B-->>A: 200 OK {textoEncriptado, textoDesencriptado}
+```
+
 ### Seguridad
 
 - **JWT** con firma HMAC-SHA384
+- **AES-256-GCM** para encriptación bidireccional de datos sensibles
 - **BCrypt** para hash de contraseñas
 - **Roles**: ROLE_ADMIN, ROLE_USER, ROLE_PREMIUM
 - Control de intentos fallidos: 3 intentos, bloqueo progresivo (5min → 15min → 30min → 1h → 12h → 24h → permanente)
