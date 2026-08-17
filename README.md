@@ -456,10 +456,43 @@ sequenceDiagram
 ### Pruebas
 
 - **59 pruebas automatizadas** (integración + unitarias)
-- Cobertura: login, restart-password, validaciones de contraseña, control de roles, bloqueos
-- Ejecutar: `mvn test`
 
-## 100. Servicios Docker
+- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos
+
+- Ejecutar todas: `mvn test`
+
+- Ejecutar suite específica: `mvn test -Dtest=NombreDeLaSuite`
+
+```mermaid
+graph TB
+    subgraph "SUITES DE PRUEBAS - 59 tests"
+        A["AuthIntegrationTest<br/>31 pruebas<br/>Login, restart-password, logout"]
+        B["ChangeMyPasswordIntegrationTest<br/>11 pruebas<br/>Cambio de contraseña propia"]
+        C["EncryptionIntegrationTest<br/>7 pruebas<br/>Encriptación AES-256-GCM"]
+        D["PasswordRecoveryIntegrationTest<br/>4 pruebas<br/>Recuperación 2FA SMTP"]
+        E["LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
+    end
+
+    A --> F["BaseIntegrationTest<br/>Helpers comunes"]
+    B --> F
+    C --> F
+    D --> F
+    E --> F
+
+    F --> G["TestConfig<br/>Variables desde .unitTestEnv"]
+    G --> H[".unitTestEnv<br/>src/test/resources/"]
+```
+
+**Arquitectura de pruebas:**
+- `.unitTestEnv`: archivo de configuración con todos los datos de prueba (usuarios, contraseñas, URLs) ubicado en `src/test/resources/`
+
+- `BaseIntegrationTest`: helpers comunes (loginAndGetToken, toJson, printBanner)
+
+- `TestConfig`: variables centralizadas desde `.unitTestEnv`
+
+- `@BeforeEach`: login fresco en cada test para independencia total
+
+- Cleanup automático: restauración de contraseñas al final de cada suite
 
 ### Servicios
 
