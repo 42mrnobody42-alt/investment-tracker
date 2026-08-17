@@ -122,8 +122,10 @@ public class PasswordRecoveryService {
         }
 
         // Cambiar contraseña
-        String encryptedPassword = securityLoginComponent.encryptPassword(attempt.getNewPassword());
-        user.setPasswordHash(encryptedPassword);
+        String newPassword = Objects.requireNonNull(attempt.getNewPassword(), "newPassword no puede ser null");
+        String encryptedPassword = securityLoginComponent
+                .encryptPassword(Objects.requireNonNull(newPassword, "newPassword no puede ser null"));
+        user.setPasswordHash(Objects.requireNonNull(encryptedPassword, "encryptedPassword no puede ser null"));
         userRepository.save(user);
 
         // Limpiar caché

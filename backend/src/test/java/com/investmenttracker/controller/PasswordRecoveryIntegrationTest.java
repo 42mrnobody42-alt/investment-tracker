@@ -75,8 +75,8 @@ class PasswordRecoveryIntegrationTest {
             .build();
 
         MvcResult result = mockMvc.perform(post("/api/auth/recovery/request")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(request)))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value("REC-0001"))
             .andReturn();
@@ -104,8 +104,8 @@ class PasswordRecoveryIntegrationTest {
             .build();
 
         mockMvc.perform(post("/api/auth/recovery/verify")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(toJson(request)))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value("REC-0002"))
             .andExpect(jsonPath("$.message").value("Contraseña actualizada exitosamente"));
@@ -121,7 +121,7 @@ class PasswordRecoveryIntegrationTest {
         printSubStep("Usuario: " + USERNAME + " | Password: " + NEW_PASSWORD);
 
         mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content("{\"username\":\"" + USERNAME + "\",\"password\":\"" + NEW_PASSWORD + "\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists())
@@ -137,7 +137,7 @@ class PasswordRecoveryIntegrationTest {
         printStep("REC-04", "Restaurar contraseña original de incognito");
         
         MvcResult adminLogin = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content("{\"username\":\"admin\",\"password\":\"Admin123!\"}"))
             .andExpect(status().isOk())
             .andReturn();
@@ -146,7 +146,7 @@ class PasswordRecoveryIntegrationTest {
             .get("token").asText();
 
         mockMvc.perform(post("/api/auth/restart-password")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .header("Authorization", "Bearer " + adminToken)
                 .content("{\"username\":\"incognito\",\"email\":\"42mrnobody42@gmail.com\",\"nombreCompleto\":\"Usuario Premium incognito\",\"nuevoPassword\":\"C4mb14m3!Urgente\",\"repetirNuevoPassword\":\"C4mb14m3!Urgente\"}"))
             .andExpect(status().isOk());
