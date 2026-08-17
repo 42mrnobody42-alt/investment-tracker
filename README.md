@@ -1,6 +1,6 @@
 # PROMPT INICIAL - Sistema de Gestión de Inversiones
 
-## Fecha: 2026-08-17
+## Fecha: 2026-08-18
 
 ## Proyecto: Investment Tracker Pro
 
@@ -44,6 +44,7 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
     - [Desencriptar Texto (ADMIN)](#desencriptar-texto-admin)
     - [Logout (Cerrar Sesión)](#logout-cerrar-sesión)
     - [Recuperación de Contraseña (2FA SMTP)](#recuperación-de-contraseña-2fa-smtp)
+    - [Change My Password](#change-my-password)
   - [Seguridad](#seguridad)
   - [Pruebas](#pruebas)
 
@@ -266,6 +267,7 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 | `/api/auth/logout`           | POST   | JWT   | Cerrar sesión - invalida el token                        |
 | `/api/auth/recovery/request` | POST   | No    | Solicitar recuperación - envía token 6 dígitos por email |
 | `/api/auth/recovery/verify`  | POST   | No    | Verificar token y cambiar contraseña                     |
+| `/api/auth/change-my-pass`   | POST   | JWT   | Cambiar contraseña propia con validación actual          |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
@@ -414,6 +416,32 @@ sequenceDiagram
     B-->>U: 200 OK {code: REC-0002, message: Contraseña actualizada}
 ```
 
+#### Change My Password
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuario
+    participant B as 🔒 Backend (7700)
+    participant DB as 🗄️ PostgreSQL
+
+    U->>B: POST /api/auth/change-my-pass {username, email, actualPassword, nuevoPassword, repetirNuevoPassword}
+    Note right of B: Header: Authorization: Bearer <JWT>
+    B->>B: Validar campos no vacíos
+    B->>DB: SELECT usuario + password_hash
+    DB-->>B: User (username, email, hash, activo)
+    B->>B: Validar username coincide con token
+    B->>B: Validar email (case-insensitive)
+    B->>B: BCrypt.verify(actualPassword, hash)
+    B->>B: Validar contraseñas coinciden (case-sensitive)
+    B->>B: Validar criterios (8+ chars, mayúscula, especial)
+    B->>B: Validar nueva ≠ actual
+    B->>B: BCrypt.encode(nuevoPassword)
+    B->>DB: UPDATE password_hash
+    DB-->>B: OK
+    B->>B: Reset intentos fallidos
+    B-->>U: 200 OK {code: AUTH-0003, message: Contraseña actualizada}
+```
+
 ### Seguridad
 
 - **JWT** con firma HMAC-SHA384
@@ -423,10 +451,11 @@ sequenceDiagram
 - Control de intentos fallidos: 3 intentos, bloqueo progresivo (5min → 15min → 30min → 1h → 12h → 24h → permanente)
 - Validaciones de contraseña: 8+ caracteres, 1 mayúscula, 1 carácter especial, sin comillas
 - Validación case-insensitive para email, case-sensitive para contraseñas
+- **2FA SMTP** para recuperación de contraseña con token de 6 dígitos
 
 ### Pruebas
 
-- **32 pruebas automatizadas** (26 integración + 6 unitarias)
+- **59 pruebas automatizadas** (integración + unitarias)
 - Cobertura: login, restart-password, validaciones de contraseña, control de roles, bloqueos
 - Ejecutar: `mvn test`
 
@@ -487,7 +516,7 @@ sequenceDiagram
 
 ### 101. Estructura del Proyecto
 
-#### Estructura detallada de archivos
+#### Estructura detallada de archivos (81 archivos, 46 directorios)
 
 - **`investment-tracker/`** - Raíz del proyecto
   - `.gitignore` - Archivos ignorados por Git
@@ -530,31 +559,46 @@ sequenceDiagram
       - `InvestmentTrackerApplication.java` - Clase principal (puerto 7700)
       - **`config/`**
         - `SecurityConfig.java` - Spring Security + JWT
+        - `EncryptedDataSourceConfig.java` - DataSource con desencriptación AES
+        - `MailConfig.java` - Configuración SMTP con desencriptación
       - **`controller/`** - Endpoints REST
-        - `AuthController.java` - Login + restart-password
+        - `AuthController.java` - Login + restart-password + logout + change-my-pass
+        - `PasswordRecoveryController.java` - Recuperación de contraseña (2FA SMTP)
+        - `EncryptionController.java` - Encriptación/desencriptación AES-GCM
         - `TestValidationController.java` - Health check
       - **`service/`** - Lógica de negocio
         - `LoginService.java` - Autenticación + control de intentos
         - `JwtService.java` - Generación/validación JWT
         - `RestartUserPasswordService.java` - Restablecer contraseña (ADMIN)
+        - `ChangeMyPasswordService.java` - Cambio de contraseña propia
+        - `PasswordRecoveryService.java` - Recuperación con 2FA
+        - `EncryptionService.java` - Encriptación AES-GCM
+        - `LogoutService.java` - Cierre de sesión con blacklist
+        - `EmailService.java` - Envío de correos SMTP
       - **`component/`** - Componentes reutilizables
         - `LoginComponent.java` - Control de intentos fallidos y bloqueos
         - `SecurityLoginComponent.java` - Encriptación BCrypt + validación
+        - `AESEncryptionComponent.java` - Encriptación AES-256-GCM
+        - `TokenBlacklistComponent.java` - Blacklist de tokens JWT
       - **`security/`** - Capa de seguridad
         - `JwtAuthFilter.java` - Filtro de autenticación JWT
         - `UserDetailsServiceImpl.java` - Carga usuarios desde BD
       - **`model/`** - Modelo de datos
         - **`entity/`** - `User.java`, `Role.java`
         - **`enums/`** - `ErrorCode.java`, `LockLevel.java`, `SuccessfulCode.java`
-        - **`request/`** - `LoginRequest.java`, `RestartPasswordRequest.java`
-        - **`response/`** - `LoginResponse.java`, `ErrorResponse.java`, `SuccessResponse.java`
+        - **`request/`** - `LoginRequest.java`, `RestartPasswordRequest.java`, `ChangePasswordRequest.java`, `PasswordRecoveryRequest.java`, `TokenVerificationRequest.java`, `EncryptionRequest.java`
+        - **`response/`** - `LoginResponse.java`, `ErrorResponse.java`, `SuccessResponse.java`, `EncryptionResponse.java`
         - **`dto/`** - `UserPasswordDTO.java`
       - **`repository/`** - `UserRepository.java`
       - **`exception/`** - `AuthenticationException.java`, `GlobalExceptionHandler.java`
     - **`src/main/resources/`**
-      - `application.yml` - Configuración (DB, JWT, puerto 7700)
-    - **`src/test/java/com/investmenttracker/`** - Pruebas (32 tests)
-      - **`controller/`** - `AuthIntegrationTest.java` (26 pruebas de integración)
+      - `application.yml` - Configuración (DB encriptada, JWT, SMTP encriptado, puerto 7700)
+    - **`src/test/java/com/investmenttracker/`** - Pruebas (59 tests)
+      - **`controller/`** - 4 suites de integración
+        - `AuthIntegrationTest.java` (31 pruebas)
+        - `EncryptionIntegrationTest.java` (7 pruebas)
+        - `PasswordRecoveryIntegrationTest.java` (4 pruebas)
+        - `ChangeMyPasswordIntegrationTest.java` (11 pruebas)
       - **`service/`** - `LoginServiceTest.java` (6 pruebas unitarias)
   - **`frontend/`** - SPA React 18 (estructura inicial)
     - `package.json` - Dependencias npm
