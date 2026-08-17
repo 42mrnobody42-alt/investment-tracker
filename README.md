@@ -1,6 +1,6 @@
 # PROMPT INICIAL - Sistema de Gestión de Inversiones
 
-## Fecha: 2026-08-16
+## Fecha: 2026-08-17
 
 ## Proyecto: Investment Tracker Pro
 
@@ -256,16 +256,16 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 
 ### Servicios Publicados
 
-| Endpoint                     | Método | Auth  | Descripción                                 |
-| ---------------------------- | ------ | ----- | ------------------------------------------- |
-| `/api/auth/login`            | POST   | No    | Login - Retorna JWT                         |
-| `/api/auth/restart-password` | POST   | ADMIN | Restablecer contraseña de cualquier usuario |
-| `/api/test/health`           | GET    | No    | Health check del servicio                   |
-| `/api/encryption/encrypt`    | POST   | ADMIN | Encriptar texto con AES-GCM                 |
-| `/api/encryption/decrypt`    | POST   | ADMIN | Desencriptar texto con AES-GCM              |
-| `/api/auth/logout`           | POST   | JWT   | Cerrar sesión - invalida el token           |
+| Endpoint                     | Método | Auth  | Descripción                                              |
+| ---------------------------- | ------ | ----- | -------------------------------------------------------- |
+| `/api/auth/login`            | POST   | No    | Login - Retorna JWT                                      |
+| `/api/auth/restart-password` | POST   | ADMIN | Restablecer contraseña de cualquier usuario              |
+| `/api/test/health`           | GET    | No    | Health check del servicio                                |
+| `/api/encryption/encrypt`    | POST   | ADMIN | Encriptar texto con AES-GCM                              |
+| `/api/encryption/decrypt`    | POST   | ADMIN | Desencriptar texto con AES-GCM                           |
+| `/api/auth/logout`           | POST   | JWT   | Cerrar sesión - invalida el token                        |
 | `/api/auth/recovery/request` | POST   | No    | Solicitar recuperación - envía token 6 dígitos por email |
-| `/api/auth/recovery/verify`  | POST   | No    | Verificar token y cambiar contraseña                       |
+| `/api/auth/recovery/verify`  | POST   | No    | Verificar token y cambiar contraseña                     |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
