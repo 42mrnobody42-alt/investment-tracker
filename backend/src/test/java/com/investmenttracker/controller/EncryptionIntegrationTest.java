@@ -1,9 +1,7 @@
 package com.investmenttracker.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investmenttracker.model.request.EncryptionRequest;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -18,13 +16,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class EncryptionIntegrationTest extends BaseIntegrationTest {
 
-    private static String adminToken;
+    private String adminToken;
 
     private static final List<String> TEST_TEXTS = List.of(
         "MiPasswordSecreto123!",
         "TextoConCaracteresEspeciales@#$%^&*()_+=-[]{}|;:',.<>?/~`",
         "ContrasenaSinAcentosConNumeros123yEspacios"
     );
+
+    @BeforeEach
+    void setUpFreshLogin() throws Exception {
+        adminToken = loginAndGetToken(testConfig.getAdminUser(), testConfig.getAdminPassword());
+        assertNotNull(adminToken, "Token admin no puede ser null");
+    }
 
     private void printSubStep(String message) {
         System.out.println("     ↳ " + message);
@@ -42,13 +46,10 @@ class EncryptionIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Order(1)
-    @DisplayName("EC-01: Login admin fresco para esta suite")
+    @DisplayName("EC-01: Login admin fresco (BeforeEach)")
     void testAdminLogin() throws Exception {
         printBanner("🔐 PRUEBAS DE ENCRIPTACIÓN/DESENCRIPTACIÓN AES-GCM");
-        printStep("EC-01", "Login admin fresco");
-
-        adminToken = loginAndGetToken(testConfig.getAdminUser(), testConfig.getAdminPassword());
-        assertNotNull(adminToken, "Token admin no puede ser null");
+        printStep("EC-01", "Login admin fresco con @BeforeEach");
         printStep("EC-01", "✅ Token admin obtenido");
     }
 

@@ -22,6 +22,9 @@ public class TestConfig {
     @Value("${TEST_USER_DEMO_NOMBRE}")
     private String demoNombre;
 
+    @Value("${TEST_USER_DEMO_NEW_PASSWORD}")
+    private String demoNewPassword;
+
     @Value("${TEST_USER_ADMIN}")
     private String adminUser;
 
@@ -45,4 +48,10 @@ public class TestConfig {
 
     @Value("${TEST_USER_INCOGNITO_NOMBRE}")
     private String incognitoNombre;
+
+    @Value("${TEST_USER_INCOGNITO_NEW_PASSWORD}")
+    private String incognitoNewPassword;
+
+    @Value("${TEST_BASE_URL}")
+    private String baseUrl;
 }
