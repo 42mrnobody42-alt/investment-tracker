@@ -36,28 +36,28 @@ login:
   lock-duration-minutes: 5
   attempt-window-minutes: 5
 
+# SMTP Configuration (valores encriptados)
+smtp:
+  host: ${SMTP_HOST_ENCRYPTED:DBchFGCWc04I8QWKvkU90V82t0prGi96uRvgMweBZk+lmgIw0ipD/yTM}
+  port: ${SMTP_PORT_ENCRYPTED:JDoIGO9TVWnco9Ohv9AoHhTrlqB1nglg5X2RFt4pFA==}
+  username: ${SMTP_USERNAME_ENCRYPTED:rQ83spM04IIfAvbx35PlQvrj3b5yCpQCbaByLSlYVTIZOxjp1GnMzjQL3l2cKguzjUE=}
+  password: ${SMTP_PASSWORD_ENCRYPTED:h4pwMKSn9pko3P/vQ6RNp4f0fhoElSgw5eW2Fj0B377jUr79q/dKm5F/KHIkOv4=}
+  auth: true
+  starttls:
+    enable: true
+  from: ${SMTP_FROM_ENCRYPTED:rQ83spM04IIfAvbx35PlQvrj3b5yCpQCbaByLSlYVTIZOxjp1GnMzjQL3l2cKguzjUE=}
+  from-name: "Investment Tracker Pro"
+
+# Password Recovery Configuration
+password-recovery:
+  token-ttl-minutes: 5
+  max-attempts-per-hour: 3
+  lock-duration-hours: 24
+  token-length: 6
+
 # Logging
 logging:
   level:
     com.investmenttracker: DEBUG
     org.springframework.security: INFO
     org.hibernate.SQL: WARN
-
-# SMTP Configuration (Gmail)
-smtp:
-  host: smtp.gmail.com
-  port: 587
-  username: ${SMTP_USERNAME:42mrNobody42@gmail.com}
-  password: ${SMTP_PASSWORD:ybqx lxjj zjti dnlo}
-  auth: true
-  starttls:
-    enable: true
-  from: ${SMTP_USERNAME:42mrNobody42@gmail.com}
-  from-name: "Investment Tracker Pro"
-
-# Password Recovery Configuration
-password-recovery:
-  token-ttl-minutes: 5 # Tiempo de vida del token en minutos
-  max-attempts-per-hour: 3 # Máximo de solicitudes por hora
-  lock-duration-hours: 24 # Bloqueo por 24 horas
-  token-length: 6 # Longitud del token numérico
