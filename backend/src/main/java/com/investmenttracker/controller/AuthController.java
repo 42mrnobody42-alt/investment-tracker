@@ -1,9 +1,11 @@
 package com.investmenttracker.controller;
 
+import com.investmenttracker.model.request.ChangePasswordRequest;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.request.RestartPasswordRequest;
 import com.investmenttracker.model.response.LoginResponse;
 import com.investmenttracker.model.response.SuccessResponse;
+import com.investmenttracker.service.ChangeMyPasswordService;
 import com.investmenttracker.service.LoginService;
 import com.investmenttracker.service.LogoutService;
 import com.investmenttracker.service.RestartUserPasswordService;
@@ -17,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,6 +29,7 @@ public class AuthController {
     private final LoginService loginService;
     private final RestartUserPasswordService restartUserPasswordService;
     private final LogoutService logoutService;
+    private final ChangeMyPasswordService changeMyPasswordService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -68,6 +72,15 @@ public class AuthController {
 
         String token = authHeader.substring(7);
         SuccessResponse response = logoutService.logout(token);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/change-my-pass")
+    public ResponseEntity<SuccessResponse> changeMyPassword(@Valid @RequestBody ChangePasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedUsername = Objects.requireNonNull(authentication.getName(), "Username no puede ser null");
+
+        SuccessResponse response = changeMyPasswordService.changePassword(request, authenticatedUsername);
         return ResponseEntity.ok(response);
     }
 }

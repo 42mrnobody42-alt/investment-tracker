@@ -33,6 +33,8 @@ public enum ErrorCode {
     // Errores de contraseña
     PASSWORDS_DO_NOT_MATCH("PWD-001", "El nuevo password y su repetición NO coinciden", HttpStatus.BAD_REQUEST),
     PASSWORD_CRITERIA_NOT_MET("PWD-002", "CONTRASEÑA_NO_CUMPLE_CRITERIOS", HttpStatus.BAD_REQUEST),
+    CURRENT_PASSWORD_INCORRECT("PWD-003", "La contraseña actual es incorrecta", HttpStatus.BAD_REQUEST),
+    SAME_PASSWORD("PWD-004", "La nueva contraseña no puede ser igual a la actual", HttpStatus.BAD_REQUEST),
     
     // Errores de encriptación
     ENCRYPT_ERROR("ENC-001", "Error al encriptar el texto proporcionado", HttpStatus.INTERNAL_SERVER_ERROR),

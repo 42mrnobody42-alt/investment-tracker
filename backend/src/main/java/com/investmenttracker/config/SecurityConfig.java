@@ -44,6 +44,7 @@ public class SecurityConfig {
                 // Endpoints completamente públicos
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
+                .requestMatchers("/api/auth/change-my-pass").authenticated()
                 .requestMatchers("/api/auth/recovery/request").permitAll()
                 .requestMatchers("/api/auth/recovery/verify").permitAll()
                 .requestMatchers("/api/test/**").permitAll()

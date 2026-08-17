@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investmenttracker.model.request.EncryptionRequest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
@@ -18,19 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class EncryptionIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+class EncryptionIntegrationTest extends BaseIntegrationTest {
 
     private static String adminToken;
-    private static String demoToken;
 
     private static final List<String> TEST_TEXTS = List.of(
         "MiPasswordSecreto123!",
@@ -38,36 +26,12 @@ class EncryptionIntegrationTest {
         "ContrasenaSinAcentosConNumeros123yEspacios"
     );
 
-    private void printBanner(String title) {
-        System.out.println("\n" + "=".repeat(70));
-        System.out.println("  " + title);
-        System.out.println("=".repeat(70));
-    }
-
-    private void printStep(String step, String message) {
-        System.out.println("  [" + step + "] " + message);
-    }
-
     private void printSubStep(String message) {
         System.out.println("     ↳ " + message);
     }
 
     private void printData(String label, String value) {
         System.out.println("       " + label + ": " + value);
-    }
-
-    private String toJson(Object obj) {
-        try {
-            return Objects.requireNonNull(objectMapper.writeValueAsString(obj), "JSON no puede ser null");
-        } catch (Exception e) {
-            throw new RuntimeException("Error serializando JSON", e);
-        }
-    }
-
-    private String extractToken(MvcResult result) throws Exception {
-        return Objects.requireNonNull(
-            objectMapper.readTree(result.getResponse().getContentAsString()).get("token").asText(),
-            "Token no puede ser null");
     }
 
     private String extractField(MvcResult result, String fieldName) throws Exception {
@@ -78,19 +42,13 @@ class EncryptionIntegrationTest {
 
     @Test
     @Order(1)
-    @DisplayName("EC-01: Login admin para pruebas")
+    @DisplayName("EC-01: Login admin fresco para esta suite")
     void testAdminLogin() throws Exception {
         printBanner("🔐 PRUEBAS DE ENCRIPTACIÓN/DESENCRIPTACIÓN AES-GCM");
-        printStep("EC-01", "Login admin");
-        
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
-                .content("{\"username\":\"admin\",\"password\":\"Admin123!\"}"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").exists())
-            .andReturn();
-        
-        adminToken = extractToken(result);
+        printStep("EC-01", "Login admin fresco");
+
+        adminToken = loginAndGetToken(testConfig.getAdminUser(), testConfig.getAdminPassword());
+        assertNotNull(adminToken, "Token admin no puede ser null");
         printStep("EC-01", "✅ Token admin obtenido");
     }
 
@@ -98,15 +56,14 @@ class EncryptionIntegrationTest {
     @Order(2)
     @DisplayName("EC-02: 3 encriptaciones + 3 desencriptaciones en orden")
     void testEncryptDecryptCycles() throws Exception {
-        printStep("EC-02", "Ejecutar 3 encriptaciones y 3 desencriptaciones en orden");
+        printStep("EC-02", "Ejecutar 3 encriptaciones y 3 desencriptaciones");
         
         List<String> encryptedTexts = new ArrayList<>();
         List<String> originalTexts = new ArrayList<>();
         
-        // FASE 1: Encriptar los 3 textos uno por uno
         for (int i = 0; i < TEST_TEXTS.size(); i++) {
             String originalText = TEST_TEXTS.get(i);
-            printSubStep("━━━ ENCRIPTACIÓN #" + (i + 1) + " ━━━");
+            printSubStep("━━─ ENCRIPTACIÓN #" + (i + 1) + " ─━━");
             printData("Texto Original (body)", originalText);
             
             EncryptionRequest request = EncryptionRequest.builder()
@@ -114,7 +71,7 @@ class EncryptionIntegrationTest {
                 .build();
             
             MvcResult result = mockMvc.perform(post("/api/encryption/encrypt")
-                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                     .header("Authorization", "Bearer " + adminToken)
                     .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                 .andExpect(status().isOk())
@@ -134,12 +91,11 @@ class EncryptionIntegrationTest {
             printSubStep("✅ Encriptación #" + (i + 1) + " validada\n");
         }
         
-        // FASE 2: Desencriptar los 3 textos uno por uno
         for (int i = 0; i < encryptedTexts.size(); i++) {
             String expectedOriginal = originalTexts.get(i);
             String encryptedText = encryptedTexts.get(i);
             
-            printSubStep("━━━ DESENCRIPTACIÓN #" + (i + 1) + " ━━━");
+            printSubStep("━━─ DESENCRIPTACIÓN #" + (i + 1) + " ─━━");
             printData("textoEncriptado (body)", encryptedText);
             printData("textoOriginal esperado", expectedOriginal);
             
@@ -148,7 +104,7 @@ class EncryptionIntegrationTest {
                 .build();
             
             MvcResult result = mockMvc.perform(post("/api/encryption/decrypt")
-                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                    .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                     .header("Authorization", "Bearer " + adminToken)
                     .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                 .andExpect(status().isOk())
@@ -159,7 +115,7 @@ class EncryptionIntegrationTest {
             printData("textoDesencriptado (respuesta)", textoDesencriptado);
             
             assertEquals(expectedOriginal, textoDesencriptado,
-                "❌ DESENCRIPTACIÓN #" + (i + 1) + ": NO coincide con el original");
+                "❌ DESENCRIPTACIÓN #" + (i + 1) + ": NO coincide con original");
             
             printSubStep("✅ Desencriptación #" + (i + 1) + " validada\n");
         }
@@ -171,114 +127,95 @@ class EncryptionIntegrationTest {
     @Order(3)
     @DisplayName("EC-03: ⚠️ LIMITACIÓN - Acentos UTF-8 se corrompen")
     void testEncryptWithAccentsFails() throws Exception {
-        printStep("EC-03", "⚠️ Reporte de limitación: texto con acentos");
+        printStep("EC-03", "⚠️ Reporte de limitación");
         
         String textoConAcentos = "ContraseñaConAcentosÁÉÍÓÚñÑ";
-        printSubStep("━━─ DATOS DE PRUEBA ─━━");
-        printData("Texto Original (body)", textoConAcentos);
         
         EncryptionRequest request = EncryptionRequest.builder()
             .cadena_string_a_encriptar(textoConAcentos)
             .build();
         
         MvcResult result = mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .header("Authorization", "Bearer " + adminToken)
                 .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isOk())
             .andReturn();
         
         String textoOriginalRespuesta = extractField(result, "textoOriginal");
-        String textoEncriptado = extractField(result, "textoEncriptado");
         
-        printData("textoOriginal (respuesta)", textoOriginalRespuesta);
-        printData("textoEncriptado", textoEncriptado);
-        
-        if (!textoConAcentos.equals(textoOriginalRespuesta)) {
-            printSubStep("⚠️ CONFIRMADO: Los acentos se corrompen (mojibake UTF-8)");
-            printSubStep("   LIMITACIÓN DOCUMENTADA: Usar solo ASCII en textos a encriptar");
-            assertNotEquals(textoConAcentos, textoOriginalRespuesta,
-                "Se esperaba corrupción de acentos (limitación conocida)");
-        } else {
-            printSubStep("✅ Los acentos se mantienen correctamente");
-        }
+        assertNotEquals(textoConAcentos, textoOriginalRespuesta,
+            "Se esperaba corrupción de acentos (limitación conocida)");
         
         printStep("EC-03", "⚠️ Limitación documentada\n");
     }
 
     @Test
     @Order(4)
-    @DisplayName("EC-04: Encriptar texto null - debe dar 400")
+    @DisplayName("EC-04: Texto null → 400")
     void testEncryptNullText() throws Exception {
-        printStep("EC-04", "Encriptar texto null → 400");
+        printStep("EC-04", "Texto null → 400");
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .header("Authorization", "Bearer " + adminToken)
                 .content("{}"))
             .andExpect(status().isBadRequest());
-        printStep("EC-04", "✅ Texto null rechazado (400)\n");
+        printStep("EC-04", "✅ 400\n");
     }
 
     @Test
     @Order(5)
-    @DisplayName("EC-05: Encriptar texto vacío - debe dar 400")
+    @DisplayName("EC-05: Texto vacío → 400")
     void testEncryptEmptyText() throws Exception {
-        printStep("EC-05", "Encriptar texto vacío → 400");
+        printStep("EC-05", "Texto vacío → 400");
         EncryptionRequest request = EncryptionRequest.builder()
             .cadena_string_a_encriptar("")
             .build();
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .header("Authorization", "Bearer " + adminToken)
                 .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isBadRequest());
-        printStep("EC-05", "✅ Texto vacío rechazado (400)\n");
+        printStep("EC-05", "✅ 400\n");
     }
 
     @Test
     @Order(6)
-    @DisplayName("EC-06: Sin token - debe dar 403")
+    @DisplayName("EC-06: Sin token → 403")
     void testEncryptWithoutToken() throws Exception {
         printStep("EC-06", "Sin token → 403");
         EncryptionRequest request = EncryptionRequest.builder()
             .cadena_string_a_encriptar("Test123!")
             .build();
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isForbidden());
-        printStep("EC-06", "✅ Sin token = 403\n");
+        printStep("EC-06", "✅ 403\n");
     }
 
     @Test
     @Order(7)
-    @DisplayName("EC-07: demo_user sin ROLE_ADMIN - debe dar 403")
+    @DisplayName("EC-07: demo_user sin ROLE_ADMIN → 403")
     void testDemoUserCannotEncrypt() throws Exception {
         printStep("EC-07", "demo_user intenta encriptar → 403");
         
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
-                .content("{\"username\":\"demo_user\",\"password\":\"Demo123!\"}"))
-            .andExpect(status().isOk())
-            .andReturn();
-        
-        demoToken = extractToken(loginResult);
+        String demoToken = loginAndGetToken(testConfig.getDemoUser(), testConfig.getDemoPassword());
+        assertNotNull(demoToken, "Token demo no puede ser null");
         
         EncryptionRequest request = EncryptionRequest.builder()
             .cadena_string_a_encriptar("TestDemo!")
             .build();
         
         mockMvc.perform(post("/api/encryption/encrypt")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .header("Authorization", "Bearer " + demoToken)
                 .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
             .andExpect(status().isForbidden());
         
         printStep("EC-07", "✅ demo_user BLOQUEADO (403)");
-        
         System.out.println("=".repeat(70));
-        System.out.println("  🔐 FIN PRUEBAS DE ENCRIPTACIÓN - 7/7 EJECUTADAS");
-        System.out.println("  ⚠️  EC-03 documenta limitación con acentos UTF-8");
+        System.out.println("  🔐 FIN PRUEBAS DE ENCRIPTACIÓN");
         System.out.println("=".repeat(70));
     }
 }
