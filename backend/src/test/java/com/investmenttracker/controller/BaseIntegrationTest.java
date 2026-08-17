@@ -1,7 +1,9 @@
 package com.investmenttracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.investmenttracker.component.TokenBlacklistComponent;
 import com.investmenttracker.config.TestConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,11 +28,19 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected TestConfig testConfig;
 
+    @Autowired
+    protected TokenBlacklistComponent tokenBlacklistComponent;
+
+    @BeforeEach
+    void clearBlacklist() {
+        tokenBlacklistComponent.clear();
+    }
+
     protected String loginAndGetToken(String username, String password) throws Exception {
         String body = String.format("{\"username\":\"%s\",\"password\":\"%s\"}", username, password);
         
         MvcResult result = mockMvc.perform(post("/api/auth/login")
-                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
+                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                 .content(Objects.requireNonNull(body, "Body no puede ser null")))
             .andReturn();
         

@@ -58,6 +58,14 @@ public class TokenBlacklistComponent {
     /**
      * Retorna la cantidad de tokens en blacklist
      */
+
+    /**
+     * Limpia toda la blacklist (para testing)
+     */
+    public void clear() {
+        blacklist.clear();
+        log.debug("Blacklist limpiada completamente");
+    }
     public int getBlacklistSize() {
         return blacklist.size();
     }
