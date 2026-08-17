@@ -43,6 +43,7 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
     - [Encriptar Texto (ADMIN)](#encriptar-texto-admin)
     - [Desencriptar Texto (ADMIN)](#desencriptar-texto-admin)
     - [Logout (Cerrar Sesión)](#logout-cerrar-sesión)
+    - [Recuperación de Contraseña (2FA SMTP)](#recuperación-de-contraseña-2fa-smtp)
   - [Seguridad](#seguridad)
   - [Pruebas](#pruebas)
 
@@ -263,6 +264,8 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 | `/api/encryption/encrypt`    | POST   | ADMIN | Encriptar texto con AES-GCM                 |
 | `/api/encryption/decrypt`    | POST   | ADMIN | Desencriptar texto con AES-GCM              |
 | `/api/auth/logout`           | POST   | JWT   | Cerrar sesión - invalida el token           |
+| `/api/auth/recovery/request` | POST   | No    | Solicitar recuperación - envía token 6 dígitos por email |
+| `/api/auth/recovery/verify`  | POST   | No    | Verificar token y cambiar contraseña                       |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
@@ -377,6 +380,38 @@ sequenceDiagram
     B->>BL: Verificar si token está en blacklist
     BL-->>B: Token encontrado → inválido
     B-->>U: 401 Unauthorized {message: Token inválido o expirado}
+```
+
+#### Recuperación de Contraseña (2FA SMTP)
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuario
+    participant B as 🔒 Backend (7700)
+    participant E as 📧 Email SMTP
+    participant DB as 🗄️ PostgreSQL
+
+    Note over U,B: PASO 1: Solicitar recuperación
+    U->>B: POST /api/auth/recovery/request {username, email, nuevoPassword}
+    B->>B: Validar campos no vacíos
+    B->>B: Validar criterios de contraseña (8+ chars, mayúscula, especial)
+    B->>DB: SELECT usuario + email
+    DB-->>B: User (username, email)
+    B->>B: Generar token 6 dígitos (SecureRandom)
+    B->>E: Enviar email con token
+    E-->>B: Email enviado exitosamente
+    B-->>U: 200 OK {code: REC-0001, message: Correo enviado}
+
+    Note over U,B: PASO 2: Verificar token y cambiar contraseña
+    U->>B: POST /api/auth/recovery/verify {username, email, token, nuevoPassword}
+    B->>B: Validar token no expirado (TTL 5 min)
+    B->>B: Validar token coincide
+    B->>DB: SELECT usuario
+    DB-->>B: User
+    B->>B: BCrypt.encode(nuevoPassword)
+    B->>DB: UPDATE password_hash
+    DB-->>B: OK
+    B-->>U: 200 OK {code: REC-0002, message: Contraseña actualizada}
 ```
 
 ### Seguridad
