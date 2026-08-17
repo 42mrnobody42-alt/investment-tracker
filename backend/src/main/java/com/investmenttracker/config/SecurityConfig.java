@@ -41,20 +41,24 @@ public class SecurityConfig {
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Endpoints completamente públicos
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
-                .requestMatchers("/api/auth/recovery/**").permitAll()
+                .requestMatchers("/api/auth/recovery/request").permitAll()
+                .requestMatchers("/api/auth/recovery/verify").permitAll()
                 .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                // Endpoints protegidos
                 .requestMatchers(HttpMethod.POST, "/api/auth/restart-password").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/encryption/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .formLogin(form -> form.disable())
-            .httpBasic(basic -> basic.disable());
-
+            .httpBasic(basic -> basic.disable())
+            .logout(logout -> logout.disable());
+        
         return http.build();
     }
 }

@@ -37,6 +37,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final TokenBlacklistComponent tokenBlacklistComponent;
 
     @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/api/auth/recovery/");
+    }
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
@@ -53,7 +59,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
 
-        // Verificar si el token está en la blacklist
         if (tokenBlacklistComponent.isBlacklisted(jwt)) {
             log.warn("Token en blacklist - acceso denegado");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
