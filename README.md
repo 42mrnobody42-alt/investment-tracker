@@ -455,7 +455,7 @@ sequenceDiagram
 
 ### Pruebas
 
-- **59 pruebas automatizadas** (integración + unitarias)
+- **63 pruebas automatizadas** (integración + unitarias)
 
 - Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos
 
@@ -465,19 +465,20 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "SUITES DE PRUEBAS - 59 tests"
+    subgraph "SUITES DE PRUEBAS - 63 tests"
         A["AuthIntegrationTest<br/>31 pruebas<br/>Login, restart-password, logout"]
         B["ChangeMyPasswordIntegrationTest<br/>11 pruebas<br/>Cambio de contraseña propia"]
         C["EncryptionIntegrationTest<br/>7 pruebas<br/>Encriptación AES-256-GCM"]
         D["PasswordRecoveryIntegrationTest<br/>4 pruebas<br/>Recuperación 2FA SMTP"]
-        E["LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
+        E["RateLimitIntegrationTest<br/>4 pruebas<br/>Rate limiting anti fuerza bruta"]
+        F["LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
     end
 
     A --> F["BaseIntegrationTest<br/>Helpers comunes"]
     B --> F
     C --> F
     D --> F
-    E --> F
+    F --> G
 
     F --> G["TestConfig<br/>Variables desde .unitTestEnv"]
     G --> H[".unitTestEnv<br/>src/test/resources/"]
@@ -626,7 +627,7 @@ graph TB
       - **`exception/`** - `AuthenticationException.java`, `GlobalExceptionHandler.java`
     - **`src/main/resources/`**
       - `application.yml` - Configuración (DB encriptada, JWT, SMTP encriptado, puerto 7700)
-    - **`src/test/java/com/investmenttracker/`** - Pruebas (59 tests)
+    - **`src/test/java/com/investmenttracker/`** - Pruebas (63 tests)
       - **`controller/`** - 4 suites de integración
         - `AuthIntegrationTest.java` (31 pruebas)
         - `EncryptionIntegrationTest.java` (7 pruebas)
