@@ -2,6 +2,7 @@ package com.investmenttracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investmenttracker.component.TokenBlacklistComponent;
+import com.investmenttracker.component.RateLimitComponent;
 import com.investmenttracker.config.TestConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +32,13 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected TokenBlacklistComponent tokenBlacklistComponent;
 
+    @Autowired
+    protected RateLimitComponent rateLimitComponent;
+
     @BeforeEach
     void clearBlacklist() {
         tokenBlacklistComponent.clear();
+        rateLimitComponent.clear();
     }
 
     protected String loginAndGetToken(String username, String password) throws Exception {
@@ -65,5 +70,9 @@ public abstract class BaseIntegrationTest {
 
     protected void printStep(String step, String message) {
         System.out.println("  [" + step + "] " + message);
+    }
+
+    protected void printSubStep(String message) {
+        System.out.println("     ↳ " + message);
     }
 }

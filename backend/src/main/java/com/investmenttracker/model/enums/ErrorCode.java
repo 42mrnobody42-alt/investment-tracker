@@ -47,6 +47,7 @@ public enum ErrorCode {
     NO_POSITION_FOUND("BIZ-003", "No se encontraron posiciones para el símbolo indicado", HttpStatus.NOT_FOUND),
     
     // Errores internos
+    RATE_LIMIT_EXCEEDED("RATE-001", "Demasiadas peticiones. Intente nuevamente más tarde", HttpStatus.TOO_MANY_REQUESTS),
     INTERNAL_ERROR("SYS-001", "Error interno del servidor", HttpStatus.INTERNAL_SERVER_ERROR),
     DATABASE_ERROR("SYS-002", "Error de conexión con la base de datos", HttpStatus.INTERNAL_SERVER_ERROR);
     

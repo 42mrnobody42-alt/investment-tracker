@@ -61,3 +61,25 @@ logging:
     com.investmenttracker: DEBUG
     org.springframework.security: INFO
     org.hibernate.SQL: WARN
+
+# Rate Limiting Configuration
+rate-limiting:
+  enabled: true
+  # Límites por endpoint
+  login:
+    max-requests: 5
+    window-seconds: 60
+  recovery:
+    max-requests: 5
+    window-seconds: 3600
+  restart-password:
+    max-requests: 10
+    window-seconds: 60
+  encryption:
+    max-requests: 30
+    window-seconds: 60
+  default:
+    max-requests: 100
+    window-seconds: 60
+  # Tiempo de bloqueo cuando se excede el límite (segundos)
+  block-duration-seconds: 300

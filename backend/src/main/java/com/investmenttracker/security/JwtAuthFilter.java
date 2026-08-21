@@ -37,12 +37,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final TokenBlacklistComponent tokenBlacklistComponent;
 
     @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        String path = request.getServletPath();
-        return path.startsWith("/api/auth/recovery/");
-    }
-
-    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
