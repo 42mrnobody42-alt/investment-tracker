@@ -11,16 +11,12 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investmenttracker.model.request.EncryptionRequest;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.request.RestartPasswordRequest;
@@ -28,35 +24,11 @@ import com.investmenttracker.model.request.RestartPasswordRequest;
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class AuthIntegrationTest {
-
-        @Autowired
-        private MockMvc mockMvc;
-
-        @Autowired
-        private ObjectMapper objectMapper;
+class AuthIntegrationTest extends BaseIntegrationTest {
 
         private static String adminToken;
         private static String demoToken;
         private static final String PWD_VALIDA = "C4mb14m3!Urgente";
-
-        private void printBanner(String title) {
-                System.out.println("\n" + "=".repeat(70));
-                System.out.println("  " + title);
-                System.out.println("=".repeat(70));
-        }
-
-        private void printStep(String step, String message) {
-                System.out.println("  [" + step + "] " + message);
-        }
-
-        private String toJson(Object obj) {
-                try {
-                        return Objects.requireNonNull(objectMapper.writeValueAsString(obj), "JSON no puede ser null");
-                } catch (JsonProcessingException e) {
-                        throw new RuntimeException("Error serializando JSON", e);
-                }
-        }
 
         private MockHttpServletRequestBuilder postJson(String url, String token, Object request) {
                 Objects.requireNonNull(url, "URL no puede ser null");
@@ -93,9 +65,7 @@ class AuthIntegrationTest {
                                 "Token no puede ser null");
         }
 
-        // =============================================
         // BLOQUE 0: VALIDACIONES
-        // =============================================
         @Test
         @Order(1)
         @DisplayName("TC-00: Login admin")
@@ -289,9 +259,7 @@ class AuthIntegrationTest {
                 System.out.println("=".repeat(70));
         }
 
-        // =============================================
         // BLOQUE 1: demo_user PRIMERO, luego admin
-        // =============================================
         @Test
         @Order(17)
         @DisplayName("TC-16: Login demo")
@@ -346,9 +314,7 @@ class AuthIntegrationTest {
                 System.out.println("=".repeat(70));
         }
 
-        // =============================================
         // BLOQUE 2: VICEVERSA
-        // =============================================
         @Test
         @Order(21)
         @DisplayName("TC-20: Login admin v2")
@@ -403,9 +369,7 @@ class AuthIntegrationTest {
                 System.out.println("=".repeat(70));
         }
 
-        // =============================================
         // BLOQUE 3: ADICIONALES
-        // =============================================
         @Test
         @Order(25)
         @DisplayName("TC-24: Sin token")
@@ -434,52 +398,41 @@ class AuthIntegrationTest {
                 System.out.println("=".repeat(70));
         }
 
-        // =============================================
-        // BLOQUE 4: LOGOUT
-        // =============================================
+        // BLOQUE 4: LOGOUT COMBINADO (login + logout + verificación en un solo test)
         @Test
         @Order(27)
-        @DisplayName("BLOQUE-4 | TC-26: Login admin para logout")
-        void testLoginForLogout() throws Exception {
+        @DisplayName("BLOQUE-4 | TC-26: Login + Logout + Token invalidado")
+        void testLoginLogoutAndVerifyTokenInvalidated() throws Exception {
                 printBanner("🟣 BLOQUE 4: PRUEBAS DE LOGOUT");
                 printStep("TC-26", "Login admin para obtener token");
                 LoginRequest r = LoginRequest.builder().username("admin").password("Admin123!").build();
-                MockHttpServletRequestBuilder builder = postJson("/api/auth/login", null, r);
-                MvcResult result = mockMvc.perform(Objects.requireNonNull(builder))
+                MockHttpServletRequestBuilder loginBuilder = postJson("/api/auth/login", null, r);
+                MvcResult result = mockMvc.perform(Objects.requireNonNull(loginBuilder))
                                 .andExpect(status().isOk())
                                 .andReturn();
-                adminToken = extractToken(result);
+                String logoutToken = extractToken(result);
                 printStep("TC-26", "✅ Token obtenido");
-        }
 
-        @Test
-        @Order(28)
-        @DisplayName("BLOQUE-4 | TC-27: Logout exitoso")
-        void testLogoutSuccess() throws Exception {
                 printStep("TC-27", "Logout con token válido → 200");
                 mockMvc.perform(post("/api/auth/logout")
-                                .header("Authorization", "Bearer " + adminToken))
+                                .header("Authorization", "Bearer " + logoutToken))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.message").value("Sesión cerrada exitosamente"));
                 printStep("TC-27", "✅ Logout exitoso");
-        }
 
-        @Test
-        @Order(29)
-        @DisplayName("BLOQUE-4 | TC-28: Token invalidado después de logout")
-        void testTokenInvalidatedAfterLogout() throws Exception {
                 printStep("TC-28", "Usar token después de logout → 401");
                 EncryptionRequest encRequest = EncryptionRequest.builder()
                                 .cadena_string_a_encriptar("TestPostLogout123!")
                                 .build();
-                MockHttpServletRequestBuilder builder = postJson("/api/encryption/encrypt", adminToken, encRequest);
-                mockMvc.perform(Objects.requireNonNull(builder))
+                MockHttpServletRequestBuilder encBuilder = postJson("/api/encryption/encrypt", logoutToken, encRequest);
+                mockMvc.perform(Objects.requireNonNull(encBuilder))
                                 .andExpect(status().isUnauthorized());
                 printStep("TC-28", "✅ Token invalidado (401)");
         }
 
+        // Logout sin token
         @Test
-        @Order(30)
+        @Order(28)
         @DisplayName("BLOQUE-4 | TC-29: Logout sin token")
         void testLogoutWithoutToken() throws Exception {
                 printStep("TC-29", "Logout sin token → 400");
@@ -488,8 +441,9 @@ class AuthIntegrationTest {
                 printStep("TC-29", "✅ Sin token = 400");
         }
 
+        // Logout con token inválido
         @Test
-        @Order(31)
+        @Order(29)
         @DisplayName("BLOQUE-4 | TC-30: Logout con token inválido")
         void testLogoutWithInvalidToken() throws Exception {
                 printStep("TC-30", "Logout con token inválido → 4xx");
