@@ -462,4 +462,4 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                 clearBlacklist();
         }
 
-}
+    }
