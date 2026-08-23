@@ -35,10 +35,14 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected RateLimitComponent rateLimitComponent;
 
+    @Autowired
+    protected com.investmenttracker.component.RefreshTokenComponent refreshTokenComponent;
+
     @BeforeEach
-    void clearBlacklist() {
+    protected void clearBlacklist() {
         tokenBlacklistComponent.clear();
         rateLimitComponent.clear();
+        refreshTokenComponent.clear();
     }
 
     protected String loginAndGetToken(String username, String password) throws Exception {

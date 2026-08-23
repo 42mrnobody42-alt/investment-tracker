@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.investmenttracker.component.LoginComponent;
+import com.investmenttracker.component.RefreshTokenComponent;
 import com.investmenttracker.exception.AuthenticationException;
 import com.investmenttracker.model.entity.Role;
 import com.investmenttracker.model.entity.User;
@@ -33,191 +34,200 @@ import com.investmenttracker.model.response.LoginResponse;
 @ExtendWith(MockitoExtension.class)
 class LoginServiceTest {
 
-    @Mock
-    private LoginComponent loginComponent;
+        @Mock
+        private LoginComponent loginComponent;
 
-    @Mock
-    private JwtService jwtService;
+        @Mock
+        private JwtService jwtService;
 
-    @InjectMocks
-    private LoginService loginService;
+        @Mock
+        private RefreshTokenComponent refreshTokenComponent;
 
-    private User demoUser;
-    private User adminUser;
+        @InjectMocks
+        private LoginService loginService;
 
-    @BeforeEach
-    void setUp() {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        private User demoUser;
+        private User adminUser;
 
-        String demoPassHash = Objects.requireNonNull(encoder.encode("Demo123!"), "Hash demo no puede ser null");
-        String adminPassHash = Objects.requireNonNull(encoder.encode("Admin123!"), "Hash admin no puede ser null");
+        @BeforeEach
+        void setUp() {
+                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-        Role userRole = Role.builder()
-                .id(UUID.randomUUID())
-                .nombre("ROLE_USER")
-                .build();
+                String demoPassHash = Objects.requireNonNull(encoder.encode("Demo123!"), "Hash demo no puede ser null");
+                String adminPassHash = Objects.requireNonNull(encoder.encode("Admin123!"),
+                                "Hash admin no puede ser null");
 
-        Role adminRole = Role.builder()
-                .id(UUID.randomUUID())
-                .nombre("ROLE_ADMIN")
-                .build();
+                Role userRole = Role.builder()
+                                .id(UUID.randomUUID())
+                                .nombre("ROLE_USER")
+                                .build();
 
-        Set<Role> demoRoles = Objects.requireNonNull(Set.of(userRole), "Roles demo no puede ser null");
-        Set<Role> adminRoles = Objects.requireNonNull(Set.of(userRole, adminRole), "Roles admin no puede ser null");
+                Role adminRole = Role.builder()
+                                .id(UUID.randomUUID())
+                                .nombre("ROLE_ADMIN")
+                                .build();
 
-        demoUser = User.builder()
-                .id(UUID.randomUUID())
-                .username("demo_user")
-                .passwordHash(demoPassHash)
-                .email("demo@test.com")
-                .nombreCompleto("Usuario Demo")
-                .activo(true)
-                .roles(demoRoles)
-                .build();
+                Set<Role> demoRoles = Objects.requireNonNull(Set.of(userRole), "Roles demo no puede ser null");
+                Set<Role> adminRoles = Objects.requireNonNull(Set.of(userRole, adminRole),
+                                "Roles admin no puede ser null");
 
-        adminUser = User.builder()
-                .id(UUID.randomUUID())
-                .username("admin")
-                .passwordHash(adminPassHash)
-                .email("admin@test.com")
-                .nombreCompleto("Administrador")
-                .activo(true)
-                .roles(adminRoles)
-                .build();
-    }
+                demoUser = User.builder()
+                                .id(UUID.randomUUID())
+                                .username("demo_user")
+                                .passwordHash(demoPassHash)
+                                .email("demo@test.com")
+                                .nombreCompleto("Usuario Demo")
+                                .activo(true)
+                                .roles(demoRoles)
+                                .build();
 
-    @Test
-    @DisplayName("UT-01: Login exitoso demo_user")
-    void testDemoUserLoginSuccess() {
-        LoginRequest request = LoginRequest.builder()
-                .username("demo_user")
-                .password("Demo123!")
-                .build();
+                adminUser = User.builder()
+                                .id(UUID.randomUUID())
+                                .username("admin")
+                                .passwordHash(adminPassHash)
+                                .email("admin@test.com")
+                                .nombreCompleto("Administrador")
+                                .activo(true)
+                                .roles(adminRoles)
+                                .build();
+        }
 
-        when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
-        when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token-demo-user-xyz123456789");
-        when(jwtService.getExpirationTime()).thenReturn(86400000L);
+        @Test
+        @DisplayName("UT-01: Login exitoso demo_user")
+        void testDemoUserLoginSuccess() {
+                LoginRequest request = LoginRequest.builder()
+                                .username("demo_user")
+                                .password("Demo123!")
+                                .build();
 
-        LoginResponse response = loginService.login(request);
+                when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
+                when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
+                when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token-demo-user-xyz123456789");
+                when(jwtService.getExpirationTime()).thenReturn(86400000L);
+                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
 
-        assertNotNull(response);
-        assertEquals("demo_user", response.getUsername());
-        assertEquals("jwt-token-demo-user-xyz123456789", response.getToken());
-        assertEquals("Bearer", response.getTokenType());
-        verify(loginComponent).resetFailedAttempts(demoUser);
+                LoginResponse response = loginService.login(request);
 
-        System.out.println("✅ UT-01: Login demo_user exitoso");
-    }
+                assertNotNull(response);
+                assertEquals("demo_user", response.getUsername());
+                assertEquals("jwt-token-demo-user-xyz123456789", response.getToken());
+                assertEquals("Bearer", response.getTokenType());
+                verify(loginComponent).resetFailedAttempts(demoUser);
 
-    @Test
-    @DisplayName("UT-02: Login exitoso admin")
-    void testAdminLoginSuccess() {
-        LoginRequest request = LoginRequest.builder()
-                .username("admin")
-                .password("Admin123!")
-                .build();
+                System.out.println("✅ UT-01: Login demo_user exitoso");
+        }
 
-        when(loginComponent.findUserByUsername("admin")).thenReturn(Optional.of(adminUser));
-        when(loginComponent.isUserLocked("admin")).thenReturn(false);
-        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token-admin-abc987654321");
-        when(jwtService.getExpirationTime()).thenReturn(86400000L);
+        @Test
+        @DisplayName("UT-02: Login exitoso admin")
+        void testAdminLoginSuccess() {
+                LoginRequest request = LoginRequest.builder()
+                                .username("admin")
+                                .password("Admin123!")
+                                .build();
 
-        LoginResponse response = loginService.login(request);
+                when(loginComponent.findUserByUsername("admin")).thenReturn(Optional.of(adminUser));
+                when(loginComponent.isUserLocked("admin")).thenReturn(false);
+                when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token-admin-abc987654321");
+                when(jwtService.getExpirationTime()).thenReturn(86400000L);
+                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
 
-        assertNotNull(response);
-        assertEquals("admin", response.getUsername());
-        assertEquals("jwt-token-admin-abc987654321", response.getToken());
+                LoginResponse response = loginService.login(request);
 
-        System.out.println("✅ UT-02: Login admin exitoso");
-    }
+                assertNotNull(response);
+                assertEquals("admin", response.getUsername());
+                assertEquals("jwt-token-admin-abc987654321", response.getToken());
 
-    @Test
-    @DisplayName("UT-03: Login fallido - contraseña incorrecta")
-    void testLoginInvalidPassword() {
-        LoginRequest request = LoginRequest.builder()
-                .username("demo_user")
-                .password("WrongPassword!")
-                .build();
+                System.out.println("✅ UT-02: Login admin exitoso");
+        }
 
-        when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
-        when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
-        when(loginComponent.getLockInfo("demo_user"))
-                .thenReturn(new LoginComponent.LockInfo(false, 0, 2));
+        @Test
+        @DisplayName("UT-03: Login fallido - contraseña incorrecta")
+        void testLoginInvalidPassword() {
+                LoginRequest request = LoginRequest.builder()
+                                .username("demo_user")
+                                .password("WrongPassword!")
+                                .build();
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class,
-                () -> loginService.login(request));
+                when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
+                when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
+                when(loginComponent.getLockInfo("demo_user"))
+                                .thenReturn(new LoginComponent.LockInfo(false, 0, 2));
 
-        assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
-        verify(loginComponent).recordFailedAttempt("demo_user");
+                AuthenticationException exception = assertThrows(AuthenticationException.class,
+                                () -> loginService.login(request));
 
-        System.out.println("✅ UT-03: Contraseña incorrecta detectada");
-    }
+                assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
+                verify(loginComponent).recordFailedAttempt("demo_user");
 
-    @Test
-    @DisplayName("UT-04: Login fallido - usuario bloqueado")
-    void testLoginUserLocked() {
-        LoginRequest request = LoginRequest.builder()
-                .username("demo_user")
-                .password("Demo123!")
-                .build();
+                System.out.println("✅ UT-03: Contraseña incorrecta detectada");
+        }
 
-        when(loginComponent.isUserLocked("demo_user")).thenReturn(true);
-        when(loginComponent.getLockInfo("demo_user"))
-                .thenReturn(new LoginComponent.LockInfo(true, 300, 0));
+        @Test
+        @DisplayName("UT-04: Login fallido - usuario bloqueado")
+        void testLoginUserLocked() {
+                LoginRequest request = LoginRequest.builder()
+                                .username("demo_user")
+                                .password("Demo123!")
+                                .build();
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class,
-                () -> loginService.login(request));
+                when(loginComponent.isUserLocked("demo_user")).thenReturn(true);
+                when(loginComponent.getLockInfo("demo_user"))
+                                .thenReturn(new LoginComponent.LockInfo(true, 300, 0));
 
-        assertEquals(ErrorCode.ACCOUNT_LOCKED, exception.getErrorCode());
+                AuthenticationException exception = assertThrows(AuthenticationException.class,
+                                () -> loginService.login(request));
 
-        System.out.println("✅ UT-04: Usuario bloqueado detectado");
-    }
+                assertEquals(ErrorCode.ACCOUNT_LOCKED, exception.getErrorCode());
 
-    @Test
-    @DisplayName("UT-05: Login fallido - usuario no encontrado")
-    void testLoginUserNotFound() {
-        LoginRequest request = LoginRequest.builder()
-                .username("no_existe")
-                .password("password123")
-                .build();
+                System.out.println("✅ UT-04: Usuario bloqueado detectado");
+        }
 
-        when(loginComponent.findUserByUsername("no_existe")).thenReturn(Optional.empty());
+        @Test
+        @DisplayName("UT-05: Login fallido - usuario no encontrado")
+        void testLoginUserNotFound() {
+                LoginRequest request = LoginRequest.builder()
+                                .username("no_existe")
+                                .password("password123")
+                                .build();
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class,
-                () -> loginService.login(request));
+                when(loginComponent.findUserByUsername("no_existe")).thenReturn(Optional.empty());
 
-        assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
+                AuthenticationException exception = assertThrows(AuthenticationException.class,
+                                () -> loginService.login(request));
 
-        System.out.println("✅ UT-05: Usuario no encontrado detectado");
-    }
+                assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
 
-    @Test
-    @DisplayName("UT-06: Verificar independencia de tokens")
-    void testTokenIndependence() {
-        when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
-        when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
-        when(jwtService.generateToken(demoUser)).thenReturn("token-unico-demo-user-123456789");
-        when(jwtService.getExpirationTime()).thenReturn(86400000L);
+                System.out.println("✅ UT-05: Usuario no encontrado detectado");
+        }
 
-        LoginResponse demoResponse = loginService.login(
-                LoginRequest.builder().username("demo_user").password("Demo123!").build());
+        @Test
+        @DisplayName("UT-06: Verificar independencia de tokens")
+        void testTokenIndependence() {
+                when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
+                when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
+                when(jwtService.generateToken(demoUser)).thenReturn("token-unico-demo-user-123456789");
+                when(jwtService.getExpirationTime()).thenReturn(86400000L);
+                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
 
-        when(loginComponent.findUserByUsername("admin")).thenReturn(Optional.of(adminUser));
-        when(loginComponent.isUserLocked("admin")).thenReturn(false);
-        when(jwtService.generateToken(adminUser)).thenReturn("token-unico-admin-456987123");
-        when(jwtService.getExpirationTime()).thenReturn(86400000L);
+                LoginResponse demoResponse = loginService.login(
+                                LoginRequest.builder().username("demo_user").password("Demo123!").build());
 
-        LoginResponse adminResponse = loginService.login(
-                LoginRequest.builder().username("admin").password("Admin123!").build());
+                when(loginComponent.findUserByUsername("admin")).thenReturn(Optional.of(adminUser));
+                when(loginComponent.isUserLocked("admin")).thenReturn(false);
+                when(jwtService.generateToken(adminUser)).thenReturn("token-unico-admin-456987123");
+                when(jwtService.getExpirationTime()).thenReturn(86400000L);
+                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
 
-        assertNotEquals(
-                Objects.requireNonNull(demoResponse.getToken(), "Token demo no puede ser null"),
-                Objects.requireNonNull(adminResponse.getToken(), "Token admin no puede ser null"),
-                "Los tokens deben ser diferentes");
-        assertEquals("demo_user", demoResponse.getUsername());
-        assertEquals("admin", adminResponse.getUsername());
+                LoginResponse adminResponse = loginService.login(
+                                LoginRequest.builder().username("admin").password("Admin123!").build());
 
-        System.out.println("✅ UT-06: Independencia de tokens verificada");
-    }
+                assertNotEquals(
+                                Objects.requireNonNull(demoResponse.getToken(), "Token demo no puede ser null"),
+                                Objects.requireNonNull(adminResponse.getToken(), "Token admin no puede ser null"),
+                                "Los tokens deben ser diferentes");
+                assertEquals("demo_user", demoResponse.getUsername());
+                assertEquals("admin", adminResponse.getUsername());
+
+                System.out.println("✅ UT-06: Independencia de tokens verificada");
+        }
 }

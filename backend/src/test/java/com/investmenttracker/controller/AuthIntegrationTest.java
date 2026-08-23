@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Objects;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -455,4 +456,10 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                 System.out.println("  🟣 FIN BLOQUE 4: LOGOUT");
                 System.out.println("=".repeat(70));
         }
+
+        @AfterEach
+        void cleanUpAfterTest() {
+                clearBlacklist();
+        }
+
 }

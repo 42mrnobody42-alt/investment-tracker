@@ -1,6 +1,5 @@
 package com.investmenttracker.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.investmenttracker.component.RefreshTokenComponent;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
