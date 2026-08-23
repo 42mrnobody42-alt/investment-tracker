@@ -49,6 +49,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
                 .requestMatchers("/api/auth/logout").permitAll()
+                .requestMatchers("/api/auth/refresh-token").permitAll()
                 .requestMatchers("/api/auth/recovery/request").permitAll()
                 .requestMatchers("/api/auth/recovery/verify").permitAll()
                 .requestMatchers("/api/test/**").permitAll()

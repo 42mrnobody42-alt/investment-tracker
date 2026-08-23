@@ -83,3 +83,10 @@ rate-limiting:
     window-seconds: 60
   # Tiempo de bloqueo cuando se excede el límite (segundos)
   block-duration-seconds: 300
+
+# Refresh Token Configuration
+refresh-token:
+  # Tiempo de vida del refresh token (horas de inactividad)
+  ttl-hours: 1
+  # Tiempo de vida del access token (minutos)
+  access-token-ttl-minutes: 15

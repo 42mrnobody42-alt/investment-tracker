@@ -1,6 +1,7 @@
 package com.investmenttracker.service;
 
 import com.investmenttracker.component.LoginComponent;
+import com.investmenttracker.component.RefreshTokenComponent;
 import com.investmenttracker.exception.AuthenticationException;
 import com.investmenttracker.model.entity.User;
 import com.investmenttracker.model.enums.ErrorCode;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,17 +24,14 @@ public class LoginService {
 
     private final LoginComponent loginComponent;
     private final JwtService jwtService;
+    private final RefreshTokenComponent refreshTokenComponent;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    /**
-     * Procesa el login del usuario
-     */
     @Transactional
     public LoginResponse login(LoginRequest request) {
         String username = request.getUsername();
         log.info("Intento de login para usuario: {}", username);
-        
-        // 1. Verificar si está bloqueado por intentos fallidos (caché)
+
         if (loginComponent.isUserLocked(username)) {
             LoginComponent.LockInfo lockInfo = loginComponent.getLockInfo(username);
             throw new AuthenticationException(
@@ -41,24 +40,19 @@ public class LoginService {
                               lockInfo.lockedUntilSeconds() / 60)
             );
         }
-        
-        // 2. Buscar usuario
+
         User user = loginComponent.findUserByUsername(username)
             .orElseThrow(() -> {
                 log.warn("Usuario no encontrado: {}", username);
                 return new AuthenticationException(ErrorCode.INVALID_CREDENTIALS);
             });
-        
-        // 3. Verificar si está deshabilitado (DB)
+
         if (!user.getActivo()) {
-            log.warn("Usuario {} está deshabilitado", username);
             throw new AuthenticationException(ErrorCode.ACCOUNT_DISABLED);
         }
-        
-        // 4. Validar contraseña
+
         if (!validatePassword(request.getPassword(), user.getPasswordHash())) {
             loginComponent.recordFailedAttempt(username);
-            
             LoginComponent.LockInfo lockInfo = loginComponent.getLockInfo(username);
             
             if (lockInfo.locked()) {
@@ -75,33 +69,31 @@ public class LoginService {
                               lockInfo.remainingAttempts())
             );
         }
-        
-        // 5. Login exitoso - resetear intentos
+
         loginComponent.resetFailedAttempts(user);
-        
-        // 6. Generar JWT
-        String token = jwtService.generateToken(user);
-        
-        // 7. Construir respuesta
+
+        // Generar access token y refresh token
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenComponent.generateRefreshToken(user.getUsername());
+
         String roles = user.getRoles().stream()
             .map(role -> role.getNombre())
             .collect(Collectors.joining(", "));
-        
+
         log.info("Login exitoso para usuario: {} con roles: {}", user.getUsername(), roles);
-        
+
         return LoginResponse.builder()
-            .token(token)
+            .token(accessToken)
             .tokenType("Bearer")
             .expiresIn(jwtService.getExpirationTime())
+            .refreshToken(refreshToken)
+            .refreshTokenExpiresIn((long) java.time.Duration.ofHours(1).toMillis())
             .username(user.getUsername())
             .email(user.getEmail())
             .nombreCompleto(user.getNombreCompleto())
             .build();
     }
 
-    /**
-     * Valida la contraseña contra el hash BCrypt almacenado
-     */
     private boolean validatePassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
