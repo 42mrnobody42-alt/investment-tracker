@@ -1,5 +1,9 @@
 # PROMPT INICIAL - Sistema de Gestión de Inversiones
 
+- Version = `00`
+- Release = `001`
+- Hotfix = `000`
+
 ## Fecha: 2026-08-30
 
 ## Proyecto: Investment Tracker Pro
