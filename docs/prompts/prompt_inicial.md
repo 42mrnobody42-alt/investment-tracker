@@ -137,21 +137,21 @@ Se adoptará la siguiente estructura estandarizada para todos los scripts de bas
 
 Dentro de **ambos directorios** (`install/` y `updates/`), se organizarán subdirectorios numerados de 10 en 10 para agrupar componentes por orden de aplicación:
 
-10_esquemas/ # Creación de esquemas (CREATE SCHEMA)
-20_extensiones/ # Extensiones de PostgreSQL (uuid-ossp, pgcrypto, etc.)
-30_tipos/ # Tipos personalizados (ENUM, DOMAIN, COMPOSITE)
-40_tablas/ # Definición de tablas (CREATE TABLE)
-50_restricciones/ # Restricciones de integridad (claves primarias, únicas, foráneas, chequeos) - ALTER TABLE ADD CONSTRAINT
-60_indices/ # Índices (CREATE INDEX) - para rendimiento
-70_vistas/ # Vistas y vistas materializadas (CREATE VIEW, CREATE MATERIALIZED VIEW)
-80_funciones/ # Funciones (CREATE FUNCTION)
-90_procedimientos/ # Procedimientos almacenados (CREATE PROCEDURE)
-100_disparadores/ # Triggers (CREATE TRIGGER) y sus funciones asociadas
-110_eventos/ # Eventos programados (pg_cron, etc.) o notificaciones
-120_secuencias/ # Secuencias (CREATE SEQUENCE) si no se definieron en tablas
-130_datos_basicos/ # Datos de catálogo, maestros, datos de prueba esenciales (INSERT)
-140_permisos/ # Asignación de permisos (GRANT, REVOKE)
-150_comentarios/ # Comentarios de documentación (COMMENT ON) - opcional
+- 10_esquemas/ # Creación de esquemas (CREATE SCHEMA)
+- 20_extensiones/ # Extensiones de PostgreSQL (uuid-ossp, pgcrypto, etc.)
+- 30_tipos/ # Tipos personalizados (ENUM, DOMAIN, COMPOSITE)
+- 40_tablas/ # Definición de tablas (CREATE TABLE)
+- 50_restricciones/ # Restricciones de integridad (claves primarias, únicas, foráneas, chequeos) - ALTER TABLE ADD CONSTRAINT
+- 60_indices/ # Índices (CREATE INDEX) - para rendimiento
+- 70_vistas/ # Vistas y vistas materializadas (CREATE VIEW, CREATE MATERIALIZED VIEW)
+- 80_funciones/ # Funciones (CREATE FUNCTION)
+- 90_procedimientos/ # Procedimientos almacenados (CREATE PROCEDURE)
+- 100_disparadores/ # Triggers (CREATE TRIGGER) y sus funciones asociadas
+- 110_eventos/ # Eventos programados (pg_cron, etc.) o notificaciones
+- 120_secuencias/ # Secuencias (CREATE SEQUENCE) si no se definieron en tablas
+- 130_datos_basicos/ # Datos de catálogo, maestros, datos de prueba esenciales (INSERT)
+- 140_permisos/ # Asignación de permisos (GRANT, REVOKE)
+- 150_comentarios/ # Comentarios de documentación (COMMENT ON) - opcional
 
 Cada archivo SQL dentro de estos directorios seguirá la nomenclatura:
 Version_Release_Hotfix_Orden_Nombre.sql
