@@ -775,3 +775,5 @@ graph TB
 - **Control de versiones**: Git/GitHub
 - **Sistema Operativo**: Pop OS 22.04
 - **IDE**: Visual Studio Code
+
+# agregar prueba de bloqueo
