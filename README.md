@@ -1,6 +1,6 @@
 # PROMPT INICIAL - Sistema de Gestión de Inversiones
 
-## Fecha: 2026-08-18
+## Fecha: 2026-08-30
 
 ## Proyecto: Investment Tracker Pro
 
@@ -44,13 +44,14 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
     - [Desencriptar Texto (ADMIN)](#desencriptar-texto-admin)
     - [Logout (Cerrar Sesión)](#logout-cerrar-sesión)
     - [Recuperación de Contraseña (2FA SMTP)](#recuperación-de-contraseña-2fa-smtp)
+    - [Refresh Token](#refresh-token)
     - [Change My Password](#change-my-password)
   - [Seguridad](#seguridad)
   - [Pruebas](#pruebas)
 
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
 
-- [5. Nginx - publicación](#5-Nginx---publicación)
+- [5. Nginx - publicación](#5-nginx---publicación)
 
 - [100. Servicios Docker](#100-servicios-docker)
   - [Servicios](#servicios)
@@ -257,17 +258,18 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 
 ### Servicios Publicados
 
-| Endpoint                     | Método | Auth  | Descripción                                              |
-| ---------------------------- | ------ | ----- | -------------------------------------------------------- |
-| `/api/auth/login`            | POST   | No    | Login - Retorna JWT                                      |
-| `/api/auth/restart-password` | POST   | ADMIN | Restablecer contraseña de cualquier usuario              |
-| `/api/test/health`           | GET    | No    | Health check del servicio                                |
-| `/api/encryption/encrypt`    | POST   | ADMIN | Encriptar texto con AES-GCM                              |
-| `/api/encryption/decrypt`    | POST   | ADMIN | Desencriptar texto con AES-GCM                           |
-| `/api/auth/logout`           | POST   | JWT   | Cerrar sesión - invalida el token                        |
-| `/api/auth/recovery/request` | POST   | No    | Solicitar recuperación - envía token 6 dígitos por email |
-| `/api/auth/recovery/verify`  | POST   | No    | Verificar token y cambiar contraseña                     |
-| `/api/auth/change-my-pass`   | POST   | JWT   | Cambiar contraseña propia con validación actual          |
+| Endpoint                     | Método | Auth                   | Descripción                                              |
+| ---------------------------- | ------ | ---------------------- | -------------------------------------------------------- |
+| `/api/auth/login`            | POST   | No                     | Login - Retorna JWT + Refresh Token                      |
+| `/api/auth/restart-password` | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario              |
+| `/api/auth/refresh-token`    | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido   |
+| `/api/test/health`           | GET    | No                     | Health check del servicio                                |
+| `/api/encryption/encrypt`    | POST   | ADMIN                  | Encriptar texto con AES-GCM                              |
+| `/api/encryption/decrypt`    | POST   | ADMIN                  | Desencriptar texto con AES-GCM                           |
+| `/api/auth/logout`           | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token     |
+| `/api/auth/recovery/request` | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email |
+| `/api/auth/recovery/verify`  | POST   | No                     | Verificar token y cambiar contraseña                     |
+| `/api/auth/change-my-pass`   | POST   | JWT                    | Cambiar contraseña propia con validación actual          |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
@@ -286,7 +288,8 @@ sequenceDiagram
     alt Login exitoso
         B->>B: Reset intentos fallidos
         B->>B: Generar JWT (HMAC-SHA384, expiración 24h)
-        B-->>U: 200 OK {token, username, email, nombreCompleto}
+        B->>B: Generar Refresh Token (aleatorio 64 bytes, TTL 1h)
+        B-->>U: 200 OK {token, refreshToken, tokenType, expiresIn, refreshTokenExpiresIn, username, email, nombreCompleto}
     else Contraseña incorrecta
         B->>B: Registrar intento fallido (máx 3)
         B-->>U: 401 {code: AUTH-001, message: Credenciales inválidas}
@@ -368,12 +371,14 @@ sequenceDiagram
     participant U as 👤 Usuario
     participant B as 🔒 Backend (7700)
     participant BL as 🚫 Token Blacklist
+    participant RT as 🔄 RefreshTokenComponent
 
     U->>B: POST /api/auth/logout
     Note right of B: Header: Authorization: Bearer <JWT>
     B->>B: Validar JWT
     B->>B: Extraer expiración del token
     B->>BL: Agregar token a blacklist hasta expiración
+    B->>RT: Revocar refresh token (si existe en la petición)
     BL-->>B: Token agregado
     B-->>U: 200 OK {code: AUTH-0001, message: Sesión cerrada exitosamente}
 
@@ -416,6 +421,37 @@ sequenceDiagram
     B-->>U: 200 OK {code: REC-0002, message: Contraseña actualizada}
 ```
 
+#### Refresh Token
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuario
+    participant B as 🔒 Backend (7700)
+    participant RT as 🔄 RefreshTokenComponent
+    participant DB as 🗄️ PostgreSQL (5432)
+
+    Note over U,B: El usuario ya tiene un refresh token válido (obtenido en login)
+
+    U->>B: POST /api/auth/refresh-token {refreshToken}
+    B->>B: Validar que el refreshToken no sea null/vacío
+    B->>RT: validateAndGetUsername(refreshToken)
+    RT->>RT: Buscar token en memoria (ConcurrentHashMap)
+    alt Token no encontrado
+        RT-->>B: null
+        B-->>U: 401 Unauthorized {code: TOKEN_EXPIRED}
+    else Token expirado por inactividad
+        RT-->>B: null (elimina token)
+        B-->>U: 401 Unauthorized {code: TOKEN_EXPIRED}
+    else Token válido
+        RT->>RT: Actualizar última actividad (sesión deslizante)
+        RT-->>B: username asociado
+        B->>DB: SELECT usuario por username
+        DB-->>B: User (id, username, email, nombre, roles)
+        B->>B: Generar nuevo access token (JWT)
+        B-->>U: 200 OK {token, tokenType, expiresIn, refreshToken, refreshTokenExpiresIn, username, email, nombreCompleto}
+    end
+```
+
 #### Change My Password
 
 ```mermaid
@@ -452,12 +488,13 @@ sequenceDiagram
 - Validaciones de contraseña: 8+ caracteres, 1 mayúscula, 1 carácter especial, sin comillas
 - Validación case-insensitive para email, case-sensitive para contraseñas
 - **2FA SMTP** para recuperación de contraseña con token de 6 dígitos
+- **Refresh Token**: Se genera un token adicional en el login, válido por 1 hora, que permite renovar el access token sin necesidad de reautenticación. La renovación se realiza mediante una sesión deslizante (cada uso extiende la expiración 1 hora más). Los refresh tokens se almacenan en memoria (ConcurrentHashMap) y se invalidan al hacer logout o al expirar. La configuración completa (TTL, tiempos, etc.) se gestiona en el archivo application.yml bajo la clave refresh-token.
 
 ### Pruebas
 
-- **63 pruebas automatizadas** (integración + unitarias)
+- **70 pruebas automatizadas** (integración + unitarias)
 
-- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos
+- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos, refresh token.
 
 - Ejecutar todas: `mvn test`
 
@@ -465,35 +502,58 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "SUITES DE PRUEBAS - 63 tests"
-        A["AuthIntegrationTest<br/>31 pruebas<br/>Login, restart-password, logout"]
-        B["ChangeMyPasswordIntegrationTest<br/>11 pruebas<br/>Cambio de contraseña propia"]
-        C["EncryptionIntegrationTest<br/>7 pruebas<br/>Encriptación AES-256-GCM"]
-        D["PasswordRecoveryIntegrationTest<br/>4 pruebas<br/>Recuperación 2FA SMTP"]
-        E["RateLimitIntegrationTest<br/>4 pruebas<br/>Rate limiting anti fuerza bruta"]
-        F["LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
+    subgraph "ORDEN DE EJECUCIÓN DE PRUEBAS - 70 tests"
+        A["1️⃣ ChangeMyPasswordIntegrationTest<br/>11 pruebas<br/>Cambio de contraseña propia"]
+        B["2️⃣ AuthIntegrationTest<br/>31 pruebas<br/>Login, restart-password, logout"]
+        C["3️⃣ EncryptionIntegrationTest<br/>7 pruebas<br/>Encriptación AES-256-GCM"]
+        D["4️⃣ RefreshTokenIntegrationTest<br/>7 pruebas<br/>Refresco de token JWT"]
+        E["5️⃣ RateLimitIntegrationTest<br/>4 pruebas<br/>Rate limiting anti fuerza bruta"]
+        F["6️⃣ PasswordRecoveryIntegrationTest<br/>4 pruebas<br/>Recuperación 2FA SMTP"]
+        G["7️⃣ LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
     end
 
-    A --> F["BaseIntegrationTest<br/>Helpers comunes"]
-    B --> F
-    C --> F
-    D --> F
-    F --> G
+    A --> H["BaseIntegrationTest<br/>Helpers comunes"]
+    B --> H
+    C --> H
+    D --> H
+    E --> H
+    F --> H
+    G --> H
 
-    F --> G["TestConfig<br/>Variables desde .unitTestEnv"]
-    G --> H[".unitTestEnv<br/>src/test/resources/"]
+    H --> I["TestConfig<br/>Variables desde .unitTestEnv"]
+    I --> J[".unitTestEnv<br/>src/test/resources/"]
 ```
 
 **Arquitectura de pruebas:**
+
 - `.unitTestEnv`: archivo de configuración con todos los datos de prueba (usuarios, contraseñas, URLs) ubicado en `src/test/resources/`
 
-- `BaseIntegrationTest`: helpers comunes (loginAndGetToken, toJson, printBanner)
+- `BaseIntegrationTest`: helpers comunes (`loginAndGetToken`, `toJson`, `printBanner`, `clearBlacklist`).  
+  **Nota:** En el método `clearBlacklist()` (ejecutado en `@BeforeEach`) se limpian la blacklist de tokens JWT y el rate limiter, pero **no** se limpian los refresh tokens. Esto es intencional para permitir que las pruebas de `RefreshTokenIntegrationTest` generen un refresh token en una prueba y lo reutilicen en pruebas posteriores dentro de la misma suite.
 
 - `TestConfig`: variables centralizadas desde `.unitTestEnv`
 
-- `@BeforeEach`: login fresco en cada test para independencia total
+- `@BeforeEach`: se utiliza en la mayoría de las pruebas para obtener un token fresco (login) antes de cada test, garantizando independencia total entre ellos.  
+  **Excepciones:**
+  - **`ChangeMyPasswordIntegrationTest`**: No usa `@BeforeEach` para obtener tokens, ya que al cambiar la contraseña del usuario `demo_user` en la prueba 2, el login posterior con la contraseña antigua fallaría y bloquearía al usuario. En su lugar, se usa `@BeforeAll` (ver más abajo).
+  - **`RefreshTokenIntegrationTest`**: No usa `@BeforeEach` porque necesita que el refresh token generado en la prueba 1 persista hasta la prueba 2 (no se debe limpiar entre pruebas). La limpieza automática de refresh tokens está deshabilitada en `BaseIntegrationTest`.
 
-- Cleanup automático: restauración de contraseñas al final de cada suite
+- `@AfterEach`: se utiliza en algunas pruebas para limpiar estados o restaurar datos después de cada test.  
+  **Excepción:** En `ChangeMyPasswordIntegrationTest` no se usa `@AfterEach`, ya que la restauración de la contraseña original se realiza explícitamente en la última prueba (CMP-11) utilizando un token de administrador.
+
+- `@BeforeAll`: se usa **únicamente** en `ChangeMyPasswordIntegrationTest` para obtener los tokens de `demo_user` y `admin` una sola vez antes de todas las pruebas de esa clase. Esto evita que el cambio de contraseña afecte a los logins posteriores y previene el bloqueo del usuario por intentos fallidos.  
+  El comentario asociado en el código es el siguiente:
+
+```java
+/**
+ * Importante NUNCA se debe usar @BeforeEach ni @AfterEach para obtener tokens,
+ * ya que se reinicia el estado de la base de datos y se invalidan los tokens.
+ * Por eso se usa @BeforeAll para obtener los tokens una sola vez antes de todas
+ * las pruebas.
+ *
+ * @throws Exception
+ */
+```
 
 ### Servicios
 
@@ -550,7 +610,7 @@ graph TB
 
 ### 101. Estructura del Proyecto
 
-#### Estructura detallada de archivos (81 archivos, 46 directorios)
+#### Estructura detallada de archivos (185 archivos, 82 directorios)
 
 - **`investment-tracker/`** - Raíz del proyecto
   - `.gitignore` - Archivos ignorados por Git
@@ -559,7 +619,6 @@ graph TB
   - **`.vscode/`**
     - `settings.json` - Configuración de VS Code
   - **`docker/`** - Contenedores y orquestación
-    - `.env` - Variables de entorno Docker
     - `docker-compose.yml` - Orquestación de servicios
     - `Dockerfile.backend` - Imagen para Spring Boot
     - `Dockerfile.frontend` - Imagen para React
@@ -574,79 +633,135 @@ graph TB
     - **`postgres/`**
       - `init.sql` - Inicialización de BD
     - **`shellTest/`** - Scripts de mantenimiento
+      - `backup-db.sh` - Backup de BD
       - `check-all.sh` - Verificación completa
+      - `final-check-uuid.sh` - Verificación UUID
       - `reset-all.sh` - Reset BD (mantiene pgadmin)
       - `reset-pgadmin.sh` - Reset solo pgadmin
-      - `backup-db.sh` - Backup de BD
       - `restore-db.sh` - Restaurar desde backup
-      - `final-check-uuid.sh` - Verificación UUID
   - **`database/`** - Base de datos
+    - **`MER/`**
+      - `diagram.md` - Diagrama entidad-relación
     - **`sql/`**
       - `01_schema.sql` - Esquema v2.1.0 (UUID + Monedas)
       - `02_functions.sql` - Funciones PL/pgSQL v2.0.0
       - `03_seed.sql` - Datos iniciales v2.1.0
-    - **`MER/`**
-      - `diagram.md` - Diagrama entidad-relación
   - **`backend/`** - API REST Spring Boot 3.x + Java 21
     - `pom.xml` - Dependencias Maven
-    - **`src/main/java/com/investmenttracker/`**
-      - `InvestmentTrackerApplication.java` - Clase principal (puerto 7700)
-      - **`config/`**
-        - `SecurityConfig.java` - Spring Security + JWT
-        - `EncryptedDataSourceConfig.java` - DataSource con desencriptación AES
-        - `MailConfig.java` - Configuración SMTP con desencriptación
-      - **`controller/`** - Endpoints REST
-        - `AuthController.java` - Login + restart-password + logout + change-my-pass
-        - `PasswordRecoveryController.java` - Recuperación de contraseña (2FA SMTP)
-        - `EncryptionController.java` - Encriptación/desencriptación AES-GCM
-        - `TestValidationController.java` - Health check
-      - **`service/`** - Lógica de negocio
-        - `LoginService.java` - Autenticación + control de intentos
-        - `JwtService.java` - Generación/validación JWT
-        - `RestartUserPasswordService.java` - Restablecer contraseña (ADMIN)
-        - `ChangeMyPasswordService.java` - Cambio de contraseña propia
-        - `PasswordRecoveryService.java` - Recuperación con 2FA
-        - `EncryptionService.java` - Encriptación AES-GCM
-        - `LogoutService.java` - Cierre de sesión con blacklist
-        - `EmailService.java` - Envío de correos SMTP
-      - **`component/`** - Componentes reutilizables
-        - `LoginComponent.java` - Control de intentos fallidos y bloqueos
-        - `SecurityLoginComponent.java` - Encriptación BCrypt + validación
-        - `AESEncryptionComponent.java` - Encriptación AES-256-GCM
-        - `TokenBlacklistComponent.java` - Blacklist de tokens JWT
-      - **`security/`** - Capa de seguridad
-        - `JwtAuthFilter.java` - Filtro de autenticación JWT
-        - `UserDetailsServiceImpl.java` - Carga usuarios desde BD
-      - **`model/`** - Modelo de datos
-        - **`entity/`** - `User.java`, `Role.java`
-        - **`enums/`** - `ErrorCode.java`, `LockLevel.java`, `SuccessfulCode.java`
-        - **`request/`** - `LoginRequest.java`, `RestartPasswordRequest.java`, `ChangePasswordRequest.java`, `PasswordRecoveryRequest.java`, `TokenVerificationRequest.java`, `EncryptionRequest.java`
-        - **`response/`** - `LoginResponse.java`, `ErrorResponse.java`, `SuccessResponse.java`, `EncryptionResponse.java`
-        - **`dto/`** - `UserPasswordDTO.java`
-      - **`repository/`** - `UserRepository.java`
-      - **`exception/`** - `AuthenticationException.java`, `GlobalExceptionHandler.java`
-    - **`src/main/resources/`**
-      - `application.yml` - Configuración (DB encriptada, JWT, SMTP encriptado, puerto 7700)
-    - **`src/test/java/com/investmenttracker/`** - Pruebas (63 tests)
-      - **`controller/`** - 4 suites de integración
-        - `AuthIntegrationTest.java` (31 pruebas)
-        - `EncryptionIntegrationTest.java` (7 pruebas)
-        - `PasswordRecoveryIntegrationTest.java` (4 pruebas)
-        - `ChangeMyPasswordIntegrationTest.java` (11 pruebas)
-      - **`service/`** - `LoginServiceTest.java` (6 pruebas unitarias)
+    - **`src/`**
+      - **`main/`**
+        - **`java/`**
+          - **`com/`**
+            - **`investmenttracker/`**
+              - `InvestmentTrackerApplication.java` - Clase principal (puerto 7700)
+              - **`component/`** - Componentes reutilizables
+                - `AESEncryptionComponent.java` - Encriptación AES-256-GCM
+                - `LoginComponent.java` - Control de intentos fallidos y bloqueos
+                - `RateLimitComponent.java` - Limitador de peticiones por IP
+                - `RefreshTokenComponent.java` - Gestión de refresh tokens
+                - `SecurityLoginComponent.java` - Encriptación BCrypt + validación
+                - `TokenBlacklistComponent.java` - Blacklist de tokens JWT
+              - **`config/`** - Configuración de Spring
+                - `EncryptedDataSourceConfig.java` - DataSource con desencriptación AES
+                - `MailConfig.java` - Configuración SMTP con desencriptación
+                - `SecurityConfig.java` - Spring Security + JWT
+              - **`controller/`** - Endpoints REST
+                - `AuthController.java` - Login + restart-password + logout + change-my-pass
+                - `EncryptionController.java` - Encriptación/desencriptación AES-GCM
+                - `PasswordRecoveryController.java` - Recuperación de contraseña (2FA SMTP)
+                - `TestValidationController.java` - Health check
+              - **`exception/`** - Manejo de excepciones
+                - `AuthenticationException.java` - Excepción personalizada
+                - `GlobalExceptionHandler.java` - Manejador global de excepciones
+              - **`model/`** - Modelos de datos
+                - **`dto/`** - Data Transfer Objects
+                  - `UserPasswordDTO.java` - DTO para cambio de contraseña
+                - **`entity/`** - Entidades JPA
+                  - `Role.java` - Entidad de roles
+                  - `User.java` - Entidad de usuarios
+                - **`enums/`** - Enumeraciones de respuesta
+                  - `ErrorCode.java` - Códigos de error
+                  - `LockLevel.java` - Niveles de bloqueo
+                  - `SuccessfulCode.java` - Códigos de éxito
+                - **`request/`** - Objetos de petición
+                  - `ChangePasswordRequest.java` - Solicitud de cambio de contraseña
+                  - `EncryptionRequest.java` - Solicitud de encriptación
+                  - `LoginRequest.java` - Solicitud de login
+                  - `PasswordRecoveryRequest.java` - Solicitud de recuperación
+                  - `RestartPasswordRequest.java` - Solicitud de reinicio (admin)
+                  - `TokenVerificationRequest.java` - Verificación de token
+                - **`response/`** - Objetos de respuesta
+                  - `EncryptionResponse.java` - Respuesta de encriptación
+                  - `ErrorResponse.java` - Respuesta de error
+                  - `LoginResponse.java` - Respuesta de login
+                  - `SuccessResponse.java` - Respuesta de éxito
+              - **`repository/`** - Repositorios JPA
+                - `UserRepository.java` - Repositorio de usuarios
+              - **`security/`** - Capa de seguridad
+                - `JwtAuthFilter.java` - Filtro de autenticación JWT
+                - `RateLimitFilter.java` - Filtro de límite de peticiones
+                - `UserDetailsServiceImpl.java` - Carga de usuarios desde BD
+              - **`service/`** - Lógica de negocio
+                - `ChangeMyPasswordService.java` - Cambio de contraseña propia
+                - `EmailService.java` - Envío de correos SMTP
+                - `EncryptionService.java` - Encriptación AES-GCM
+                - `JwtService.java` - Generación/validación JWT
+                - `LoginService.java` - Autenticación + control de intentos
+                - `LogoutService.java` - Cierre de sesión con blacklist
+                - `PasswordRecoveryService.java` - Recuperación con 2FA
+                - `RefreshTokenService.java` - Servicio de refresh tokens
+                - `RestartUserPasswordService.java` - Restablecer contraseña (ADMIN)
+        - **`resources/`**
+          - `application.yml` - Configuración (DB encriptada, JWT, SMTP, puerto 7700)
+      - **`test/`** - Pruebas
+        - **`java/`**
+          - **`com/`**
+            - **`investmenttracker/`**
+              - **`config/`**
+                - `TestConfig.java` - Configuración de pruebas
+              - **`controller/`** - Pruebas de integración
+                - `AuthIntegrationTest.java` - Pruebas de autenticación (31 casos)
+                - `BaseIntegrationTest.java` - Clase base para pruebas
+                - `ChangeMyPasswordIntegrationTest.java` - Pruebas de cambio de contraseña
+                - `EncryptionIntegrationTest.java` - Pruebas de encriptación
+                - `PasswordRecoveryIntegrationTest.java` - Pruebas de recuperación
+                - `RateLimitIntegrationTest.java` - Pruebas de rate limit
+                - `RefreshTokenIntegrationTest.java` - Pruebas de refresh token
+              - **`service/`** - Pruebas unitarias
+                - `LoginServiceTest.java` - Pruebas del servicio de login
+        - **`resources/`**
+    - **`target/`** - Compilados y reportes (generado por Maven)
+      - **`classes/`** - Clases compiladas
+      - **`generated-sources/`** - Código fuente generado
+      - **`generated-test-sources/`** - Código de pruebas generado
+      - **`maven-status/`** - Estado de Maven
+      - **`surefire-reports/`** - Reportes de pruebas
+      - **`test-classes/`** - Clases de pruebas compiladas
   - **`frontend/`** - SPA React 18 (estructura inicial)
     - `package.json` - Dependencias npm
     - `README.md` - Documentación frontend
     - **`src/`**
       - `App.js` - Componente principal
-      - **`component/`** - `Dashboard.js`
-      - **`services/`** - `api.js` - Configuración Axios
-      - **`styles/`** - `global.css` - Estilos globales
+      - **`component/`**
+        - `Dashboard.js` - Panel de control
+      - **`services/`**
+        - `api.js` - Configuración Axios
+      - **`styles/`**
+        - `global.css` - Estilos globales
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
-    - **`prompts/`** - `prompt_inicial.md` - Prompt original
-    - **`serverConfig/`** - `popOS22.04.md` - Guía de instalación
-    - **`sql/`** - `consultasBasicas.sql` - Consultas de referencia
+    - **`prompts/`**
+      - `prompt_inicial.md` - Prompt original
+    - **`serverConfig/`**
+      - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
+    - **`sql/`**
+      - `consultasBasicas.sql` - Consultas de referencia
+  - **`backups/`** - Copias de seguridad de la base de datos
+    - `investment_tracker_20260710_121428.sql` - Backup de BD
+
+### 103. Requisitos Funcionales
+
+1. Sistema de autenticación con JWT y refresh token.
 
 ### 104. Stack Tecnológico
 
@@ -654,7 +769,7 @@ graph TB
 - **Base de datos**: PostgreSQL 16
 - **Frontend**: React 18+ con CSS moderno
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
-- **Seguridad**: HTTPS + JWT
+- **Seguridad**: HTTPS + JWT + Refresh Token
 - **Contenedores**: Docker + Docker Compose
 - **Gestion de DB**: pgadmin 4 Latest
 - **Control de versiones**: Git/GitHub
