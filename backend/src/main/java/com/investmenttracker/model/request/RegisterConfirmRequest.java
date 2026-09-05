@@ -15,6 +15,7 @@ import java.util.UUID;
 public class RegisterConfirmRequest {
     private String username;
     private String email;
+    private String nombreCompleto;
     private Long celular;
     private UUID paisId;
     private Plan plan;

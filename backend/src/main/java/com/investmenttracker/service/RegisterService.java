@@ -67,6 +67,7 @@ public class RegisterService {
         String token = generateToken();
         registrationCache.put(request.getUsername(), RegistrationAttempt.builder()
                 .email(request.getEmail())
+                .nombreCompleto(request.getNombreCompleto())
                 .password(request.getPassword())
                 .celular(request.getCelular())
                 .paisId(paisId)
@@ -225,47 +226,52 @@ public class RegisterService {
 
     @SuppressWarnings("null")
     private User createUser(RegisterConfirmRequest request, RegistrationAttempt attempt) {
-        log.debug("Obteniendo rol para plan: {}", request.getPlan());
         String roleName = request.getPlan().getRoleName();
         Role role = roleRepository.findByNombre(roleName)
                 .orElseThrow(() -> {
                     log.error("Rol no encontrado: {}", roleName);
                     return new AuthenticationException(ErrorCode.INTERNAL_ERROR);
                 });
-        log.debug("Rol encontrado: {}", role.getNombre());
 
         String encryptedPassword = securityLoginComponent.encryptPassword(attempt.getPassword());
-        log.debug("Contraseña encriptada generada");
 
         String username = Objects.requireNonNull(request.getUsername(), "username no puede ser null");
         String email = Objects.requireNonNull(request.getEmail(), "email no puede ser null").toLowerCase().trim();
+        String nombreCompleto = Objects.requireNonNull(attempt.getNombreCompleto(), "nombreCompleto no puede ser null");
         Long celular = Objects.requireNonNull(request.getCelular(), "celular no puede ser null");
         UUID paisId = Objects.requireNonNull(request.getPaisId(), "paisId no puede ser null");
-
-        log.debug("Construyendo usuario con username={}, email={}, celular={}, paisId={}", username, email, celular,
-                paisId);
 
         User user = User.builder()
                 .username(username)
                 .passwordHash(encryptedPassword)
                 .email(email)
-                .nombreCompleto(null)
+                .nombreCompleto(nombreCompleto)
                 .celular(celular)
-                .pais(paisRepository.getReferenceById(paisId)) // <-- Cambio aquí
+                .pais(paisRepository.getReferenceById(paisId))
                 .activo(true)
                 .build();
 
         user.getRoles().add(role);
-        log.debug("Usuario construido, guardando en BD...");
 
         try {
-            User savedUser = userRepository.save(user);
-            log.debug("Usuario guardado con ID: {}", savedUser.getId());
-            return savedUser;
+            return Objects.requireNonNull(userRepository.save(user), "El usuario guardado no puede ser null");
         } catch (Exception e) {
             log.error("Error al guardar usuario en BD: {}", e.getMessage(), e);
             throw e;
         }
+    }
+
+    /**
+     * Borrado definitivo (SOLO PARA PRUEBAS) - elimina usuario y todas sus
+     * dependencias en cascada
+     */
+    @SuppressWarnings("null")
+    @Transactional
+    public void deleteUserPermanently(String username) {
+        User user = userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new AuthenticationException(ErrorCode.USER_NOT_FOUND));
+        userRepository.delete(user);
+        log.info("Usuario eliminado definitivamente (cascada): {}", username);
     }
 
     private String generateToken() {
@@ -280,6 +286,7 @@ public class RegisterService {
     @lombok.Data
     private static class RegistrationAttempt {
         private String email;
+        private String nombreCompleto; // <-- Agregar esta línea
         private String password;
         private Long celular;
         private UUID paisId;
