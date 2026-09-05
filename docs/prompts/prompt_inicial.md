@@ -122,12 +122,12 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 
 - **Modelo relacional normalizado**: al menos hasta 3FN, con claves primarias UUID y relaciones claras.
 - **PL/pgSQL para lógica compleja**: usar funciones y procedimientos almacenados solo cuando la lógica requiera acceso eficiente a los datos o cuando se necesite atomicidad transaccional. Documentar cada función con su propósito y parámetros.
-- **Migraciones controladas**: todos los cambios de esquema deben reflejarse en scripts SQL versionados (por ejemplo, `01_schema.sql`, `02_functions.sql`, `03_seed.sql`).
+- **Migraciones controladas**: todos los cambios de esquema deben reflejarse en scripts SQL versionados tal como lo indica los subtitulos "Estándar de organización y nomenclatura" y "Scripts de construcción".
 - **Índices**: crear índices apropiados para las columnas más consultadas (especialmente claves foráneas y campos de búsqueda).
 - **Transacciones**: usar transacciones explícitas cuando se modifiquen múltiples tablas o se ejecuten funciones con efectos secundarios.
 - **Manejo de errores**: en PL/pgSQL, usar `RAISE` con códigos de error claros y manejar excepciones cuando sea necesario.
 
-#### Estándar de organización y nomenclatura (próximo cambio planificado)
+#### Estándar de organización y nomenclatura
 
 Se adoptará la siguiente estructura estandarizada para todos los scripts de base de datos, siguiendo las mejores prácticas de la industria:
 
@@ -141,17 +141,18 @@ Dentro de **ambos directorios** (`install/` y `updates/`), se organizarán subdi
 - 20_extensiones/ # Extensiones de PostgreSQL (uuid-ossp, pgcrypto, etc.)
 - 30_tipos/ # Tipos personalizados (ENUM, DOMAIN, COMPOSITE)
 - 40_tablas/ # Definición de tablas (CREATE TABLE)
-- 50_restricciones/ # Restricciones de integridad (claves primarias, únicas, foráneas, chequeos) - ALTER TABLE ADD CONSTRAINT
-- 60_indices/ # Índices (CREATE INDEX) - para rendimiento
-- 70_vistas/ # Vistas y vistas materializadas (CREATE VIEW, CREATE MATERIALIZED VIEW)
-- 80_funciones/ # Funciones (CREATE FUNCTION)
-- 90_procedimientos/ # Procedimientos almacenados (CREATE PROCEDURE)
-- 100_disparadores/ # Triggers (CREATE TRIGGER) y sus funciones asociadas
-- 110_eventos/ # Eventos programados (pg_cron, etc.) o notificaciones
-- 120_secuencias/ # Secuencias (CREATE SEQUENCE) si no se definieron en tablas
-- 130_datos_basicos/ # Datos de catálogo, maestros, datos de prueba esenciales (INSERT)
-- 140_permisos/ # Asignación de permisos (GRANT, REVOKE)
-- 150_comentarios/ # Comentarios de documentación (COMMENT ON) - opcional
+- 50_alter_tablas/ # Modificaciones a tablas (ALTER TABLE ADD/DROP COLUMN, ALTER COLUMN TYPE, etc.)
+- 60_restricciones/ # Restricciones de integridad (PK, FK, UQ, CK) - ALTER TABLE ADD CONSTRAINT
+- 70_indices/ # Índices (CREATE INDEX) - para rendimiento
+- 80_vistas/ # Vistas y vistas materializadas (CREATE VIEW, CREATE MATERIALIZED VIEW)
+- 90_funciones/ # Funciones (CREATE FUNCTION)
+- 100_procedimientos/ # Procedimientos almacenados (CREATE PROCEDURE)
+- 110_disparadores/ # Triggers (CREATE TRIGGER) y sus funciones asociadas
+- 120_eventos/ # Eventos programados (pg_cron, etc.) o notificaciones
+- 130_secuencias/ # Secuencias (CREATE SEQUENCE) si no se definieron en tablas
+- 140_datos_basicos/ # Datos de catálogo, maestros, datos de prueba esenciales (INSERT)
+- 150_permisos/ # Asignación de permisos (GRANT, REVOKE)
+- 160_comentarios/ # Comentarios de documentación (COMMENT ON) - opcional
 
 Cada archivo SQL dentro de estos directorios seguirá la nomenclatura:
 Version_Release_Hotfix_Orden_Nombre.sql
@@ -162,15 +163,53 @@ Donde:
 - **Release**: número de release (3 dígitos, ej. `001`).
 - **Hotfix**: número de hotfix (3 dígitos, ej. `000`).
 - **Orden**: número de orden del script dentro del directorio (2 dígitos, ej. `01`).
-- **Nombre**: nombre descriptivo del script (ej. `crear_usuarios`).
+- **Nombre**: nombre descriptivo del script, que **debe comenzar con un prefijo de operación** para identificar claramente el propósito del script:
+  - `cr_` → Crear (CREATE)
+  - `upd_` → Actualizar (ALTER, UPDATE, etc.)
+  - `del_` → Eliminar (DROP, DELETE, etc.)
+  - `read_` → Leer/Consultar (SELECT, funciones de consulta, etc.)
 
-> **Ejemplo completo**: `00_001_000_01_crear_usuarios.sql`
+Ejemplo de nombres válidos:
 
-Los números de **Version**, **Release** y **Hotfix** se obtienen del archivo `README.md` (sección "Historial de Versiones"). Por ejemplo, para la versión `v0.1.0`, se traduce a:
+- `cr_usuarios`
+- `upd_campo_edad`
+- `del_tabla_temporal`
+- `read_consultar_saldos`
+
+> **Ejemplo completo**: `00_001_000_01_cr_usuarios.sql`
+
+Los NUMEROS OFICIALES de **Version**, **Release** y **Hotfix** **se obtienen del archivo `README.md`** (sección "# PROMPT INICIAL - Sistema de Gestión de Inversiones"). Por ejemplo, para la versión `v0.1.0`, se traduce a:
 
 - Version = `00`
 - Release = `001`
 - Hotfix = `000`
+
+#### Scripts de construcción (build)
+
+Para facilitar el despliegue y la migración, se generarán dos scripts agregados a partir de los archivos individuales:
+
+1. **`CreateInstallSqlInvestmentTracker.sh`** (genera `database/sql/aplica.sql`):
+   - Recorre **todos** los directorios de `database/sql/install/` en orden numérico (`10_esquemas/`, `30_tipos/`, ..., `160_comentarios/`).
+   - Dentro de cada directorio, procesa los archivos en orden alfabético (que coincide con el orden numérico).
+   - Genera un archivo `aplica.sql` que **NO contiene el código SQL inline**, sino **referencias `\ir`** a cada archivo individual, con rutas relativas al directorio `database/sql/`.
+   - Ejemplo de contenido generado:
+     ```sql
+     \ir install/10_esquemas/00_001_000_01_cr_schema.sql
+     \ir install/40_tablas/00_001_000_01_cr_roles.sql
+     \ir install/40_tablas/00_001_000_02_cr_usuarios.sql
+     ```
+
+2. **`aplica_V_R_H.sql`** (migración por versión):
+   - Contiene **solo los scripts del directorio `updates/`** que corresponden a una versión, release y hotfix específicos.
+   - Ejemplo: para la versión `v0.1.0`, se generaría `aplica_00_001_000.sql` con todos los scripts de `updates/` que tengan esa misma versión, release y hotfix (`00_001_000_*`).
+   - Este script se utiliza para actualizar una instalación existente a una versión específica.
+   - Se genera de manera similar, filtrando por el prefijo de versión correspondiente.
+
+**Reglas de generación**:
+
+- El orden dentro de cada directorio se define por el número `Version`_`Release`_`Hotfix`_`Orden` del archivo (inicia con 00_000_000_01_\*).
+- Se respeta el orden de los directorios (10, 20, 30, ...).
+- Cada script agregado debe incluir al inicio un comentario breve con la descripción, la fecha de generación, autor y la versión que contiene.
 
 #### Directrices de implementación
 
