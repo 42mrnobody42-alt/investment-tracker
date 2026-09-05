@@ -126,15 +126,25 @@ Los scripts de base de datos siguen un estándar de organización y versionado:
 
 Dentro de cada directorio, los scripts se agrupan en subdirectorios numerados según su tipo:
 
-- `10_esquemas/` - Creación de esquemas y tabla de versiones.
-- `40_tablas/` - Definición de tablas (una por archivo).
-- `70_indices/` - Índices de rendimiento.
+- `10_esquemas/` - Creación de esquemas y tabla `schema_version` (incluye extensión `uuid-ossp`).
+- `20_extensiones/` - Extensiones adicionales (opcional, aquí se mantiene `uuid-ossp` por compatibilidad).
+- `40_tablas/` - Definición de tablas (una por archivo). El orden actual es:
+  - `01_cr_monedas.sql` - Tabla `monedas` (divisas).
+  - `02_cr_paises.sql` - Tabla `paises` (países con código ISO e indicativo celular, relacionada con `monedas`).
+  - `03_cr_roles.sql` - Tabla `roles`.
+  - `04_cr_usuarios.sql` - Tabla `usuarios` (incluye `celular` y `pais_id`).
+  - `05_cr_usuario_roles.sql` - Tabla de relación usuarios-roles.
+  - `06_cr_plataformas.sql` - Tabla `plataformas`.
+  - `07_cr_comisiones.sql` - Tabla `comisiones`.
+  - `08_cr_transacciones.sql` - Tabla `transacciones`.
+  - `09_cr_calculos_hist.sql` - Tabla `calculos_hist`.
+- `70_indices/` - Índices de rendimiento y unicidad (incluye índices funcionales para `username` y `email` case-insensitive, y el índice compuesto `(pais_id, celular)`).
 - `90_funciones/` - Funciones PL/pgSQL (una por archivo).
-- `140_datos_basicos/` - Datos iniciales (roles, usuarios, monedas, etc.).
+- `140_datos_basicos/` - Datos iniciales (monedas, países, roles, usuarios, etc.) en el mismo orden que las tablas.
 
 **Nomenclatura:**  
 `Version_Release_Hotfix_Orden_Prefijo_Nombre.sql`  
-Ejemplo: `00_001_000_01_cr_roles.sql`
+Ejemplo: `00_001_000_01_cr_monedas.sql`
 
 **Scripts de construcción:**
 
@@ -162,10 +172,19 @@ erDiagram
         VARCHAR password_hash
         VARCHAR email UK
         VARCHAR nombre_completo
-        BOOLEAN activo
+        BIGINT celular
         TIMESTAMP ultimo_login
         TIMESTAMP created_at
         TIMESTAMP updated_at
+        BOOLEAN activo
+    }
+    PAISES {
+        UUID id PK
+        VARCHAR nombre
+        VARCHAR codigo_iso UK
+        VARCHAR indicativo_celular
+        BOOLEAN activo
+        TIMESTAMP created_at
     }
     USUARIO_ROLES {
         UUID usuario_id PK,FK
@@ -174,6 +193,7 @@ erDiagram
     }
     USUARIOS ||--o{ USUARIO_ROLES : tiene
     ROLES ||--o{ USUARIO_ROLES : asigna
+    USUARIOS }o--|| PAISES : pertenece
 ```
 
 #### Negocio
@@ -186,6 +206,15 @@ erDiagram
         VARCHAR nombre
         VARCHAR simbolo
         VARCHAR pais
+        BOOLEAN activo
+        TIMESTAMP created_at
+    }
+    PAISES {
+        UUID id PK
+        VARCHAR nombre
+        VARCHAR codigo_iso UK
+        VARCHAR indicativo_celular
+        UUID moneda_id FK
         BOOLEAN activo
         TIMESTAMP created_at
     }
@@ -249,6 +278,8 @@ erDiagram
     MONEDAS ||--o{ TRANSACCIONES : registra_en
     USUARIOS ||--o{ CALCULOS_HIST : consulta
     PLATAFORMAS ||--o{ CALCULOS_HIST : referencia
+    PAISES ||--o{ USUARIOS : tiene_usuarios
+    PAISES }o--|| MONEDAS : usa
 ```
 
 ### Relaciones Clave
@@ -257,6 +288,9 @@ erDiagram
 | ----------- | ------------- | ---- | --------------------------------------------- |
 | usuarios    | usuario_roles | 1:N  | Un usuario tiene varios roles                 |
 | roles       | usuario_roles | 1:N  | Un rol pertenece a varios usuarios            |
+| usuarios    | paises        | N:1  | Un usuario pertenece a un país                |
+| paises      | monedas       | N:1  | Un país tiene una moneda oficial              |
+| paises      | usuarios      | 1:N  | Un país puede tener varios usuarios           |
 | usuarios    | plataformas   | 1:N  | Un usuario registra varias plataformas        |
 | monedas     | plataformas   | 1:N  | Una plataforma opera en una moneda            |
 | plataformas | comisiones    | 1:N  | Una plataforma tiene estructura de comisiones |
@@ -266,7 +300,7 @@ erDiagram
 | monedas     | transacciones | 1:N  | Una transacción se registra en una moneda     |
 | usuarios    | calculos_hist | 1:N  | Historial de cálculos por usuario             |
 
-Se incluyen **54 divisas internacionales** organizadas por región: principales (USD, COP, EUR, GBP), Américas (16), Europa (11), Asia-Pacífico (14) y Medio Oriente/África (9). Cada moneda tiene código ISO de 3 letras, nombre, símbolo y país asociado.
+Se incluyen 54 divisas internacionales organizadas por región: principales (USD, COP, EUR, GBP), Américas (16), Europa (11), Asia-Pacífico (14) y Medio Oriente/África (9). Cada moneda tiene código ISO de 3 letras, nombre, símbolo y país asociado.
 
 ### Funciones PL/pgSQL Disponibles
 
@@ -281,10 +315,12 @@ Se incluyen **54 divisas internacionales** organizadas por región: principales 
 
 ### Datos de Prueba
 
-- **3 usuarios**: demo_user, admin, incognito (con roles USER, ADMIN y PREMIUM)
-- **5 plataformas**: eToro, Interactive Brokers, Robinhood, Binance (USD) y Trii (COP)
-- **11 transacciones** de ejemplo en USD y COP con fechas en UTC
-- **54 divisas internacionales** elegidas por las mas destacadas de cada continente
+- **3 usuarios**: demo_user, admin, incognito (con roles USER, ADMIN y PREMIUM). Cada usuario tiene asignado un país (Colombia para demo_user e incognito, USA para admin) y un número de celular (numérico).
+- **5 plataformas**: eToro, Interactive Brokers, Robinhood, Binance (USD) y Trii (COP).
+- **11 transacciones** de ejemplo en USD y COP con fechas en UTC.
+- **54 divisas internacionales** elegidas por las más destacadas de cada continente.
+- **55 `paises`**: registros (uno por cada país de las monedas), con código ISO, indicativo celular y relación con la moneda correspondiente.
+- **Índices de unicidad**: `username` y `email` son únicos case-insensitive, y `celular` es único a nivel de país (combinación `pais_id` + `celular`).
 
 ## 3. BACKEND - JAVA SPRING BOOT 3.x
 
