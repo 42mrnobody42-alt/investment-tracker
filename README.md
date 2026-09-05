@@ -4,7 +4,7 @@
 - Release = `001`
 - Hotfix = `000`
 
-## Fecha: 2026-08-30
+## Fecha: 2026-09-05
 
 ## Proyecto: Investment Tracker Pro
 
@@ -51,9 +51,10 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
     - [Recuperación de Contraseña (2FA SMTP)](#recuperación-de-contraseña-2fa-smtp)
     - [Refresh Token](#refresh-token)
     - [Change My Password](#change-my-password)
+    - [Registro de Usuario](#registro-de-usuario)
+    - [Borrado de Cuenta](#borrado-de-cuenta)
   - [Seguridad](#seguridad)
   - [Pruebas](#pruebas)
-
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
@@ -326,18 +327,22 @@ Se incluyen 54 divisas internacionales organizadas por región: principales (USD
 
 ### Servicios Publicados
 
-| Endpoint                     | Método | Auth                   | Descripción                                              |
-| ---------------------------- | ------ | ---------------------- | -------------------------------------------------------- |
-| `/api/auth/login`            | POST   | No                     | Login - Retorna JWT + Refresh Token                      |
-| `/api/auth/restart-password` | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario              |
-| `/api/auth/refresh-token`    | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido   |
-| `/api/test/health`           | GET    | No                     | Health check del servicio                                |
-| `/api/encryption/encrypt`    | POST   | ADMIN                  | Encriptar texto con AES-GCM                              |
-| `/api/encryption/decrypt`    | POST   | ADMIN                  | Desencriptar texto con AES-GCM                           |
-| `/api/auth/logout`           | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token     |
-| `/api/auth/recovery/request` | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email |
-| `/api/auth/recovery/verify`  | POST   | No                     | Verificar token y cambiar contraseña                     |
-| `/api/auth/change-my-pass`   | POST   | JWT                    | Cambiar contraseña propia con validación actual          |
+| Endpoint                           | Método | Auth                   | Descripción                                              |
+| ---------------------------------- | ------ | ---------------------- | -------------------------------------------------------- |
+| `/api/auth/login`                  | POST   | No                     | Login - Retorna JWT + Refresh Token                      |
+| `/api/auth/restart-password`       | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario              |
+| `/api/auth/refresh-token`          | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido   |
+| `/api/auth/logout`                 | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token     |
+| `/api/auth/register/request`       | POST   | No                     | Solicitar registro - envía token de 6 dígitos por email  |
+| `/api/auth/register/confirm`       | POST   | No                     | Confirmar registro con token y crear usuario             |
+| `/api/auth/delete-account`         | POST   | JWT (propietario)      | Borrado lógico de la cuenta (activo = false)             |
+| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas)   | Borrado definitivo en cascada para pruebas               |
+| `/api/auth/recovery/request`       | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email |
+| `/api/auth/recovery/verify`        | POST   | No                     | Verificar token y cambiar contraseña                     |
+| `/api/auth/change-my-pass`         | POST   | JWT                    | Cambiar contraseña propia con validación actual          |
+| `/api/encryption/encrypt`          | POST   | ADMIN                  | Encriptar texto con AES-GCM                              |
+| `/api/encryption/decrypt`          | POST   | ADMIN                  | Desencriptar texto con AES-GCM                           |
+| `/api/test/health`                 | GET    | No                     | Health check del servicio                                |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
@@ -546,6 +551,68 @@ sequenceDiagram
     B-->>U: 200 OK {code: AUTH-0003, message: Contraseña actualizada}
 ```
 
+#### Registro de Usuario
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuario
+    participant B as 🔒 Backend (7700)
+    participant E as 📧 Email SMTP
+    participant DB as 🗄️ PostgreSQL (5432)
+
+    Note over U,B: PASO 1: Solicitar registro
+    U->>B: POST /api/auth/register/request {username, email, nombreCompleto, password, repeatPassword, celular, paisId, plan}
+    B->>B: Validar campos obligatorios
+    B->>B: Validar que contraseñas coincidan y cumplan criterios
+    B->>B: Validar unicidad: username, email, (pais_id, celular)
+    B->>DB: SELECT país por paisId
+    DB-->>B: País encontrado
+    B->>B: Generar token 6 dígitos (SecureRandom)
+    B->>E: Enviar email con token
+    E-->>B: Email enviado exitosamente
+    B-->>U: 200 OK {code: REG-0001, message: Correo de confirmación enviado}
+
+    Note over U,B: PASO 2: Confirmar registro
+    U->>B: POST /api/auth/register/confirm {username, email, nombreCompleto, celular, paisId, plan, token}
+    B->>B: Validar token no expirado (TTL 5 min)
+    B->>B: Validar que datos coincidan con solicitud inicial
+    B->>DB: Verificar unicidad nuevamente (por si hubo cambios)
+    B->>DB: INSERT usuario (username, email, password_hash, nombreCompleto, celular, pais_id, activo=true)
+    B->>DB: INSERT usuario_roles (rol según plan: FREE->ROLE_USER, PREMIUM->ROLE_PREMIUM)
+    DB-->>B: OK
+    B-->>U: 200 OK {code: REG-0002, message: Usuario registrado exitosamente}
+```
+
+#### Borrado de Cuenta
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 Usuario
+    participant B as 🔒 Backend (7700)
+    participant DB as 🗄️ PostgreSQL (5432)
+
+    Note over U,B: Borrado lógico (usuario autenticado)
+    U->>B: POST /api/auth/delete-account {username}
+    Note right of B: Header: Authorization: Bearer <JWT>
+    B->>B: Validar JWT y extraer username autenticado
+    B->>B: Comparar username autenticado con el de la petición
+    alt Coinciden
+        B->>DB: UPDATE usuarios SET activo=false WHERE username = ?
+        DB-->>B: OK
+        B-->>U: 200 OK {code: REG-0003, message: Cuenta eliminada exitosamente}
+    else No coinciden
+        B-->>U: 403 Forbidden {code: AUTH-007, message: No puedes eliminar la cuenta de otro usuario}
+    end
+
+    Note over U,B: Borrado definitivo (solo ADMIN, para pruebas)
+    U->>B: DELETE /api/test/delete-user/{username}
+    Note right of B: Header: Authorization: Bearer <JWT_ADMIN>
+    B->>B: Verificar rol ADMIN
+    B->>DB: DELETE FROM usuarios WHERE username = ? (en cascada)
+    DB-->>B: OK
+    B-->>U: 200 OK {message: Usuario eliminado definitivamente}
+```
+
 ### Seguridad
 
 - **JWT** con firma HMAC-SHA384
@@ -557,12 +624,14 @@ sequenceDiagram
 - Validación case-insensitive para email, case-sensitive para contraseñas
 - **2FA SMTP** para recuperación de contraseña con token de 6 dígitos
 - **Refresh Token**: Se genera un token adicional en el login, válido por 1 hora, que permite renovar el access token sin necesidad de reautenticación. La renovación se realiza mediante una sesión deslizante (cada uso extiende la expiración 1 hora más). Los refresh tokens se almacenan en memoria (ConcurrentHashMap) y se invalidan al hacer logout o al expirar. La configuración completa (TTL, tiempos, etc.) se gestiona en el archivo application.yml bajo la clave refresh-token.
+- **Registro de usuarios**: proceso en dos pasos con confirmación por email (token de 6 dígitos, TTL 5 min). Validación de unicidad de `username`, `email` y `(pais_id, celular)`. Asignación de rol según plan (`FREE` → `ROLE_USER`, `PREMIUM` → `ROLE_PREMIUM`).
+- **Borrado de cuenta**: lógico (cambia `activo` a `false`) solo para el propio usuario autenticado. Existe un endpoint adicional de borrado definitivo en cascada para pruebas (solo ADMIN).
 
 ### Pruebas
 
-- **70 pruebas automatizadas** (integración + unitarias)
+- **89 pruebas automatizadas** (integración + unitarias)
 
-- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos, refresh token.
+- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos, refresh token, registro de usuario, borrado de cuenta.
 
 - Ejecutar todas: `mvn test`
 
@@ -570,26 +639,30 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "ORDEN DE EJECUCIÓN DE PRUEBAS - 70 tests"
+    subgraph "ORDEN DE EJECUCIÓN DE PRUEBAS - 89 tests"
         A["1️⃣ ChangeMyPasswordIntegrationTest<br/>11 pruebas<br/>Cambio de contraseña propia"]
         B["2️⃣ AuthIntegrationTest<br/>31 pruebas<br/>Login, restart-password, logout"]
         C["3️⃣ EncryptionIntegrationTest<br/>7 pruebas<br/>Encriptación AES-256-GCM"]
         D["4️⃣ RefreshTokenIntegrationTest<br/>7 pruebas<br/>Refresco de token JWT"]
         E["5️⃣ RateLimitIntegrationTest<br/>4 pruebas<br/>Rate limiting anti fuerza bruta"]
         F["6️⃣ PasswordRecoveryIntegrationTest<br/>4 pruebas<br/>Recuperación 2FA SMTP"]
-        G["7️⃣ LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
+        G["7️⃣ RegisterIntegrationTest<br/>8 pruebas<br/>Registro y borrado de cuenta"]
+        H["8️⃣ LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
+        I["9️⃣ RegisterServiceTest<br/>11 pruebas<br/>Unitarias de RegisterService"]
     end
 
-    A --> H["BaseIntegrationTest<br/>Helpers comunes"]
-    B --> H
-    C --> H
-    D --> H
-    E --> H
-    F --> H
-    G --> H
+    A --> J["BaseIntegrationTest<br/>Helpers comunes"]
+    B --> J
+    C --> J
+    D --> J
+    E --> J
+    F --> J
+    G --> J
+    H --> J
+    I --> J
 
-    H --> I["TestConfig<br/>Variables desde .unitTestEnv"]
-    I --> J[".unitTestEnv<br/>src/test/resources/"]
+    J --> K["TestConfig<br/>Variables desde .unitTestEnv"]
+    K --> L[".unitTestEnv<br/>src/test/resources/"]
 ```
 
 **Arquitectura de pruebas:**
@@ -740,52 +813,62 @@ graph TB
               - **`config/`** - Configuración de Spring
                 - `EncryptedDataSourceConfig.java` - DataSource con desencriptación AES
                 - `MailConfig.java` - Configuración SMTP con desencriptación
-                - `SecurityConfig.java` - Spring Security + JWT
+                - `SecurityConfig.java` - Spring Security + JWT (permite `/register/**` público)
               - **`controller/`** - Endpoints REST
-                - `AuthController.java` - Login + restart-password + logout + change-my-pass
+                - `AuthController.java` - Login, restart-password, logout, change-my-pass, delete-account
                 - `EncryptionController.java` - Encriptación/desencriptación AES-GCM
                 - `PasswordRecoveryController.java` - Recuperación de contraseña (2FA SMTP)
-                - `TestValidationController.java` - Health check
+                - `RegisterController.java` - Registro de usuario (request/confirm)
+                - `TestValidationController.java` - Health check y delete-user (solo pruebas)
               - **`exception/`** - Manejo de excepciones
                 - `AuthenticationException.java` - Excepción personalizada
-                - `GlobalExceptionHandler.java` - Manejador global de excepciones
+                - `GlobalExceptionHandler.java` - Manejador global de excepciones (logs detallados)
               - **`model/`** - Modelos de datos
                 - **`dto/`** - Data Transfer Objects
-                  - `UserPasswordDTO.java` - DTO para cambio de contraseña
+                  - `PaisDTO.java` - País para respuestas
+                  - `UserPasswordDTO.java` - Usuario con contraseña (solo pruebas)
                 - **`entity/`** - Entidades JPA
+                  - `Pais.java` - País (con indicativo celular y moneda)
                   - `Role.java` - Entidad de roles
-                  - `User.java` - Entidad de usuarios
+                  - `User.java` - Usuario (incluye celular y país)
                 - **`enums/`** - Enumeraciones de respuesta
-                  - `ErrorCode.java` - Códigos de error
+                  - `ErrorCode.java` - Códigos de error (incluye errores de registro)
                   - `LockLevel.java` - Niveles de bloqueo
-                  - `SuccessfulCode.java` - Códigos de éxito
+                  - `Plan.java` - Planes (FREE, PREMIUM)
+                  - `SuccessfulCode.java` - Códigos de éxito (incluye registro)
                 - **`request/`** - Objetos de petición
-                  - `ChangePasswordRequest.java` - Solicitud de cambio de contraseña
-                  - `EncryptionRequest.java` - Solicitud de encriptación
-                  - `LoginRequest.java` - Solicitud de login
-                  - `PasswordRecoveryRequest.java` - Solicitud de recuperación
-                  - `RestartPasswordRequest.java` - Solicitud de reinicio (admin)
+                  - `ChangePasswordRequest.java` - Cambio de contraseña
+                  - `DeleteAccountRequest.java` - Borrado de cuenta
+                  - `EncryptionRequest.java` - Encriptación
+                  - `LoginRequest.java` - Login
+                  - `PasswordRecoveryRequest.java` - Recuperación
+                  - `RegisterConfirmRequest.java` - Confirmación de registro
+                  - `RegisterRequest.java` - Solicitud de registro
+                  - `RestartPasswordRequest.java` - Reinicio (admin)
                   - `TokenVerificationRequest.java` - Verificación de token
                 - **`response/`** - Objetos de respuesta
                   - `EncryptionResponse.java` - Respuesta de encriptación
                   - `ErrorResponse.java` - Respuesta de error
-                  - `LoginResponse.java` - Respuesta de login
+                  - `LoginResponse.java` - Respuesta de login (incluye celular y país)
                   - `SuccessResponse.java` - Respuesta de éxito
               - **`repository/`** - Repositorios JPA
-                - `UserRepository.java` - Repositorio de usuarios
+                - `PaisRepository.java` - País
+                - `RoleRepository.java` - Roles
+                - `UserRepository.java` - Usuarios (incluye findByUsernameIgnoreCase y existsByPaisIdAndCelular)
               - **`security/`** - Capa de seguridad
                 - `JwtAuthFilter.java` - Filtro de autenticación JWT
                 - `RateLimitFilter.java` - Filtro de límite de peticiones
                 - `UserDetailsServiceImpl.java` - Carga de usuarios desde BD
               - **`service/`** - Lógica de negocio
                 - `ChangeMyPasswordService.java` - Cambio de contraseña propia
-                - `EmailService.java` - Envío de correos SMTP
+                - `EmailService.java` - Envío de correos SMTP (recuperación y registro)
                 - `EncryptionService.java` - Encriptación AES-GCM
                 - `JwtService.java` - Generación/validación JWT
                 - `LoginService.java` - Autenticación + control de intentos
                 - `LogoutService.java` - Cierre de sesión con blacklist
                 - `PasswordRecoveryService.java` - Recuperación con 2FA
                 - `RefreshTokenService.java` - Servicio de refresh tokens
+                - `RegisterService.java` - Registro con confirmación por email y borrado lógico
                 - `RestartUserPasswordService.java` - Restablecer contraseña (ADMIN)
         - **`resources/`**
           - `application.yml` - Configuración (DB encriptada, JWT, SMTP, puerto 7700)
@@ -794,18 +877,21 @@ graph TB
           - **`com/`**
             - **`investmenttracker/`**
               - **`config/`**
-                - `TestConfig.java` - Configuración de pruebas
+                - `TestConfig.java` - Configuración de pruebas (mapeo de .unitTestEnv)
               - **`controller/`** - Pruebas de integración
                 - `AuthIntegrationTest.java` - Pruebas de autenticación (31 casos)
-                - `BaseIntegrationTest.java` - Clase base para pruebas
+                - `BaseIntegrationTest.java` - Clase base para pruebas (helpers comunes)
                 - `ChangeMyPasswordIntegrationTest.java` - Pruebas de cambio de contraseña
                 - `EncryptionIntegrationTest.java` - Pruebas de encriptación
                 - `PasswordRecoveryIntegrationTest.java` - Pruebas de recuperación
                 - `RateLimitIntegrationTest.java` - Pruebas de rate limit
                 - `RefreshTokenIntegrationTest.java` - Pruebas de refresh token
+                - `RegisterIntegrationTest.java` - Pruebas de registro (flujo completo FREE/PREMIUM)
               - **`service/`** - Pruebas unitarias
                 - `LoginServiceTest.java` - Pruebas del servicio de login
+                - `RegisterServiceTest.java` - Pruebas del servicio de registro
         - **`resources/`**
+          - `.unitTestEnv` - Datos de prueba (usuarios, emails, contraseñas, etc.)
     - **`target/`** - Compilados y reportes (generado por Maven)
       - **`classes/`** - Clases compiladas
       - **`generated-sources/`** - Código fuente generado
