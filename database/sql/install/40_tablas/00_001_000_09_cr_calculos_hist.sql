@@ -7,7 +7,7 @@ DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM investment_tracker.schema_version
-        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_08_cr_calculos_hist.sql'
+        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_09_cr_calculos_hist.sql'
     ) THEN
         RAISE NOTICE '⚠️  Tabla calculos_hist 00_001_000 ya instalada. Omitiendo.';
         RETURN;
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS investment_tracker.calculos_hist (
 );
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Tabla calculos_hist', '40_tablas/00_001_000_08_cr_calculos_hist.sql')
+VALUES ('00_001_000', 'Tabla calculos_hist', '40_tablas/00_001_000_09_cr_calculos_hist.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Tabla calculos_hist creada (00_001_000)'

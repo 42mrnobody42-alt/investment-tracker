@@ -7,7 +7,7 @@ DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM investment_tracker.schema_version
-        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_06_cr_comisiones.sql'
+        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_07_cr_comisiones.sql'
     ) THEN
         RAISE NOTICE '⚠️  Tabla comisiones 00_001_000 ya instalada. Omitiendo.';
         RETURN;
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS investment_tracker.comisiones (
 );
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Tabla comisiones', '40_tablas/00_001_000_06_cr_comisiones.sql')
+VALUES ('00_001_000', 'Tabla comisiones', '40_tablas/00_001_000_07_cr_comisiones.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Tabla comisiones creada (00_001_000)'
