@@ -274,6 +274,14 @@ public class RegisterService {
         log.info("Usuario eliminado definitivamente (cascada): {}", username);
     }
 
+    /**
+     * SOLO PARA TESTING - Obtener token actual del caché
+     */
+    public String getTokenForTest(String username) {
+        RegistrationAttempt attempt = registrationCache.get(username);
+        return attempt != null ? attempt.getToken() : null;
+    }
+
     private String generateToken() {
         SecureRandom random = new SecureRandom();
         int token = random.nextInt(900000) + 100000;
