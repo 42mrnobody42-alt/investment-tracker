@@ -11,11 +11,10 @@ services:
     volumes:
       # Volumen persistente para datos
       - postgres_data:/var/lib/postgresql/data
-      # Scripts de inicialización (se ejecutan en orden alfabético)
-      - ../database/sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ../database/sql/02_functions.sql:/docker-entrypoint-initdb.d/02_functions.sql
-      - ../database/sql/03_seed.sql:/docker-entrypoint-initdb.d/03_seed.sql
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/00_init.sql
+      # Script de inicialización (shell)
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/00_init.sh
+      # Directorio completo de scripts SQL (para acceder a aplica.sql)
+      - ../database:/scripts:ro
     ports:
       - "5432:5432"
     networks:
@@ -27,7 +26,7 @@ services:
       retries: 5
       start_period: 30s
 
- # ==================== PGADMIN ====================
+  # ==================== PGADMIN ====================
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: investment-pgadmin
