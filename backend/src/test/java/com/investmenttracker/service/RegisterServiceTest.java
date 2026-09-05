@@ -1,5 +1,27 @@
 package com.investmenttracker.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.investmenttracker.component.SecurityLoginComponent;
 import com.investmenttracker.exception.AuthenticationException;
 import com.investmenttracker.model.entity.Pais;
@@ -13,22 +35,6 @@ import com.investmenttracker.model.response.SuccessResponse;
 import com.investmenttracker.repository.PaisRepository;
 import com.investmenttracker.repository.RoleRepository;
 import com.investmenttracker.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias de RegisterService")
@@ -115,12 +121,12 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - éxito (FREE)")
     void requestRegistration_Free_Success() {
+        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
+        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(Optional.empty());
         when(userRepository.existsByPaisIdAndCelular(any(), any())).thenReturn(false);
         when(paisRepository.existsById(any())).thenReturn(true);
-        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
-        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
         doNothing().when(emailService).sendRegistrationEmail(any(), any(), any());
 
         SuccessResponse response = registerService.requestRegistration(registerRequest);
@@ -134,12 +140,12 @@ class RegisterServiceTest {
     @DisplayName("Request registration - éxito (PREMIUM)")
     void requestRegistration_Premium_Success() {
         registerRequest.setPlan(Plan.PREMIUM);
+        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
+        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(Optional.empty());
         when(userRepository.existsByPaisIdAndCelular(any(), any())).thenReturn(false);
         when(paisRepository.existsById(any())).thenReturn(true);
-        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
-        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
         doNothing().when(emailService).sendRegistrationEmail(any(), any(), any());
 
         SuccessResponse response = registerService.requestRegistration(registerRequest);
@@ -182,6 +188,10 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - username ya existe → error")
     void requestRegistration_UsernameExists_ThrowsException() {
+        // Permitir que las validaciones de contraseña pasen
+        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
+        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
+        // Simular que el username ya existe
         when(userRepository.existsByUsername(any())).thenReturn(true);
 
         AuthenticationException ex = assertThrows(AuthenticationException.class,
@@ -192,6 +202,10 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - email ya existe → error")
     void requestRegistration_EmailExists_ThrowsException() {
+        // Permitir que las validaciones de contraseña pasen
+        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
+        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
+        // Simular que el email ya existe (username no existe)
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(Optional.of(mockUser));
 
@@ -203,9 +217,14 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - pais no existe → error")
     void requestRegistration_PaisNotFound_ThrowsException() {
+        // Permitir que las validaciones de contraseña pasen
+        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
+        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
+        // Simular que username y email no existen
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(Optional.empty());
         when(userRepository.existsByPaisIdAndCelular(any(), any())).thenReturn(false);
+        // Simular que el país no existe
         when(paisRepository.existsById(any())).thenReturn(false);
 
         AuthenticationException ex = assertThrows(AuthenticationException.class,
@@ -216,12 +235,12 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - error al enviar email → error")
     void requestRegistration_EmailSendError_ThrowsException() {
+        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
+        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(Optional.empty());
         when(userRepository.existsByPaisIdAndCelular(any(), any())).thenReturn(false);
         when(paisRepository.existsById(any())).thenReturn(true);
-        when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
-        when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
         doThrow(new RuntimeException("SMTP error")).when(emailService).sendRegistrationEmail(any(), any(), any());
 
         AuthenticationException ex = assertThrows(AuthenticationException.class,
@@ -231,28 +250,8 @@ class RegisterServiceTest {
 
     // ============ CONFIRM REGISTRATION TESTS ============
 
-    @Test
-    @DisplayName("Confirm registration - éxito (FREE)")
-    void confirmRegistration_Free_Success() {
-        // Simular el intento en caché
-        // (necesitamos invocar primero requestRegistration para llenar la caché, o usar reflection)
-        // Para pruebas unitarias, usaremos un enfoque más directo: inyectar un attempt en la caché.
-        // Como la caché es privada, usaremos un método de prueba o reflection.
-        // Para simplificar, probaremos el flujo completo integrando request + confirm.
-        // Pero como es unitario, podemos usar un truco: llamar a request y luego confirm con el token generado.
-        // Sin embargo, la caché se llena en el método request.
-        // Aquí haremos una prueba más simple: mockear el comportamiento del caché usando un spy.
-        // Usaremos un spy para simular la caché.
-        // Mejor: crearemos un test de integración para el flujo completo.
-        // Por ahora, dejaremos este test pendiente para integración.
-        // En su lugar, probaremos las validaciones de confirm.
-        // Se requiere un enfoque diferente: crear un método de prueba que inyecte un attempt en la caché.
-        // Usaremos un truco con reflection.
-        // Para esta prueba, asumiremos que request ya se llamó.
-        // En la práctica, las pruebas de integración cubrirán el flujo completo.
-        // Por ahora, dejamos un placeholder.
-        assertTrue(true);
-    }
+    // Nota: Para pruebas de confirmación se requiere un enfoque de integración
+    // debido al caché en memoria. Las pruebas unitarias se centran en validaciones.
 
     // ============ DELETE ACCOUNT TESTS ============
 
