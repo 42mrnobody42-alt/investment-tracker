@@ -12,6 +12,12 @@ pom.xml.versionsBackup
 pom.xml.next
 release.properties
 
+# Archivos residuales de pruebas
+backend/org.junit.jupiter.api.*
+backend/org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
+backend/org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+
+
 # =============================================
 # IDE - VS Code
 # =============================================
