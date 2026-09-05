@@ -28,24 +28,41 @@ else
 fi
 echo ""
 
-# 3. Datos
-echo "📊 3. DATOS EN BASE DE DATOS"
+# 3. Datos - Tabla de conteos
+echo "📊 3. CONTEO DE REGISTROS POR TABLA"
 docker compose exec -T postgres psql -U investor -d investment_tracker << 'SQL'
-SELECT '--- CONTEO DE REGISTROS ---' as info;
-SELECT '  Roles: ' || COUNT(*) FROM investment_tracker.roles;
-SELECT '  Usuarios: ' || COUNT(*) FROM investment_tracker.usuarios;
-SELECT '  Plataformas: ' || COUNT(*) FROM investment_tracker.plataformas;
-SELECT '  Comisiones: ' || COUNT(*) FROM investment_tracker.comisiones;
-SELECT '  Transacciones: ' || COUNT(*) FROM investment_tracker.transacciones;
-SELECT '  Versiones: ' || COUNT(*) FROM investment_tracker.schema_version;
+SELECT tabla, registros FROM (
+    SELECT 'Roles' AS tabla, COUNT(*) AS registros FROM investment_tracker.roles
+    UNION ALL
+    SELECT 'Usuarios', COUNT(*) FROM investment_tracker.usuarios
+    UNION ALL
+    SELECT 'Usuario_Roles', COUNT(*) FROM investment_tracker.usuario_roles
+    UNION ALL
+    SELECT 'Monedas', COUNT(*) FROM investment_tracker.monedas
+    UNION ALL
+    SELECT 'Plataformas', COUNT(*) FROM investment_tracker.plataformas
+    UNION ALL
+    SELECT 'Comisiones', COUNT(*) FROM investment_tracker.comisiones
+    UNION ALL
+    SELECT 'Transacciones', COUNT(*) FROM investment_tracker.transacciones
+    UNION ALL
+    SELECT 'Calculos_Hist', COUNT(*) FROM investment_tracker.calculos_hist
+    UNION ALL
+    SELECT 'Países', COUNT(*) FROM investment_tracker.paises
+    UNION ALL
+    SELECT 'Versiones', COUNT(*) FROM investment_tracker.schema_version
+) AS conteos
+ORDER BY tabla;
 SQL
 echo ""
 
-# 4. Usuarios
+# 4. Usuarios (incluyendo celular y país)
 echo "👤 4. USUARIOS REGISTRADOS"
 docker compose exec -T postgres psql -U investor -d investment_tracker << 'SQL'
-SELECT username, email, nombre_completo, activo, created_at::date as creado
-FROM investment_tracker.usuarios;
+SELECT u.username, u.email, u.nombre_completo, u.celular, p.nombre as pais, u.activo, u.created_at::date as creado
+FROM investment_tracker.usuarios u
+LEFT JOIN investment_tracker.paises p ON u.pais_id = p.id
+ORDER BY u.username;
 SQL
 echo ""
 

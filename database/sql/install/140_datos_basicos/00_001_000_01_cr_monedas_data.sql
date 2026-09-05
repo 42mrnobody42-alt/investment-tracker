@@ -73,7 +73,7 @@ BEGIN
 END $$;
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Datos de monedas', '140_datos_basicos/00_001_000_03_cr_monedas_data.sql')
+VALUES ('00_001_000', 'Datos de monedas', '140_datos_basicos/00_001_000_01_cr_monedas_data.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Datos de monedas insertados (00_001_000)'

@@ -3,6 +3,7 @@ package com.investmenttracker.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.lang.NonNull;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,6 +36,13 @@ public class User {
 
     @Column(name = "nombre_completo", length = 200)
     private String nombreCompleto;
+
+    @Column(length = 20)
+    private Long celular;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pais_id")
+    private Pais pais;
 
     @NonNull
     @Column(nullable = false)

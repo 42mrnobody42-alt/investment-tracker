@@ -1,5 +1,5 @@
 -- =============================================
--- DATOS: usuarios
+-- DATOS: usuarios (con celular BIGINT y país)
 -- Versión: 00_001_000
 -- =============================================
 
@@ -11,21 +11,26 @@ DECLARE
     v_USER_DEMO      UUID := 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a';
     v_USER_ADMIN     UUID := 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b';
     v_USER_INCOGNITO UUID := 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c';
+    -- UUIDs de países (coinciden con los definidos en paises_data.sql)
+    v_PAIS_COLOMBIA  UUID := '10000000-0001-0001-0001-000000000002';
+    v_PAIS_USA       UUID := '10000000-0001-0001-0001-000000000001';
 BEGIN
-    INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo)
+    INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo, celular, pais_id)
     SELECT v_USER_DEMO, 'demo_user',
            '$2a$10$geVB6cZUm027Tw0.suctIOtzL4CkbAQ6XNsxTNzsbjX8ADtgUWPDS',
-           'demo@investment-tracker.com', 'Usuario Demo'
+           'demo@investment-tracker.com', 'Usuario Demo',
+           3001234567, v_PAIS_COLOMBIA
     WHERE NOT EXISTS (SELECT 1 FROM investment_tracker.usuarios WHERE username = 'demo_user');
 
     INSERT INTO investment_tracker.usuario_roles (usuario_id, rol_id)
     SELECT v_USER_DEMO, v_ROLE_USER
     WHERE NOT EXISTS (SELECT 1 FROM investment_tracker.usuario_roles WHERE usuario_id = v_USER_DEMO AND rol_id = v_ROLE_USER);
 
-    INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo)
+    INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo, celular, pais_id)
     SELECT v_USER_ADMIN, 'admin',
            '$2a$10$emTDQhyVPegoeKxfw1lZieRYRyeM5RsWkLB1iXNH15VzhrubbLweq',
-           'admin@investment-tracker.com', 'Administrador'
+           'admin@investment-tracker.com', 'Administrador',
+           5551234567, v_PAIS_USA
     WHERE NOT EXISTS (SELECT 1 FROM investment_tracker.usuarios WHERE username = 'admin');
 
     INSERT INTO investment_tracker.usuario_roles (usuario_id, rol_id)
@@ -33,10 +38,11 @@ BEGIN
     WHERE r.nombre IN ('ROLE_ADMIN', 'ROLE_USER')
     AND NOT EXISTS (SELECT 1 FROM investment_tracker.usuario_roles WHERE usuario_id = v_USER_ADMIN AND rol_id = r.id);
 
-    INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo)
+    INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo, celular, pais_id)
     SELECT v_USER_INCOGNITO, 'incognito',
            '$2a$10$Rw3wbbs1gphl3cS3eJ1r2Oh2kSHSqCWJGqPRLs7/snc8OcgayZCYq',
-           '42mrnobody42@gmail.com', 'Usuario Premium incognito'
+           '42mrnobody42@gmail.com', 'Usuario Premium incognito',
+           3109876543, v_PAIS_COLOMBIA
     WHERE NOT EXISTS (SELECT 1 FROM investment_tracker.usuarios WHERE username = 'incognito');
 
     INSERT INTO investment_tracker.usuario_roles (usuario_id, rol_id)
@@ -46,7 +52,7 @@ BEGIN
 END $$;
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Datos de usuarios', '140_datos_basicos/00_001_000_02_cr_usuarios_data.sql')
+VALUES ('00_001_000', 'Datos de usuarios con celular', '140_datos_basicos/00_001_000_04_cr_usuarios_data.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Datos de usuarios insertados (00_001_000)'

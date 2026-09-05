@@ -75,6 +75,8 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                 printStep("TC-00", "Login admin");
                 LoginRequest r = LoginRequest.builder().username("admin").password("Admin123!").build();
                 MvcResult result = mockMvc.perform(Objects.requireNonNull(postJson("/api/auth/login", null, r)))
+                                .andExpect(jsonPath("$.celular").exists())
+                                .andExpect(jsonPath("$.pais").exists())
                                 .andExpect(status().isOk()).andExpect(jsonPath("$.username").value("admin"))
                                 .andReturn();
                 adminToken = extractToken(result);
@@ -294,6 +296,8 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                 printStep("TC-18", "Login admin");
                 LoginRequest r = LoginRequest.builder().username("admin").password("Admin123!").build();
                 MvcResult result = mockMvc.perform(Objects.requireNonNull(postJson("/api/auth/login", null, r)))
+                                .andExpect(jsonPath("$.celular").exists())
+                                .andExpect(jsonPath("$.pais").exists())
                                 .andExpect(status().isOk()).andExpect(jsonPath("$.username").value("admin"))
                                 .andReturn();
                 adminToken = extractToken(result);
@@ -324,6 +328,8 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                 printStep("TC-20", "Login admin");
                 LoginRequest r = LoginRequest.builder().username("admin").password("Admin123!").build();
                 MvcResult result = mockMvc.perform(Objects.requireNonNull(postJson("/api/auth/login", null, r)))
+                                .andExpect(jsonPath("$.celular").exists())
+                                .andExpect(jsonPath("$.pais").exists())
                                 .andExpect(status().isOk()).andExpect(jsonPath("$.username").value("admin"))
                                 .andReturn();
                 adminToken = extractToken(result);
@@ -462,4 +468,4 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                 clearBlacklist();
         }
 
-    }
+}

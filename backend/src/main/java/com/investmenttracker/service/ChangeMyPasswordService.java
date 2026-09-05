@@ -99,7 +99,7 @@ public class ChangeMyPasswordService {
     }
 
     private User findAndValidateUser(ChangePasswordRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameIgnoreCase(request.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Usuario no encontrado: {}", request.getUsername());
                     return new AuthenticationException(ErrorCode.USER_NOT_FOUND);

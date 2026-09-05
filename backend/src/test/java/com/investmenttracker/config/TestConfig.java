@@ -1,9 +1,10 @@
 package com.investmenttracker.config;
 
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+
+import lombok.Getter;
 
 @Configuration
 @PropertySource("classpath:.unitTestEnv")
@@ -51,6 +52,30 @@ public class TestConfig {
 
     @Value("${TEST_USER_INCOGNITO_NEW_PASSWORD}")
     private String incognitoNewPassword;
+
+    @Value("${TEST_REGISTER_USERNAME_FREE}")
+    private String registerUsernameFree;
+
+    @Value("${TEST_REGISTER_USERNAME_PREMIUM}")
+    private String registerUsernamePremium;
+
+    @Value("${TEST_REGISTER_EMAIL_FREE}")
+    private String registerEmailFree;
+
+    @Value("${TEST_REGISTER_EMAIL_PREMIUM}")
+    private String registerEmailPremium;
+
+    @Value("${TEST_REGISTER_NOMBRE}")
+    private String registerNombre;
+
+    @Value("${TEST_REGISTER_PASSWORD}")
+    private String registerPassword;
+
+    @Value("${TEST_REGISTER_CELULAR}")
+    private Long registerCelular;
+
+    @Value("${TEST_REGISTER_PAIS_ID}")
+    private String registerPaisId;
 
     @Value("${TEST_BASE_URL}")
     private String baseUrl;

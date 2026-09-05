@@ -7,7 +7,7 @@ DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM investment_tracker.schema_version
-        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_05_cr_plataformas.sql'
+        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_06_cr_plataformas.sql'
     ) THEN
         RAISE NOTICE '⚠️  Tabla plataformas 00_001_000 ya instalada. Omitiendo.';
         RETURN;
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS investment_tracker.plataformas (
 );
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Tabla plataformas', '40_tablas/00_001_000_05_cr_plataformas.sql')
+VALUES ('00_001_000', 'Tabla plataformas', '40_tablas/00_001_000_06_cr_plataformas.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Tabla plataformas creada (00_001_000)'

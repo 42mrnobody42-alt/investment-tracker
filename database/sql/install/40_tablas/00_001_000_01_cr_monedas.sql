@@ -7,7 +7,7 @@ DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM investment_tracker.schema_version
-        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_04_cr_monedas.sql'
+        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_01_cr_monedas.sql'
     ) THEN
         RAISE NOTICE '⚠️  Tabla monedas 00_001_000 ya instalada. Omitiendo.';
         RETURN;
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS investment_tracker.monedas (
 );
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Tabla monedas', '40_tablas/00_001_000_04_cr_monedas.sql')
+VALUES ('00_001_000', 'Tabla monedas', '40_tablas/00_001_000_01_cr_monedas.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Tabla monedas creada (00_001_000)'

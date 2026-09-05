@@ -7,7 +7,7 @@ DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM investment_tracker.schema_version
-        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_01_cr_roles.sql'
+        WHERE version = '00_001_000' AND script_name = '40_tablas/00_001_000_03_cr_roles.sql'
     ) THEN
         RAISE NOTICE '⚠️  Tabla roles 00_001_000 ya instalada. Omitiendo.';
         RETURN;
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS investment_tracker.roles (
 );
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Tabla roles', '40_tablas/00_001_000_01_cr_roles.sql')
+VALUES ('00_001_000', 'Tabla roles', '40_tablas/00_001_000_03_cr_roles.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Tabla roles creada (00_001_000)'
