@@ -122,12 +122,12 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 
 - **Modelo relacional normalizado**: al menos hasta 3FN, con claves primarias UUID y relaciones claras.
 - **PL/pgSQL para lógica compleja**: usar funciones y procedimientos almacenados solo cuando la lógica requiera acceso eficiente a los datos o cuando se necesite atomicidad transaccional. Documentar cada función con su propósito y parámetros.
-- **Migraciones controladas**: todos los cambios de esquema deben reflejarse en scripts SQL versionados (por ejemplo, `01_schema.sql`, `02_functions.sql`, `03_seed.sql`).
+- **Migraciones controladas**: todos los cambios de esquema deben reflejarse en scripts SQL versionados tal como lo indica los subtitulos "Estándar de organización y nomenclatura" y "Scripts de construcción".
 - **Índices**: crear índices apropiados para las columnas más consultadas (especialmente claves foráneas y campos de búsqueda).
 - **Transacciones**: usar transacciones explícitas cuando se modifiquen múltiples tablas o se ejecuten funciones con efectos secundarios.
 - **Manejo de errores**: en PL/pgSQL, usar `RAISE` con códigos de error claros y manejar excepciones cuando sea necesario.
 
-#### Estándar de organización y nomenclatura (próximo cambio planificado)
+#### Estándar de organización y nomenclatura
 
 Se adoptará la siguiente estructura estandarizada para todos los scripts de base de datos, siguiendo las mejores prácticas de la industria:
 
@@ -178,7 +178,7 @@ Ejemplo de nombres válidos:
 
 > **Ejemplo completo**: `00_001_000_01_cr_usuarios.sql`
 
-Los números de **Version**, **Release** y **Hotfix** se obtienen del archivo `README.md` (sección "Historial de Versiones"). Por ejemplo, para la versión `v0.1.0`, se traduce a:
+Los NUMEROS OFICIALES de **Version**, **Release** y **Hotfix** **se obtienen del archivo `README.md`** (sección "# PROMPT INICIAL - Sistema de Gestión de Inversiones"). Por ejemplo, para la versión `v0.1.0`, se traduce a:
 
 - Version = `00`
 - Release = `001`
@@ -188,12 +188,16 @@ Los números de **Version**, **Release** y **Hotfix** se obtienen del archivo `R
 
 Para facilitar el despliegue y la migración, se generarán dos scripts agregados a partir de los archivos individuales:
 
-1. **`aplica.sql`** (instalación completa):
-   - Contiene **todos** los scripts de la carpeta `install/` combinados en orden:
-     - Primero todos los archivos del directorio `10_esquemas/` (ordenados por `Version`_`Release`_`Hotfix`\_`Orden`).
-     - Luego `20_extensiones/`, `30_tipos/`, ..., hasta `160_comentarios/`.
-   - Este script se utiliza para una instalación completa desde cero.
-   - Se genera automáticamente mediante un script o herramienta (ej. `build_aplicaSql.sh`) que recorre los directorios y concatena los archivos respetando el orden numérico.
+1. **`CreateInstallSqlInvestmentTracker.sh`** (genera `database/sql/aplica.sql`):
+   - Recorre **todos** los directorios de `database/sql/install/` en orden numérico (`10_esquemas/`, `30_tipos/`, ..., `160_comentarios/`).
+   - Dentro de cada directorio, procesa los archivos en orden alfabético (que coincide con el orden numérico).
+   - Genera un archivo `aplica.sql` que **NO contiene el código SQL inline**, sino **referencias `\ir`** a cada archivo individual, con rutas relativas al directorio `database/sql/`.
+   - Ejemplo de contenido generado:
+     ```sql
+     \ir install/10_esquemas/00_001_000_01_cr_schema.sql
+     \ir install/40_tablas/00_001_000_01_cr_roles.sql
+     \ir install/40_tablas/00_001_000_02_cr_usuarios.sql
+     ```
 
 2. **`aplica_V_R_H.sql`** (migración por versión):
    - Contiene **solo los scripts del directorio `updates/`** que corresponden a una versión, release y hotfix específicos.

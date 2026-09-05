@@ -32,6 +32,7 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
   - [Diagrama de Arquitectura](#diagrama-de-arquitectura)
 
 - [2. Base de Datos](#2-base-de-datos)
+  - [Estructura de Scripts SQL](#estructura-de-scripts-sql)
   - [Diagrama MER (Modelo Entidad-Relación)](#diagrama-mer-modelo-entidad-relación)
     - [Login](#login)
     - [Negocio](#negocio)
@@ -115,6 +116,33 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 ```
 
 ## 2. BASE DE DATOS
+
+### Estructura de Scripts SQL
+
+Los scripts de base de datos siguen un estándar de organización y versionado:
+
+- **Directorio `database/sql/install/`**: contiene todos los scripts para una instalación completa desde cero.
+- **Directorio `database/sql/updates/`**: contiene scripts de migración incremental (por versión, release o hotfix).
+
+Dentro de cada directorio, los scripts se agrupan en subdirectorios numerados según su tipo:
+
+- `10_esquemas/` - Creación de esquemas y tabla de versiones.
+- `40_tablas/` - Definición de tablas (una por archivo).
+- `70_indices/` - Índices de rendimiento.
+- `90_funciones/` - Funciones PL/pgSQL (una por archivo).
+- `140_datos_basicos/` - Datos iniciales (roles, usuarios, monedas, etc.).
+
+**Nomenclatura:**  
+`Version_Release_Hotfix_Orden_Prefijo_Nombre.sql`  
+Ejemplo: `00_001_000_01_cr_roles.sql`
+
+**Scripts de construcción:**
+
+- `CreateInstallSqlInvestmentTracker.sh` → genera `database/sql/aplica.sql` con referencias `\ir` a todos los scripts de `install/`.
+- `CreateRelease00_001_000SqlInvestmentTracker.sh` → genera `database/sql/aplica_00_001_000.sql` para migraciones específicas.
+
+**Inicialización en Docker:**  
+El contenedor PostgreSQL ejecuta `docker/postgres/init.sh` al iniciarse. Este script verifica si el esquema `investment_tracker` ya existe; si no, ejecuta `aplica.sql` para instalar todo desde cero. Esto asegura que la base de datos se inicialice solo la primera vez y preserve los datos en reinicios posteriores.
 
 ### Diagrama MER (Modelo Entidad-Relación)
 
@@ -647,9 +675,17 @@ graph TB
     - **`MER/`**
       - `diagram.md` - Diagrama entidad-relación
     - **`sql/`**
-      - `01_schema.sql` - Esquema v2.1.0 (UUID + Monedas)
-      - `02_functions.sql` - Funciones PL/pgSQL v2.0.0
-      - `03_seed.sql` - Datos iniciales v2.1.0
+      - **`install/`** - Scripts de instalación completa
+        - `10_esquemas/` - Esquema y tabla de versiones
+        - `40_tablas/` - Tablas individuales
+        - `70_indices/` - Índices
+        - `90_funciones/` - Funciones PL/pgSQL
+        - `140_datos_basicos/` - Datos iniciales
+      - **`updates/`** - Scripts de migración incremental
+      - `aplica.sql` - Script consolidado de instalación (generado)
+      - `aplica_00_001_000.sql` - Script de migración para versión 00_001_000 (generado)
+    - `CreateInstallSqlInvestmentTracker.sh` - Generador de aplica.sql
+    - `CreateRelease00_001_000SqlInvestmentTracker.sh` - Generador de aplica_V_R_H.sql
   - **`backend/`** - API REST Spring Boot 3.x + Java 21
     - `pom.xml` - Dependencias Maven
     - **`src/`**
