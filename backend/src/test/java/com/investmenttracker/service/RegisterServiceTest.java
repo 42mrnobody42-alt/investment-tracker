@@ -25,11 +25,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.investmenttracker.component.SecurityLoginComponent;
 import com.investmenttracker.exception.AuthenticationException;
 import com.investmenttracker.model.entity.Pais;
-import com.investmenttracker.model.entity.Role;
 import com.investmenttracker.model.entity.User;
 import com.investmenttracker.model.enums.ErrorCode;
 import com.investmenttracker.model.enums.Plan;
-import com.investmenttracker.model.request.RegisterConfirmRequest;
 import com.investmenttracker.model.request.RegisterRequest;
 import com.investmenttracker.model.response.SuccessResponse;
 import com.investmenttracker.repository.PaisRepository;
@@ -38,6 +36,7 @@ import com.investmenttracker.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias de RegisterService")
+@SuppressWarnings("null") // Los mocks de Mockito pueden tener argumentos null, pero están controlados
 class RegisterServiceTest {
 
     @Mock
@@ -59,9 +58,7 @@ class RegisterServiceTest {
     private RegisterService registerService;
 
     private RegisterRequest registerRequest;
-    private RegisterConfirmRequest confirmRequest;
     private User mockUser;
-    private Role mockRole;
     private Pais mockPais;
     private UUID paisId;
     private UUID userId;
@@ -80,21 +77,6 @@ class RegisterServiceTest {
                 .celular(3101234567L)
                 .paisId(paisId)
                 .plan(Plan.FREE)
-                .build();
-
-        confirmRequest = RegisterConfirmRequest.builder()
-                .username("test_user")
-                .email("test@email.com")
-                .nombreCompleto("Test User")
-                .celular(3101234567L)
-                .paisId(paisId)
-                .plan(Plan.FREE)
-                .token("123456")
-                .build();
-
-        mockRole = Role.builder()
-                .id(UUID.randomUUID())
-                .nombre("ROLE_USER")
                 .build();
 
         mockPais = Pais.builder()
@@ -188,10 +170,8 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - username ya existe → error")
     void requestRegistration_UsernameExists_ThrowsException() {
-        // Permitir que las validaciones de contraseña pasen
         when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
         when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
-        // Simular que el username ya existe
         when(userRepository.existsByUsername(any())).thenReturn(true);
 
         AuthenticationException ex = assertThrows(AuthenticationException.class,
@@ -202,10 +182,8 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - email ya existe → error")
     void requestRegistration_EmailExists_ThrowsException() {
-        // Permitir que las validaciones de contraseña pasen
         when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
         when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
-        // Simular que el email ya existe (username no existe)
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(Optional.of(mockUser));
 
@@ -217,14 +195,11 @@ class RegisterServiceTest {
     @Test
     @DisplayName("Request registration - pais no existe → error")
     void requestRegistration_PaisNotFound_ThrowsException() {
-        // Permitir que las validaciones de contraseña pasen
         when(securityLoginComponent.passwordsMatch(any(), any())).thenReturn(true);
         when(securityLoginComponent.isValidPassword(any())).thenReturn(true);
-        // Simular que username y email no existen
         when(userRepository.existsByUsername(any())).thenReturn(false);
         when(userRepository.findByEmailIgnoreCase(any())).thenReturn(Optional.empty());
         when(userRepository.existsByPaisIdAndCelular(any(), any())).thenReturn(false);
-        // Simular que el país no existe
         when(paisRepository.existsById(any())).thenReturn(false);
 
         AuthenticationException ex = assertThrows(AuthenticationException.class,
@@ -247,11 +222,6 @@ class RegisterServiceTest {
                 () -> registerService.requestRegistration(registerRequest));
         assertEquals(ErrorCode.RECOVERY_EMAIL_SEND_ERROR, ex.getErrorCode());
     }
-
-    // ============ CONFIRM REGISTRATION TESTS ============
-
-    // Nota: Para pruebas de confirmación se requiere un enfoque de integración
-    // debido al caché en memoria. Las pruebas unitarias se centran en validaciones.
 
     // ============ DELETE ACCOUNT TESTS ============
 

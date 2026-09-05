@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.junit.jupiter.api.AfterAll;
@@ -127,8 +128,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 printStep("REG-01.1", "Solicitar registro para " + username);
                 RegisterRequest request = buildRegisterRequest(username, email, plan, celularSuffix);
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.code").value("REG-0001"));
                 printSubStep("✅ Solicitud exitosa");
@@ -143,8 +145,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 RegisterConfirmRequest confirmRequest = buildConfirmRequest(username, email, plan, realToken,
                                 celularSuffix);
                 mockMvc.perform(post("/api/auth/register/confirm")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(confirmRequest)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(confirmRequest), "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.code").value("REG-0002"));
                 printSubStep("✅ Registro confirmado");
@@ -152,9 +155,12 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 // PASO 4: Login
                 printStep("REG-01.3", "Login con " + username);
                 MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"username\":\"" + username + "\",\"password\":\""
-                                                + testConfig.getRegisterPassword() + "\"}"))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(
+                                                new com.investmenttracker.model.request.LoginRequest(username,
+                                                                testConfig.getRegisterPassword())),
+                                                "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.token").exists())
                                 .andExpect(jsonPath("$.username").value(username))
@@ -169,8 +175,12 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                                 .asText();
                 mockMvc.perform(post("/api/auth/delete-account")
                                 .header("Authorization", "Bearer " + userToken)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"username\":\"" + username + "\"}"))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(
+                                                com.investmenttracker.model.request.DeleteAccountRequest.builder()
+                                                                .username(username).build()),
+                                                "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.code").value("REG-0003"));
                 printSubStep("✅ Cuenta desactivada");
@@ -205,8 +215,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 printStep("REG-02.1", "Solicitar registro para " + username);
                 RegisterRequest request = buildRegisterRequest(username, email, plan, celularSuffix);
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.code").value("REG-0001"));
                 printSubStep("✅ Solicitud exitosa");
@@ -221,8 +232,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 RegisterConfirmRequest confirmRequest = buildConfirmRequest(username, email, plan, realToken,
                                 celularSuffix);
                 mockMvc.perform(post("/api/auth/register/confirm")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(confirmRequest)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(confirmRequest), "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.code").value("REG-0002"));
                 printSubStep("✅ Registro confirmado");
@@ -230,9 +242,12 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 // PASO 4: Login
                 printStep("REG-02.3", "Login con " + username);
                 MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"username\":\"" + username + "\",\"password\":\""
-                                                + testConfig.getRegisterPassword() + "\"}"))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(
+                                                new com.investmenttracker.model.request.LoginRequest(username,
+                                                                testConfig.getRegisterPassword())),
+                                                "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.token").exists())
                                 .andExpect(jsonPath("$.username").value(username))
@@ -247,8 +262,12 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                                 .asText();
                 mockMvc.perform(post("/api/auth/delete-account")
                                 .header("Authorization", "Bearer " + userToken)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{\"username\":\"" + username + "\"}"))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(
+                                                com.investmenttracker.model.request.DeleteAccountRequest.builder()
+                                                                .username(username).build()),
+                                                "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.code").value("REG-0003"));
                 printSubStep("✅ Cuenta desactivada");
@@ -288,8 +307,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                                 .build();
 
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.code").value("VAL-005"));
                 printStep("REG-03", "✅ Campos vacíos rechazados");
@@ -310,8 +330,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 request.setRepeatPassword("Different123!");
 
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.code").value("REG-008"));
                 printStep("REG-04", "✅ Contraseñas diferentes rechazadas");
@@ -335,8 +356,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                 request.setRepeatPassword("weak");
 
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.code").value("PWD-002"));
                 printStep("REG-05", "✅ Contraseña débil rechazada");
@@ -358,8 +380,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                                 5);
 
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.code").value("REG-001"));
                 printStep("REG-06", "✅ Username duplicado rechazado");
@@ -378,8 +401,9 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                                 6);
 
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isConflict())
                                 .andExpect(jsonPath("$.code").value("REG-002"));
                 printStep("REG-07", "✅ Email duplicado rechazado");
@@ -399,15 +423,17 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
 
                 RegisterRequest request = buildRegisterRequest(username, email, plan, celularSuffix);
                 mockMvc.perform(post("/api/auth/register/request")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(request)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
                                 .andExpect(status().isOk());
 
                 RegisterConfirmRequest confirmRequest = buildConfirmRequest(username, email, plan, "999999",
                                 celularSuffix);
                 mockMvc.perform(post("/api/auth/register/confirm")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toJson(confirmRequest)))
+                                .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON,
+                                                "MediaType no puede ser null"))
+                                .content(Objects.requireNonNull(toJson(confirmRequest), "JSON no puede ser null")))
                                 .andExpect(status().isBadRequest())
                                 .andExpect(jsonPath("$.code").value("REG-005"));
                 printStep("REG-08", "✅ Token inválido rechazado");
