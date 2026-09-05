@@ -26,11 +26,11 @@ public class LoginComponent {
     private final Map<String, LoginAttempt> attemptsCache = new ConcurrentHashMap<>();
 
     /**
-     * Busca un usuario por username
+     * Busca un usuario por username (case-insensitive)
      */
     @Transactional(readOnly = true)
     public Optional<User> findUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+        return userRepository.findByUsernameIgnoreCase(username);
     }
 
     /**
@@ -64,7 +64,7 @@ public class LoginComponent {
      */
     @Transactional(readOnly = true)
     public boolean isUserDisabled(String username) {
-        return userRepository.findByUsername(username)
+        return userRepository.findByUsernameIgnoreCase(username)
                 .map(user -> !user.getActivo())
                 .orElse(false);
     }
@@ -107,7 +107,7 @@ public class LoginComponent {
         if (nextLevel == LockLevel.PERMANENT) {
             attempt.setLockedUntil(null);
             // Deshabilitar usuario en DB
-            userRepository.findByUsername(username).ifPresent(user -> {
+            userRepository.findByUsernameIgnoreCase(username).ifPresent(user -> {
                 user.setActivo(false);
                 userRepository.save(user);
             });

@@ -1,6 +1,7 @@
 package com.investmenttracker.model.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.investmenttracker.model.dto.PaisDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,4 +22,6 @@ public class LoginResponse {
     private String username;
     private String email;
     private String nombreCompleto;
+    private Long celular;
+    private PaisDTO pais;
 }

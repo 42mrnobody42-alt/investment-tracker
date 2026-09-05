@@ -1,20 +1,24 @@
 package com.investmenttracker.service;
 
-import com.investmenttracker.component.LoginComponent;
-import com.investmenttracker.component.RefreshTokenComponent;
-import com.investmenttracker.exception.AuthenticationException;
-import com.investmenttracker.model.entity.User;
-import com.investmenttracker.model.enums.ErrorCode;
-import com.investmenttracker.model.request.LoginRequest;
-import com.investmenttracker.model.response.LoginResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.stream.Collectors;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.stream.Collectors;
+import com.investmenttracker.component.LoginComponent;
+import com.investmenttracker.component.RefreshTokenComponent;
+import com.investmenttracker.exception.AuthenticationException;
+import com.investmenttracker.model.dto.PaisDTO;
+import com.investmenttracker.model.entity.Pais;
+import com.investmenttracker.model.entity.User;
+import com.investmenttracker.model.enums.ErrorCode;
+import com.investmenttracker.model.request.LoginRequest;
+import com.investmenttracker.model.response.LoginResponse;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -34,17 +38,16 @@ public class LoginService {
         if (loginComponent.isUserLocked(username)) {
             LoginComponent.LockInfo lockInfo = loginComponent.getLockInfo(username);
             throw new AuthenticationException(
-                ErrorCode.ACCOUNT_LOCKED,
-                String.format("Cuenta bloqueada temporalmente. Intente en %d minutos", 
-                              lockInfo.lockedUntilSeconds() / 60)
-            );
+                    ErrorCode.ACCOUNT_LOCKED,
+                    String.format("Cuenta bloqueada temporalmente. Intente en %d minutos",
+                            lockInfo.lockedUntilSeconds() / 60));
         }
 
         User user = loginComponent.findUserByUsername(username)
-            .orElseThrow(() -> {
-                log.warn("Usuario no encontrado: {}", username);
-                return new AuthenticationException(ErrorCode.INVALID_CREDENTIALS);
-            });
+                .orElseThrow(() -> {
+                    log.warn("Usuario no encontrado: {}", username);
+                    return new AuthenticationException(ErrorCode.INVALID_CREDENTIALS);
+                });
 
         if (!user.getActivo()) {
             throw new AuthenticationException(ErrorCode.ACCOUNT_DISABLED);
@@ -53,20 +56,18 @@ public class LoginService {
         if (!validatePassword(request.getPassword(), user.getPasswordHash())) {
             loginComponent.recordFailedAttempt(username);
             LoginComponent.LockInfo lockInfo = loginComponent.getLockInfo(username);
-            
+
             if (lockInfo.locked()) {
                 throw new AuthenticationException(
-                    ErrorCode.MAX_ATTEMPTS_EXCEEDED,
-                    String.format("Máximo de intentos excedido. Cuenta bloqueada por %d minutos",
-                                  lockInfo.lockedUntilSeconds() / 60)
-                );
+                        ErrorCode.MAX_ATTEMPTS_EXCEEDED,
+                        String.format("Máximo de intentos excedido. Cuenta bloqueada por %d minutos",
+                                lockInfo.lockedUntilSeconds() / 60));
             }
-            
+
             throw new AuthenticationException(
-                ErrorCode.INVALID_CREDENTIALS,
-                String.format("Usuario o contraseña inválidos. Intentos restantes: %d", 
-                              lockInfo.remainingAttempts())
-            );
+                    ErrorCode.INVALID_CREDENTIALS,
+                    String.format("Usuario o contraseña inválidos. Intentos restantes: %d",
+                            lockInfo.remainingAttempts()));
         }
 
         loginComponent.resetFailedAttempts(user);
@@ -76,21 +77,35 @@ public class LoginService {
         String refreshToken = refreshTokenComponent.generateRefreshToken(user.getUsername());
 
         String roles = user.getRoles().stream()
-            .map(role -> role.getNombre())
-            .collect(Collectors.joining(", "));
+                .map(role -> role.getNombre())
+                .collect(Collectors.joining(", "));
 
         log.info("Login exitoso para usuario: {} con roles: {}", user.getUsername(), roles);
 
+        // Mapear Pais a PaisDTO (si existe)
+        PaisDTO paisDTO = null;
+        Pais pais = user.getPais();
+        if (pais != null) {
+            paisDTO = PaisDTO.builder()
+                    .id(pais.getId())
+                    .nombre(pais.getNombre())
+                    .codigoIso(pais.getCodigoIso())
+                    .indicativoCelular(pais.getIndicativoCelular())
+                    .build();
+        }
+
         return LoginResponse.builder()
-            .token(accessToken)
-            .tokenType("Bearer")
-            .expiresIn(jwtService.getExpirationTime())
-            .refreshToken(refreshToken)
-            .refreshTokenExpiresIn((long) java.time.Duration.ofHours(1).toMillis())
-            .username(user.getUsername())
-            .email(user.getEmail())
-            .nombreCompleto(user.getNombreCompleto())
-            .build();
+                .token(accessToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtService.getExpirationTime())
+                .refreshToken(refreshToken)
+                .refreshTokenExpiresIn((long) java.time.Duration.ofHours(1).toMillis())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .nombreCompleto(user.getNombreCompleto())
+                .celular(user.getCelular())
+                .pais(paisDTO)
+                .build();
     }
 
     private boolean validatePassword(String rawPassword, String encodedPassword) {
