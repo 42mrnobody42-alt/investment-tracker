@@ -68,7 +68,7 @@ public class RestartUserPasswordService {
     }
 
     private void validateAdminRole(String adminUsername) {
-        User adminUser = userRepository.findByUsername(adminUsername)
+        User adminUser = userRepository.findByUsernameIgnoreCase(adminUsername)
                 .orElseThrow(() -> new AccessDeniedException("Acceso denegado"));
 
         boolean isAdmin = adminUser.getRoles().stream()
@@ -106,7 +106,7 @@ public class RestartUserPasswordService {
     }
 
     private User findAndValidateUser(RestartPasswordRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameIgnoreCase(request.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Usuario objetivo no encontrado: {}", request.getUsername());
                     return new AuthenticationException(ErrorCode.USER_NOT_FOUND);

@@ -114,7 +114,7 @@ public class PasswordRecoveryService {
         }
 
         // Validar usuario y email
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameIgnoreCase(request.getUsername())
                 .orElseThrow(() -> new AuthenticationException(ErrorCode.USER_NOT_FOUND));
 
         if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {
@@ -181,7 +181,7 @@ public class PasswordRecoveryService {
     }
 
     private User findAndValidateUser(PasswordRecoveryRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameIgnoreCase(request.getUsername())
                 .orElseThrow(() -> new AuthenticationException(ErrorCode.RECOVERY_USER_MISMATCH));
 
         if (!user.getEmail().equalsIgnoreCase(request.getEmail())) {

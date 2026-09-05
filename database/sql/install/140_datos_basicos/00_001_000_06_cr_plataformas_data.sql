@@ -37,7 +37,7 @@ BEGIN
 END $$;
 
 INSERT INTO investment_tracker.schema_version (version, descripcion, script_name)
-VALUES ('00_001_000', 'Datos de plataformas', '140_datos_basicos/00_001_000_04_cr_plataformas_data.sql')
+VALUES ('00_001_000', 'Datos de plataformas', '140_datos_basicos/00_001_000_06_cr_plataformas_data.sql')
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Datos de plataformas insertados (00_001_000)'

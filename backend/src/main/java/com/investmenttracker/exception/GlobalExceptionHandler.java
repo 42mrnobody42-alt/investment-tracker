@@ -1,6 +1,7 @@
 package com.investmenttracker.exception;
 
-import com.investmenttracker.model.response.ErrorResponse;
+import java.time.LocalDateTime;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -9,9 +10,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
+import com.investmenttracker.model.enums.ErrorCode;
+import com.investmenttracker.model.response.ErrorResponse;
+
+import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
@@ -68,12 +73,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        log.error("Error no controlado: ", ex); // <-- esto imprime el stacktrace
         ErrorResponse error = ErrorResponse.builder()
-                .code("SYS-001")
-                .message("Error interno del servidor")
+                .code(ErrorCode.INTERNAL_ERROR.getCode())
+                .message(ErrorCode.INTERNAL_ERROR.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
-
-        return ResponseEntity.internalServerError().body(error);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

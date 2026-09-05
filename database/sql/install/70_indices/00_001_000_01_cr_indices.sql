@@ -30,3 +30,66 @@ VALUES ('00_001_000', 'Índices de rendimiento', '70_indices/00_001_000_01_cr_in
 ON CONFLICT (version, script_name) DO NOTHING;
 
 \echo '✅ Índices creados (00_001_000)'
+
+-- =============================================
+-- ÍNDICES DE UNICIDAD PARA USUARIOS
+-- =============================================
+DO $$
+BEGIN
+    -- Índice único funcional para username (case-insensitive)
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_username_lower') THEN
+        CREATE UNIQUE INDEX idx_usuarios_username_lower ON investment_tracker.usuarios (LOWER(username));
+        RAISE NOTICE '✅ Índice idx_usuarios_username_lower creado';
+    END IF;
+
+    -- Índice único funcional para email (case-insensitive)
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_email_lower') THEN
+        CREATE UNIQUE INDEX idx_usuarios_email_lower ON investment_tracker.usuarios (LOWER(email));
+        RAISE NOTICE '✅ Índice idx_usuarios_email_lower creado';
+    END IF;
+
+    -- Índice único para celular
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_celular') THEN
+        CREATE UNIQUE INDEX idx_usuarios_celular ON investment_tracker.usuarios (celular);
+        RAISE NOTICE '✅ Índice idx_usuarios_celular creado';
+    END IF;
+
+    -- Índice para pais_id (por si se consulta por país)
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_pais') THEN
+        CREATE INDEX idx_usuarios_pais ON investment_tracker.usuarios (pais_id);
+        RAISE NOTICE '✅ Índice idx_usuarios_pais creado';
+    END IF;
+END $$;
+
+-- Registrar la adición de estos índices en schema_version (ya existe el script, pero no está mal re-ejecutarlo)
+-- Nota: La inserción ya existe en la parte superior, pero no afecta porque es ON CONFLICT DO NOTHING.
+
+-- =============================================
+-- ÍNDICES DE UNICIDAD PARA USUARIOS
+-- =============================================
+DO $$
+BEGIN
+    -- Índice único funcional para username (case-insensitive)
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_username_lower') THEN
+        CREATE UNIQUE INDEX idx_usuarios_username_lower ON investment_tracker.usuarios (LOWER(username));
+        RAISE NOTICE '✅ Índice idx_usuarios_username_lower creado';
+    END IF;
+
+    -- Índice único funcional para email (case-insensitive)
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_email_lower') THEN
+        CREATE UNIQUE INDEX idx_usuarios_email_lower ON investment_tracker.usuarios (LOWER(email));
+        RAISE NOTICE '✅ Índice idx_usuarios_email_lower creado';
+    END IF;
+
+    -- Índice único compuesto para pais_id + celular (unicidad por país y número local)
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_pais_celular') THEN
+        CREATE UNIQUE INDEX idx_usuarios_pais_celular ON investment_tracker.usuarios (pais_id, celular);
+        RAISE NOTICE '✅ Índice idx_usuarios_pais_celular creado';
+    END IF;
+
+    -- Índice para pais_id (por si se consulta por país)
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_usuarios_pais') THEN
+        CREATE INDEX idx_usuarios_pais ON investment_tracker.usuarios (pais_id);
+        RAISE NOTICE '✅ Índice idx_usuarios_pais creado';
+    END IF;
+END $$;

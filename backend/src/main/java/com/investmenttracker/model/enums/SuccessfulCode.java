@@ -16,7 +16,13 @@ public enum SuccessfulCode {
     RECOVERY_EMAIL_SENT("REC-0001", "Correo de recuperación enviado exitosamente. Verifique su bandeja de entrada",
             HttpStatus.OK),
     PASSWORD_CHANGED("AUTH-0003", "Contraseña actualizada exitosamente", HttpStatus.OK),
-    RECOVERY_PASSWORD_CHANGED("REC-0002", "Contraseña actualizada exitosamente", HttpStatus.OK);
+    RECOVERY_PASSWORD_CHANGED("REC-0002", "Contraseña actualizada exitosamente", HttpStatus.OK),
+
+    // Registro de usuario
+    REGISTRATION_EMAIL_SENT("REG-0001", "Correo de confirmación enviado exitosamente. Verifique su bandeja de entrada.",
+            HttpStatus.OK),
+    REGISTRATION_COMPLETED("REG-0002", "Usuario registrado exitosamente.", HttpStatus.OK),
+    ACCOUNT_DELETED("REG-0003", "Cuenta eliminada exitosamente.", HttpStatus.OK);
 
     private final String code;
     private final String message;

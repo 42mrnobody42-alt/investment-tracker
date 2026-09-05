@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.investmenttracker.exception.AuthenticationException;
+import com.investmenttracker.model.enums.ErrorCode;
 import com.investmenttracker.model.request.ChangePasswordRequest;
+import com.investmenttracker.model.request.DeleteAccountRequest;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.request.RestartPasswordRequest;
 import com.investmenttracker.model.response.LoginResponse;
@@ -24,6 +27,7 @@ import com.investmenttracker.service.ChangeMyPasswordService;
 import com.investmenttracker.service.LoginService;
 import com.investmenttracker.service.LogoutService;
 import com.investmenttracker.service.RefreshTokenService;
+import com.investmenttracker.service.RegisterService;
 import com.investmenttracker.service.RestartUserPasswordService;
 
 import jakarta.validation.Valid;
@@ -39,6 +43,7 @@ public class AuthController {
     private final LogoutService logoutService;
     private final RefreshTokenService refreshTokenService;
     private final ChangeMyPasswordService changeMyPasswordService;
+    private final RegisterService registerService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -103,6 +108,18 @@ public class AuthController {
         String authenticatedUsername = Objects.requireNonNull(authentication.getName(), "Username no puede ser null");
 
         SuccessResponse response = changeMyPasswordService.changePassword(request, authenticatedUsername);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/delete-account")
+    public ResponseEntity<SuccessResponse> deleteAccount(@RequestBody DeleteAccountRequest request,
+            Authentication authentication) {
+        String authenticatedUsername = Objects.requireNonNull(authentication.getName(), "Username no puede ser null");
+        if (!authenticatedUsername.equals(request.getUsername())) {
+            throw new AuthenticationException(ErrorCode.ACCESS_DENIED,
+                    "No puedes eliminar la cuenta de otro usuario");
+        }
+        SuccessResponse response = registerService.deleteAccount(request.getUsername());
         return ResponseEntity.ok(response);
     }
 }

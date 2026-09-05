@@ -205,11 +205,12 @@ Para facilitar el despliegue y la migración, se generarán dos scripts agregado
    - Este script se utiliza para actualizar una instalación existente a una versión específica.
    - Se genera de manera similar, filtrando por el prefijo de versión correspondiente.
 
-**Reglas de generación**:
+**⚠️ Reglas de generación**:
 
 - El orden dentro de cada directorio se define por el número `Version`_`Release`_`Hotfix`_`Orden` del archivo (inicia con 00_000_000_01_\*).
 - Se respeta el orden de los directorios (10, 20, 30, ...).
 - Cada script agregado debe incluir al inicio un comentario breve con la descripción, la fecha de generación, autor y la versión que contiene.
+- Al agregar nuevos scripts en cualquier directorio (especialmente en `40_tablas/` y `140_datos_basicos/`), se debe respetar el orden numérico existente. Esto significa que se debe asignar el siguiente número de orden disponible (por ejemplo, si el último archivo en `40_tablas/` es `09_cr_calculos_hist.sql`, el nuevo archivo debería ser `10_cr_nueva_tabla.sql`). Este orden garantiza que los scripts se ejecuten en la secuencia correcta durante la instalación, respetando las dependencias entre tablas y datos.
 
 #### Directrices de implementación
 
