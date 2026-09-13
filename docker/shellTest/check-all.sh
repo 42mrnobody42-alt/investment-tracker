@@ -230,7 +230,7 @@ BEGIN;
 INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo, activo)
 VALUES ('00000000-dead-beef-0000-000000000999', 'checkall_test', 'hash', 'checkall@test.local', 'Check Test', true);
 UPDATE investment_tracker.usuarios SET nombre_completo='Check Test 2' WHERE username='checkall_test';
-UPDATE investment_tracker.usuarios SET ultimo_login=NOW() WHERE username='checkall_test';
+UPDATE investment_tracker.usuarios SET ultimo_login=NOW(), updated_at=NOW() WHERE username='checkall_test';
 DELETE FROM investment_tracker.usuarios WHERE username='checkall_test';
 SELECT string_agg(operacion, ',' ORDER BY id)
 FROM investment_tracker.auditoria_usuarios

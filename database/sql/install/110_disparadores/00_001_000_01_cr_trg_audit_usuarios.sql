@@ -2,11 +2,12 @@
 -- Script: 00_001_000_01_cr_trg_audit_usuarios.sql
 -- Descripción: Función + trigger de auditoría para la tabla usuarios.
 --              - INSERT → I
---              - UPDATE con solo ultimo_login → L (Login)
---              - UPDATE con otros campos → U
+--              - UPDATE con solo ultimo_login (ignorando columnas sistema) → L
+--              - UPDATE con otros campos de negocio → U
 --              - DELETE → D
---              Lee app.audit_user (SET SESSION por el backend) para
---              registrar el usuario autenticado. Si no existe → 'desconocido'.
+--              Lee app.audit_user (SET SESSION por el backend vía
+--              AuditUserAwareDataSource) para registrar el usuario autenticado.
+--              Si no existe → 'desconocido'.
 -- Autor: Equipo Investment Tracker
 -- Fecha: 2026-09-12
 -- Versión: 00_001_000
@@ -26,8 +27,10 @@ DECLARE
     v_usuario_id           UUID;
     v_operacion            CHAR(1);
     v_usuario_aplicacion   VARCHAR(100);
+    -- Columnas de sistema: no cuentan como cambio de negocio
+    v_columnas_sistema     CONSTANT TEXT[] := ARRAY['updated_at'];
 BEGIN
-    -- Usuario autenticado (SET SESSION app.audit_user por el backend)
+    -- Usuario autenticado propagado por AuditUserAwareDataSource
     v_usuario_aplicacion := COALESCE(
         NULLIF(current_setting('app.audit_user', true), ''),
         'desconocido'
@@ -45,17 +48,19 @@ BEGIN
         v_datos_nuevos       := to_jsonb(NEW);
         v_usuario_id         := NEW.id;
 
+        -- Campos modificados excluyendo columnas de sistema
         SELECT ARRAY_AGG(n.key ORDER BY n.key)
           INTO v_campos_modificados
           FROM jsonb_each(v_datos_nuevos) n
-         WHERE n.value IS DISTINCT FROM (v_datos_anteriores -> n.key);
+         WHERE n.value IS DISTINCT FROM (v_datos_anteriores -> n.key)
+           AND n.key <> ALL (v_columnas_sistema);
 
-        -- Sin cambios reales → no auditar
+        -- Sin cambios de negocio reales → no auditar
         IF v_campos_modificados IS NULL THEN
             RETURN NEW;
         END IF;
 
-        -- Solo cambió ultimo_login → Login
+        -- Solo cambió ultimo_login (independiente de updated_at) → Login
         IF v_campos_modificados = ARRAY['ultimo_login'] THEN
             v_operacion := 'L';
         ELSE

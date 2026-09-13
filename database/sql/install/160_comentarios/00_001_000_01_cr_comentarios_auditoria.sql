@@ -11,7 +11,7 @@ COMMENT ON TABLE  investment_tracker.auditoria_usuarios IS
     'Historial de cambios (INSERT/UPDATE/DELETE/Login) sobre usuarios. Solo accesible por el owner (postgres); investment_app no tiene permisos.';
 
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.operacion IS
-    'I=INSERT, U=UPDATE, D=DELETE, L=Login (solo cambió ultimo_login)';
+    'I=INSERT, U=UPDATE (negocio), D=DELETE, L=Login (solo ultimo_login cambió)';
 
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.usuario_id IS
     'UUID del usuario afectado (NEW.id en INSERT/UPDATE, OLD.id en DELETE)';
@@ -23,7 +23,7 @@ COMMENT ON COLUMN investment_tracker.auditoria_usuarios.datos_nuevos IS
     'Snapshot JSONB de la fila después del cambio (NULL en DELETE)';
 
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.campos_modificados IS
-    'Lista ordenada de columnas que cambiaron en un UPDATE';
+    'Columnas de negocio que cambiaron en un UPDATE. Excluye columnas de sistema (updated_at).';
 
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.usuario_bd IS
     'SESSION_USER que ejecutó el DML (ej: investment_app)';
