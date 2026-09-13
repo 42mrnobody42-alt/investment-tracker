@@ -191,6 +191,14 @@ check_sql "Tabla auditoria_usuarios existe" \
     "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='investment_tracker' AND table_name='auditoria_usuarios';" \
     "1"
 
+check_sql "Columna usuario_aplicacion existe" \
+    "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='investment_tracker' AND table_name='auditoria_usuarios' AND column_name='usuario_aplicacion';" \
+    "1"
+
+check_sql "Check permite operacion 'L'" \
+    "SELECT COUNT(*) FROM pg_constraint WHERE conname='ck_auditoria_usuarios_operacion' AND pg_get_constraintdef(oid) LIKE '%L%';" \
+    "1"
+
 check_sql "Trigger trg_audit_usuarios instalado en usuarios" \
     "SELECT COUNT(*) FROM pg_trigger WHERE tgname='trg_audit_usuarios' AND tgrelid='investment_tracker.usuarios'::regclass AND NOT tgisinternal;" \
     "1"
@@ -222,16 +230,19 @@ BEGIN;
 INSERT INTO investment_tracker.usuarios (id, username, password_hash, email, nombre_completo, activo)
 VALUES ('00000000-dead-beef-0000-000000000999', 'checkall_test', 'hash', 'checkall@test.local', 'Check Test', true);
 UPDATE investment_tracker.usuarios SET nombre_completo='Check Test 2' WHERE username='checkall_test';
+UPDATE investment_tracker.usuarios SET ultimo_login=NOW() WHERE username='checkall_test';
 DELETE FROM investment_tracker.usuarios WHERE username='checkall_test';
-SELECT COUNT(*) FROM investment_tracker.auditoria_usuarios WHERE usuario_id='00000000-dead-beef-0000-000000000999';
+SELECT string_agg(operacion, ',' ORDER BY id)
+FROM investment_tracker.auditoria_usuarios
+WHERE usuario_id='00000000-dead-beef-0000-000000000999';
 ROLLBACK;
 SQL
 )
 AUDIT_TEST_RESULT=$(echo "$AUDIT_TEST_RESULT" | tr -d '[:space:]')
-if [ "$AUDIT_TEST_RESULT" = "3" ]; then
-    pass "Trigger registra INSERT + UPDATE + DELETE (3 registros)"
+if [ "$AUDIT_TEST_RESULT" = "I,U,L,D" ]; then
+    pass "Trigger registra I + U + L + D (secuencia correcta)"
 else
-    fail "Trigger registra INSERT + UPDATE + DELETE" "esperado=3 obtenido='$AUDIT_TEST_RESULT'"
+    fail "Trigger registra I + U + L + D" "esperado='I,U,L,D' obtenido='$AUDIT_TEST_RESULT'"
 fi
 
 # ------------------------------------------------------------

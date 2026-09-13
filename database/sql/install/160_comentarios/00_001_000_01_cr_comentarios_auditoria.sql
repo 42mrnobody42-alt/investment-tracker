@@ -8,10 +8,10 @@
 BEGIN;
 
 COMMENT ON TABLE  investment_tracker.auditoria_usuarios IS
-    'Registro histórico de cambios (INSERT/UPDATE/DELETE) sobre la tabla usuarios. Solo accesible por el owner (postgres); investment_app no tiene permisos.';
+    'Historial de cambios (INSERT/UPDATE/DELETE/Login) sobre usuarios. Solo accesible por el owner (postgres); investment_app no tiene permisos.';
 
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.operacion IS
-    'I=INSERT, U=UPDATE, D=DELETE';
+    'I=INSERT, U=UPDATE, D=DELETE, L=Login (solo cambió ultimo_login)';
 
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.usuario_id IS
     'UUID del usuario afectado (NEW.id en INSERT/UPDATE, OLD.id en DELETE)';
@@ -28,10 +28,13 @@ COMMENT ON COLUMN investment_tracker.auditoria_usuarios.campos_modificados IS
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.usuario_bd IS
     'SESSION_USER que ejecutó el DML (ej: investment_app)';
 
+COMMENT ON COLUMN investment_tracker.auditoria_usuarios.usuario_aplicacion IS
+    'Usuario autenticado en la aplicación que ejecutó la petición (JWT). "desconocido" si no hay autenticación.';
+
 COMMENT ON COLUMN investment_tracker.auditoria_usuarios.ip_cliente IS
     'IP del cliente PostgreSQL si está disponible (inet_client_addr)';
 
 COMMENT ON FUNCTION investment_tracker.fn_audit_usuarios() IS
-    'Función de trigger SECURITY DEFINER que registra los cambios de usuarios en auditoria_usuarios.';
+    'Función de trigger SECURITY DEFINER que registra cambios de usuarios. Lee app.audit_user para el usuario autenticado; mapea UPDATE de solo ultimo_login a operacion=L.';
 
 COMMIT;
