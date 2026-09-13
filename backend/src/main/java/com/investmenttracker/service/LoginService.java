@@ -28,6 +28,7 @@ public class LoginService {
     private final LoginComponent loginComponent;
     private final JwtService jwtService;
     private final RefreshTokenComponent refreshTokenComponent;
+    private final AuditContextService auditContextService;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Transactional
@@ -69,6 +70,12 @@ public class LoginService {
                     String.format("Usuario o contraseña inválidos. Intentos restantes: %d",
                             lockInfo.remainingAttempts()));
         }
+
+        // === AUDITORÍA: forzar el usuario que se está logueando ===
+        // Aún no hay JWT, por lo que SecurityContextHolder está vacío y el
+        // wrapper pondría 'desconocido'. Esto lo sobrescribe con el username real
+        // antes de que resetFailedAttempts() ejecute el UPDATE de ultimo_login.
+        auditContextService.setCurrentUser(user.getUsername());
 
         loginComponent.resetFailedAttempts(user);
 

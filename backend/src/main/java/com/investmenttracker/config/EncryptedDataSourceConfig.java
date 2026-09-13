@@ -43,13 +43,17 @@ public class EncryptedDataSourceConfig {
         log.debug("Username desencriptado: {}", decryptedUsername);
         log.debug("Password desencriptada: [PROTEGIDA]");
 
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(Objects.requireNonNull(driverClassName, "driverClassName no puede ser null"));
-        dataSource.setUrl(decryptedUrl);
-        dataSource.setUsername(decryptedUsername);
-        dataSource.setPassword(decryptedPassword);
-        
-        return dataSource;
+        DriverManagerDataSource rawDataSource = new DriverManagerDataSource();
+        rawDataSource.setDriverClassName(
+                Objects.requireNonNull(driverClassName, "driverClassName no puede ser null"));
+        rawDataSource.setUrl(decryptedUrl);
+        rawDataSource.setUsername(decryptedUsername);
+        rawDataSource.setPassword(decryptedPassword);
+
+        // Envolver con el wrapper de auditoría para propagar el usuario del JWT
+        // hacia la sesión PostgreSQL (trigger trg_audit_usuarios).
+        log.info("🔐 Envolviendo DataSource con AuditUserAwareDataSource");
+        return new AuditUserAwareDataSource(rawDataSource);
     }
 
     /**
@@ -60,13 +64,13 @@ public class EncryptedDataSourceConfig {
         if (value == null || value.trim().isEmpty()) {
             throw new IllegalStateException("El valor de " + fieldName + " no puede ser null o vacío");
         }
-        
+
         // Si ya está en texto plano (ej: contiene "jdbc:" o "postgresql"), no desencriptar
         if (value.contains("jdbc:") || value.contains("postgresql") || value.equals("investor")) {
             log.debug("{} ya está en texto plano", fieldName);
             return value;
         }
-        
+
         try {
             String decrypted = aesEncryptionComponent.decrypt(value);
             log.debug("{} desencriptado correctamente", fieldName);

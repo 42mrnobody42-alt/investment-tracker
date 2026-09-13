@@ -10,7 +10,7 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 
 ---
 
-# 🧠 CONDICIONES DE DESARROLLO PARA LA IA (actualizadas al 2026-08-30)
+# 🧠 CONDICIONES DE DESARROLLO PARA LA IA (actualizadas al 2026-09-13)
 
 ## 📁 Estructura de ramas en Git
 
@@ -37,7 +37,59 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 - **Contenedores**: Docker + Docker Compose
 - **Gestión de DB**: pgAdmin 4 (latest)
 - **Control de versiones**: Git / GitHub
-- **Pruebas**: JUnit 5 + Spring Boot Test (70 pruebas automatizadas)
+- **Pruebas**: JUnit 5 + Spring Boot Test (89 pruebas automatizadas)
+- **Auditoría**: PostgreSQL trigger + wrapper `DataSource` (`AuditUserAwareDataSource`)
+
+## 🗄️ Usuarios de base de datos
+
+El sistema separa las responsabilidades en **dos roles de PostgreSQL**:
+
+| Rol                  | Uso                                                        | Privilegios                                                                                                        | Contraseña                                                   |
+| -------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **`investor`**       | Administrador / operación manual (pgAdmin, scripts, DBA)   | Superusuario funcional sobre `investment_tracker`. Acceso total incluyendo `auditoria_usuarios`.                   | Configurada en `docker-compose.yml` (no versionada en claro) |
+| **`investment_app`** | Usuario exclusivo del backend (JDBC vía `application.yml`) | `SELECT, INSERT, UPDATE, DELETE` sobre tablas de negocio. **Sin acceso** a `auditoria_usuarios` ni a su secuencia. | Encriptada AES-256-GCM en `application.yml`                  |
+
+**Reglas**:
+
+1. El backend **nunca** usa `investor` como usuario JDBC. Siempre `investment_app`.
+2. `investment_app` **no puede** leer, modificar ni borrar la auditoría. Ni siquiera `TRUNCATE`. Se lo revoca explícitamente en `150_permisos/00_001_000_01_cr_app_db_user.sql`.
+3. `investor` se usa solo para tareas administrativas (aplicar migraciones, backups, consultas de auditoría, pgAdmin).
+4. El trigger de auditoría corre con `SECURITY DEFINER` (owner `postgres`), de modo que la escritura en `auditoria_usuarios` no requiere privilegios de `investment_app`.
+
+---
+
+## 🕵️ Auditorías
+
+Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se implementa la auditoría de usuarios; la sección queda abierta para futuras auditorías (ej: transacciones, comisiones, plataformas).
+
+### Auditoría de usuarios
+
+- **Tabla**: `investment_tracker.auditoria_usuarios` (BIGSERIAL PK).
+- **Trigger**: `trg_audit_usuarios` → función `fn_audit_usuarios` (`SECURITY DEFINER`, owner `postgres`).
+- **Disparo**: `AFTER INSERT OR UPDATE OR DELETE FOR EACH ROW` sobre `usuarios`.
+- **Mapeo de operación**:
+  - `I` → INSERT en `usuarios`
+  - `U` → UPDATE con cualquier campo de negocio (excepto `ultimo_login` aislado)
+  - `L` → UPDATE donde el **único** campo de negocio modificado es `ultimo_login` (login)
+  - `D` → DELETE en `usuarios`
+- **Exclusión de columnas de sistema**: `updated_at` se ignora al calcular `campos_modificados` para que el login se registre como `L` (el `@PreUpdate` de JPA también toca `updated_at`).
+- **Snapshots**: `datos_anteriores` y `datos_nuevos` en JSONB.
+- **Campos de trazabilidad**:
+  - `campos_modificados TEXT[]` — columnas de negocio que cambiaron en un UPDATE.
+  - `usuario_bd VARCHAR(100)` — `SESSION_USER` de PostgreSQL (ej: `investment_app`).
+  - `usuario_aplicacion VARCHAR(100)` — usuario autenticado vía JWT; `'desconocido'` si no hay auth.
+  - `ip_cliente INET` — `inet_client_addr()`.
+  - `fecha TIMESTAMPTZ DEFAULT NOW()`.
+- **Propagación del usuario autenticado**:
+  - `AuditUserAwareDataSource` envuelve el `DataSource` y ejecuta `set_config('app.audit_user', <username>, false)` en cada `getConnection()`, leyendo el username desde `SecurityContextHolder` (poblado por `JwtAuthFilter`).
+  - `AuditContextService.setCurrentUser(username)` (con `@Transactional(propagation = MANDATORY)`) fuerza el username durante el login, antes de que exista JWT.
+- **Retención**: por definir en una versión futura. Solo `investor`/`postgres` pueden limpiar la tabla.
+- **Índices**: `usuario_id`, `fecha DESC`, `operacion`.
+
+### Auditorías planificadas (roadmap)
+
+- Auditoría de accesos fallidos (a nivel aplicación, tabla separada).
+- Gerenciales, para deteccion de hacking.
 
 ## 🔐 Seguridad y autenticación
 
@@ -48,33 +100,42 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 - **Roles**: `ROLE_ADMIN`, `ROLE_USER`, `ROLE_PREMIUM`.
 - **Control de intentos fallidos**: 3 intentos, bloqueo progresivo.
 - **2FA SMTP** para recuperación de contraseña (token de 6 dígitos por correo, TTL 5 min).
+- **Registro en dos pasos**: solicitud + confirmación por email (token de 6 dígitos, TTL 5 min).
+- **Borrado de cuenta**: lógico (`activo=false`) para el propio usuario autenticado; borrado definitivo en cascada solo por ADMIN para pruebas (`/api/test/delete-user/{username}`).
+- **Auditoría**: ver sección [🕵️ Auditorías](#-auditorías).
 
 ## 📡 Endpoints publicados (API REST)
 
-| Endpoint                     | Método | Auth                   | Descripción                                              |
-| ---------------------------- | ------ | ---------------------- | -------------------------------------------------------- |
-| `/api/auth/login`            | POST   | No                     | Login - Retorna JWT + Refresh Token                      |
-| `/api/auth/restart-password` | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario              |
-| `/api/auth/refresh-token`    | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido   |
-| `/api/test/health`           | GET    | No                     | Health check del servicio                                |
-| `/api/encryption/encrypt`    | POST   | ADMIN                  | Encriptar texto con AES-GCM                              |
-| `/api/encryption/decrypt`    | POST   | ADMIN                  | Desencriptar texto con AES-GCM                           |
-| `/api/auth/logout`           | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token     |
-| `/api/auth/recovery/request` | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email |
-| `/api/auth/recovery/verify`  | POST   | No                     | Verificar token y cambiar contraseña                     |
-| `/api/auth/change-my-pass`   | POST   | JWT                    | Cambiar contraseña propia con validación actual          |
+| Endpoint                           | Método | Auth                   | Descripción                                              |
+| ---------------------------------- | ------ | ---------------------- | -------------------------------------------------------- |
+| `/api/auth/login`                  | POST   | No                     | Login - Retorna JWT + Refresh Token                      |
+| `/api/auth/restart-password`       | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario              |
+| `/api/auth/refresh-token`          | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido   |
+| `/api/auth/register/request`       | POST   | No                     | Solicitar registro - envía token de 6 dígitos por email  |
+| `/api/auth/register/confirm`       | POST   | No                     | Confirmar registro con token y crear usuario             |
+| `/api/auth/delete-account`         | POST   | JWT (propietario)      | Borrado lógico de la cuenta (activo = false)             |
+| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas)   | Borrado definitivo en cascada para pruebas               |
+| `/api/test/health`                 | GET    | No                     | Health check del servicio                                |
+| `/api/encryption/encrypt`          | POST   | ADMIN                  | Encriptar texto con AES-GCM                              |
+| `/api/encryption/decrypt`          | POST   | ADMIN                  | Desencriptar texto con AES-GCM                           |
+| `/api/auth/logout`                 | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token     |
+| `/api/auth/recovery/request`       | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email |
+| `/api/auth/recovery/verify`        | POST   | No                     | Verificar token y cambiar contraseña                     |
+| `/api/auth/change-my-pass`         | POST   | JWT                    | Cambiar contraseña propia con validación actual          |
 
 ## 🧪 Pruebas automatizadas
 
-- **Total**: 70 pruebas (integración + unitarias).
-- **Orden de ejecución** (según lo observado en el entorno local):
+- **Total**: 89 pruebas (integración + unitarias).
+- **Orden de ejecución**:
   1. `ChangeMyPasswordIntegrationTest` (11 pruebas)
   2. `AuthIntegrationTest` (31 pruebas)
   3. `EncryptionIntegrationTest` (7 pruebas)
   4. `RefreshTokenIntegrationTest` (7 pruebas)
   5. `RateLimitIntegrationTest` (4 pruebas)
   6. `PasswordRecoveryIntegrationTest` (4 pruebas)
-  7. `LoginServiceTest` (6 pruebas)
+  7. `RegisterIntegrationTest` (8 pruebas)
+  8. `LoginServiceTest` (6 pruebas) — incluye verificación de `AuditContextService`
+  9. `RegisterServiceTest` (11 pruebas)
 
 - **Clase base**: `BaseIntegrationTest` proporciona helpers (`loginAndGetToken`, `toJson`, `printBanner`, `clearBlacklist`).
   - **Nota importante:** En `clearBlacklist()` (ejecutado en `@BeforeEach`) se limpian la blacklist de JWT y el rate limiter, pero **no** se limpian los refresh tokens. Esto es intencional para permitir que `RefreshTokenIntegrationTest` genere y reutilice tokens entre pruebas.
@@ -83,6 +144,10 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
   - **No usa `@BeforeEach`** para obtener tokens (evita bloqueos al cambiar la contraseña).
   - Usa `@BeforeAll` para obtener tokens de `demo_user` y `admin` una sola vez.
   - **No usa `@AfterEach`**; la restauración de la contraseña se hace explícitamente en la última prueba (CMP-11) con token de admin.
+
+- **`LoginServiceTest`**:
+  - Verifica que `AuditContextService.setCurrentUser(username)` se invoca exactamente una vez en logins exitosos.
+  - Verifica que **no** se invoca en logins fallidos (contraseña incorrecta, usuario bloqueado, usuario inexistente).
 
 ## 📂 Estructura de archivos relevante
 
@@ -100,6 +165,8 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 2. **El archivo `README.md` contiene la información CRÍTICA y el estado general del proyecto**. Siempre consultarlo antes de responder.
 3. **El código recomendado debe ajustarse al código ya implementado**. Si no se tiene contexto de un archivo, función o script, **pedirlo explícitamente** antes de dar una respuesta. Luego, entregar una respuesta basada en el código real de la aplicación.
 4. **Todas las respuestas deben incluir, cuando sea aplicable, el uso de los helpers de `BaseIntegrationTest`** (como `printBanner`, `printStep`, `printSubStep`) para mantener consistencia en los logs de pruebas.
+5. **Nunca usar `investor` como usuario JDBC del backend**. Siempre `investment_app`.
+6. **Nunca otorgar permisos sobre `auditoria_usuarios` a `investment_app`**. Si se requiere consultar auditoría, hacerlo con `investor`/`postgres`.
 
 ---
 
@@ -111,12 +178,14 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
   - **Domain**: entidades, value objects, reglas de negocio, interfaces de puertos (repositorios, servicios externos).
   - **Application**: casos de uso, servicios que orquestan la lógica de negocio usando los puertos.
   - **Infrastructure**: implementaciones concretas de adaptadores (JPA, REST controllers, clientes HTTP, etc.).
-- **Funciones con un solo propósito**: cada método debe hacer una única cosa y estar bien nombrado.
+- **Funciones con un solo propósito**: cada método debe hacer una única responsabilidad y estar bien nombrado.
 - **Código limpio**: sin warnings de compilación ni de análisis estático (usar SonarLint o similares). Manejar excepciones adecuadamente, evitar código duplicado y mantener baja complejidad ciclomática.
+- **Cuando una solicitud requiere campos obligatorios**: debe agregar las etiquetas @NotBlank desde el \*Request.java
 - **Pruebas unitarias y de integración**: cubrir todas las capas. Usar mocks para dependencias externas en pruebas unitarias, y `@SpringBootTest` para integración. Las pruebas deben ser deterministas y rápidas.
 - **Uso de DTOs**: para transferencia de datos entre capas, evitar exponer entidades directamente en la API.
 - **Validaciones**: tanto a nivel de controlador (validación de entrada) como a nivel de dominio (invariantes).
 - **Scripts de migración de base de datos**: deben ser **idempotentes** (es decir, se pueden ejecutar múltiples veces sin causar errores). Usar `CREATE IF NOT EXISTS`, `ALTER IF EXISTS` o bloques `DO $$ ... END $$` con condiciones para evitar fallos si el objeto ya existe.
+- **Auditoría**: cuando se modifiquen datos sensibles, el usuario autenticado se propaga automáticamente vía `AuditUserAwareDataSource`. Si el flujo no tiene JWT (ej: login), invocar explícitamente `AuditContextService.setCurrentUser(username)`.
 
 ### Base de Datos (PostgreSQL / PL/pgSQL)
 
@@ -126,6 +195,7 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 - **Índices**: crear índices apropiados para las columnas más consultadas (especialmente claves foráneas y campos de búsqueda).
 - **Transacciones**: usar transacciones explícitas cuando se modifiquen múltiples tablas o se ejecuten funciones con efectos secundarios.
 - **Manejo de errores**: en PL/pgSQL, usar `RAISE` con códigos de error claros y manejar excepciones cuando sea necesario.
+- **Roles de BD**: separar estrictamente `investor` (admin) de `investment_app` (aplicación). Aplicar `REVOKE` explícito sobre las tablas de auditoría.
 
 #### Estándar de organización y nomenclatura
 
@@ -220,6 +290,7 @@ Para facilitar el despliegue y la migración, se generarán dos scripts agregado
 - **Índices y rendimiento**: crear índices apropiados para las columnas más consultadas (especialmente claves foráneas y campos de búsqueda). Documentarlos en el script correspondiente.
 - **Migraciones controladas**: todos los cambios de esquema deben reflejarse en scripts SQL versionados. No modificar scripts ya desplegados; en su lugar, crear un nuevo script incremental en `updates/`.
 - **Pruebas**: cada script debe probarse en un entorno de pruebas antes de aplicarse a producción.
+- **Permisos**: cualquier tabla nueva debe evaluar si `investment_app` requiere acceso. Las tablas de auditoría se **revocan** explícitamente.
 
 ### Frontend (React + CSS)
 
@@ -243,9 +314,11 @@ Para facilitar el despliegue y la migración, se generarán dos scripts agregado
 4. Registrar compras y ventas de acciones (cantidad, precio unitario, total, comisión, total movimiento).
 5. Visualizar el total de movimientos y el resultado (positivo o negativo) de las inversiones.
 6. Función de cálculo para determinar el precio mínimo de venta y la cantidad óptima para obtener una ganancia deseada, basado en los registros del cliente.
+7. **Auditoría de cambios en usuarios** (INSERT/UPDATE/DELETE/Login) con snapshots y trazabilidad del usuario autenticado.
+8. **Separación de credenciales de BD**: `investor` (admin) e `investment_app` (aplicación) con permisos diferenciados.
 
 ---
 
-**Fecha de actualización del prompt:** 2026-08-30  
-**Versión del proyecto:** v0.1.0 (Refresh Token implementado)  
-**Próximo cambio planificado:** Estandarización de scripts de base de datos según el estándar industrial descrito.
+**Fecha de actualización del prompt:** 2026-09-13  
+**Versión del proyecto:** v0.1.1 (Auditoría de usuarios + usuario `investment_app` restringido)  
+**Próximo cambio planificado:** el proximo cambio a implementar es el servicio de actualizar usuario despues de haber echo login y solo puedes actualizar tu propio usuario, te dejara cambiar email, nombre completo, pais y celular.

@@ -4,7 +4,7 @@
 - Release = `001`
 - Hotfix = `000`
 
-## Fecha: 2026-09-05
+## Fecha: 2026-09-13
 
 ## Proyecto: Investment Tracker Pro
 
@@ -14,13 +14,32 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 
 ### Requisitos Funcionales
 
-1. Sistema de autenticación con JWT
-2. Roles de usuario
-3. Registro de inversiones en múltiples plataformas
-4. Gestión de comisiones variables por plataforma
-5. Registro de compras y ventas de acciones
-6. Dashboard de resultados de inversiones
-7. Calculadora de venta óptima para ganancias objetivo
+**Autenticación y seguridad**
+
+1. Sistema de autenticación con JWT y Refresh Token (sesión deslizante de 1 hora).
+2. Gestión de roles de usuario (`ROLE_ADMIN`, `ROLE_USER`, `ROLE_PREMIUM`).
+3. Registro de usuarios en dos pasos con confirmación por email (token de 6 dígitos, TTL 5 min).
+4. Recuperación de contraseña con 2FA vía SMTP (token de 6 dígitos, TTL 5 min).
+5. Cambio de contraseña propia con validación de la contraseña actual.
+6. Restablecimiento de contraseña por parte de un administrador.
+7. Borrado lógico de cuenta por parte del propio usuario autenticado.
+8. Control de intentos fallidos con bloqueo progresivo (5min → 15min → 30min → 1h → 12h → 24h → permanente).
+9. Encriptación bidireccional AES-256-GCM para datos sensibles y hash BCrypt para contraseñas.
+10. **Auditoría de usuarios**: registro automático de INSERT/UPDATE/DELETE/Login sobre la tabla `usuarios`, con snapshots JSONB, campos modificados y usuario autenticado.
+
+**Gestión de inversiones**
+
+11. Registro de inversiones en múltiples plataformas (brokers, exchanges).
+12. Gestión de comisiones variables por plataforma (porcentaje y/o valor fijo, con vigencia temporal).
+13. Registro de compras y ventas de acciones (cantidad, precio unitario, comisión, valor total).
+14. Soporte multimoneda (54 divisas internacionales con código ISO, símbolo y país).
+15. Asociación de cada usuario a un país (con indicativo celular) y número de celular único por país.
+
+**Análisis y reportes**
+
+16. Dashboard con el total de movimientos y el resultado (positivo o negativo) de las inversiones.
+17. Función `calcular_venta_optima` para determinar el precio mínimo de venta y la cantidad óptima que maximiza la ganancia deseada, considerando las comisiones vigentes.
+18. Historial de cálculos de venta óptima por usuario y plataforma (`calculos_hist`).
 
 ---
 
@@ -36,8 +55,10 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
   - [Diagrama MER (Modelo Entidad-Relación)](#diagrama-mer-modelo-entidad-relación)
     - [Login](#login)
     - [Negocio](#negocio)
+    - [Auditorias](#auditorias)
   - [Relaciones Clave](#relaciones-clave)
   - [Funciones PL/pgSQL Disponibles](#funciones-plpgsql-disponibles)
+  - [Auditoría de usuarios](#auditoría-de-usuarios)
   - [Datos de Prueba](#datos-de-prueba)
 
 - [3. Backend - Java Spring Boot](#3-backend---java-spring-boot-3x)
@@ -139,9 +160,13 @@ Dentro de cada directorio, los scripts se agrupan en subdirectorios numerados se
   - `07_cr_comisiones.sql` - Tabla `comisiones`.
   - `08_cr_transacciones.sql` - Tabla `transacciones`.
   - `09_cr_calculos_hist.sql` - Tabla `calculos_hist`.
-- `70_indices/` - Índices de rendimiento y unicidad (incluye índices funcionales para `username` y `email` case-insensitive, y el índice compuesto `(pais_id, celular)`).
+  - `10_cr_auditoria_usuarios.sql` - Tabla `auditoria_usuarios` (bitácora de cambios en `usuarios`).
+- `70_indices/` - Índices de rendimiento y unicidad (incluye índices funcionales para `username` y `email` case-insensitive, y el índice compuesto `(pais_id, celular)`; además, `07_cr_idx_auditoria_usuarios.sql` con índices para la bitácora).
 - `90_funciones/` - Funciones PL/pgSQL (una por archivo).
+- `110_disparadores/` - Trigger y función de auditoría (`trg_audit_usuarios`, `fn_audit_usuarios`).
 - `140_datos_basicos/` - Datos iniciales (monedas, países, roles, usuarios, etc.) en el mismo orden que las tablas.
+- `150_permisos/` - Creación del rol `investment_app` (usuario de BD del backend) y GRANT/REVOKE sobre las tablas de negocio.
+- `160_comentarios/` - Comentarios de documentación de la tabla de auditoría.
 
 **Nomenclatura:**  
 `Version_Release_Hotfix_Orden_Prefijo_Nombre.sql`  
@@ -283,23 +308,56 @@ erDiagram
     PAISES }o--|| MONEDAS : usa
 ```
 
+#### Auditorias
+
+```mermaid
+erDiagram
+    USUARIOS {
+        UUID id PK
+        VARCHAR username UK
+        VARCHAR password_hash
+        VARCHAR email UK
+        VARCHAR nombre_completo
+        BIGINT celular
+        UUID pais_id FK
+        BOOLEAN activo
+        TIMESTAMP ultimo_login
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    AUDITORIA_USUARIOS {
+        BIGSERIAL id PK
+        CHAR operacion
+        UUID usuario_id FK
+        JSONB datos_anteriores
+        JSONB datos_nuevos
+        TEXT_ARRAY campos_modificados
+        VARCHAR usuario_bd
+        VARCHAR usuario_aplicacion
+        INET ip_cliente
+        TIMESTAMPTZ fecha
+    }
+    USUARIOS ||--o{ AUDITORIA_USUARIOS : audita_cambios
+```
+
 ### Relaciones Clave
 
-| Origen      | Destino       | Tipo | Descripción                                   |
-| ----------- | ------------- | ---- | --------------------------------------------- |
-| usuarios    | usuario_roles | 1:N  | Un usuario tiene varios roles                 |
-| roles       | usuario_roles | 1:N  | Un rol pertenece a varios usuarios            |
-| usuarios    | paises        | N:1  | Un usuario pertenece a un país                |
-| paises      | monedas       | N:1  | Un país tiene una moneda oficial              |
-| paises      | usuarios      | 1:N  | Un país puede tener varios usuarios           |
-| usuarios    | plataformas   | 1:N  | Un usuario registra varias plataformas        |
-| monedas     | plataformas   | 1:N  | Una plataforma opera en una moneda            |
-| plataformas | comisiones    | 1:N  | Una plataforma tiene estructura de comisiones |
-| monedas     | comisiones    | 1:N  | La comisión se cobra en una moneda            |
-| usuarios    | transacciones | 1:N  | Un usuario realiza varias transacciones       |
-| plataformas | transacciones | 1:N  | Una transacción se ejecuta en una plataforma  |
-| monedas     | transacciones | 1:N  | Una transacción se registra en una moneda     |
-| usuarios    | calculos_hist | 1:N  | Historial de cálculos por usuario             |
+| Origen      | Destino            | Tipo | Descripción                                                                     |
+| ----------- | ------------------ | ---- | ------------------------------------------------------------------------------- |
+| usuarios    | usuario_roles      | 1:N  | Un usuario tiene varios roles                                                   |
+| roles       | usuario_roles      | 1:N  | Un rol pertenece a varios usuarios                                              |
+| usuarios    | paises             | N:1  | Un usuario pertenece a un país                                                  |
+| paises      | monedas            | N:1  | Un país tiene una moneda oficial                                                |
+| paises      | usuarios           | 1:N  | Un país puede tener varios usuarios                                             |
+| usuarios    | plataformas        | 1:N  | Un usuario registra varias plataformas                                          |
+| monedas     | plataformas        | 1:N  | Una plataforma opera en una moneda                                              |
+| plataformas | comisiones         | 1:N  | Una plataforma tiene estructura de comisiones                                   |
+| monedas     | comisiones         | 1:N  | La comisión se cobra en una moneda                                              |
+| usuarios    | transacciones      | 1:N  | Un usuario realiza varias transacciones                                         |
+| plataformas | transacciones      | 1:N  | Una transacción se ejecuta en una plataforma                                    |
+| monedas     | transacciones      | 1:N  | Una transacción se registra en una moneda                                       |
+| usuarios    | calculos_hist      | 1:N  | Historial de cálculos por usuario                                               |
+| usuarios    | auditoria_usuarios | 1:N  | Un usuario genera múltiples registros de auditoría (INSERT/UPDATE/DELETE/Login) |
 
 Se incluyen 54 divisas internacionales organizadas por región: principales (USD, COP, EUR, GBP), Américas (16), Europa (11), Asia-Pacífico (14) y Medio Oriente/África (9). Cada moneda tiene código ISO de 3 letras, nombre, símbolo y país asociado.
 
@@ -313,6 +371,31 @@ Se incluyen 54 divisas internacionales organizadas por región: principales (USD
 | `calcular_venta_optima`   | Calcula precio mínimo para ganancia deseada   |
 
 > Las funciones reciben y retornan UUIDs. Ver `database/sql/02_functions.sql` para detalles de parámetros.
+
+### Auditoría de usuarios
+
+El vínculo lógico `USUARIOS ||--o{ AUDITORIA_USUARIOS` representa la relación funcional: cada cambio en una fila de `usuarios` produce un registro en `auditoria_usuarios`. La escritura es **automática** vía el trigger `trg_audit_usuarios` (función `fn_audit_usuarios`, `SECURITY DEFINER`, owner `postgres`), que se dispara `AFTER INSERT OR UPDATE OR DELETE` `FOR EACH ROW`.
+
+**Mapeo de operaciones registradas en `operacion`**:
+
+- `I` → INSERT en `usuarios`
+- `L` → UPDATE donde el único campo de negocio modificado es `ultimo_login` (login)
+- `U` → UPDATE con cualquier otro campo de negocio
+- `D` → DELETE en `usuarios`
+
+La columna `updated_at` (metadato del sistema, actualizado por `@PreUpdate` en la entidad JPA) se **excluye** del cálculo de `campos_modificados` para que el login —que también toca `updated_at`— se registre correctamente como `L` y no como `U`.
+
+Cada registro guarda:
+
+- **Snapshots JSONB** de la fila antes y después del cambio (`datos_anteriores`, `datos_nuevos`).
+- **Lista de columnas de negocio** modificadas en un UPDATE (`campos_modificados`).
+- **`usuario_bd`**: `SESSION_USER` de PostgreSQL que ejecutó el DML (ej: `investment_app`).
+- **`usuario_aplicacion`**: usuario autenticado vía JWT que originó la petición; `'desconocido'` si no hay autenticación.
+- **`ip_cliente`**: IP del cliente PostgreSQL (`inet_client_addr()`).
+
+**Propagación del usuario autenticado**: el backend envuelve el `DataSource` con `AuditUserAwareDataSource`, que lee `SecurityContextHolder` (poblado por `JwtAuthFilter` a partir del JWT) y ejecuta `set_config('app.audit_user', <username>, false)` en cada préstamo de conexión. El trigger consume ese valor con `current_setting('app.audit_user', true)`. Durante el login —cuando aún no hay JWT emitido— `LoginService` invoca `AuditContextService.setCurrentUser(username)` antes del `UPDATE` para forzar el username real en lugar de `'desconocido'`.
+
+**Permisos**: `investment_app` (usuario de BD del backend) no tiene ningún privilegio sobre `auditoria_usuarios` ni sobre su secuencia. El trigger corre con permisos del owner (`postgres`) gracias a `SECURITY DEFINER`, de modo que la aplicación puede seguir modificando `usuarios` sin poder leer, alterar ni borrar la bitácora.
 
 ### Datos de Prueba
 
@@ -354,7 +437,7 @@ sequenceDiagram
     participant B as 🔒 Backend (7700)
     participant DB as 🗄️ PostgreSQL (5432)
 
-    U->>B: POST /api/auth/login {username, password}
+    U->>B: POST /api/auth/login [username, password]
     B->>DB: SELECT usuario + roles + password_hash
     DB-->>B: User (id, username, hash, roles, activo)
     B->>B: Validar: bloqueo? activo? BCrypt.verify()? intentos?
@@ -362,12 +445,12 @@ sequenceDiagram
         B->>B: Reset intentos fallidos
         B->>B: Generar JWT (HMAC-SHA384, expiración 24h)
         B->>B: Generar Refresh Token (aleatorio 64 bytes, TTL 1h)
-        B-->>U: 200 OK {token, refreshToken, tokenType, expiresIn, refreshTokenExpiresIn, username, email, nombreCompleto}
+        B-->>U: 200 OK [token, refreshToken, tokenType, expiresIn, refreshTokenExpiresIn, username, email, nombreCompleto]
     else Contraseña incorrecta
         B->>B: Registrar intento fallido (máx 3)
-        B-->>U: 401 {code: AUTH-001, message: Credenciales inválidas}
+        B-->>U: 401 [code: AUTH-001, message: Credenciales inválidas]
     else Usuario bloqueado
-        B-->>U: 423 {code: AUTH-002, message: Cuenta bloqueada}
+        B-->>U: 423 [code: AUTH-002, message: Cuenta bloqueada]
     end
 ```
 
@@ -624,6 +707,9 @@ sequenceDiagram
 - Validación case-insensitive para email, case-sensitive para contraseñas
 - **2FA SMTP** para recuperación de contraseña con token de 6 dígitos
 - **Refresh Token**: Se genera un token adicional en el login, válido por 1 hora, que permite renovar el access token sin necesidad de reautenticación. La renovación se realiza mediante una sesión deslizante (cada uso extiende la expiración 1 hora más). Los refresh tokens se almacenan en memoria (ConcurrentHashMap) y se invalidan al hacer logout o al expirar. La configuración completa (TTL, tiempos, etc.) se gestiona en el archivo application.yml bajo la clave refresh-token.
+- **Auditoría de usuarios**: tabla `auditoria_usuarios` con trigger `trg_audit_usuarios` (función `fn_audit_usuarios`, `SECURITY DEFINER`, owner `postgres`). Registra INSERT/UPDATE/DELETE y Login (`operacion='L'`) con snapshots JSONB y campos modificados. Excluye `updated_at` de los campos de negocio.
+- **Usuario de BD de la aplicación**: `investment_app` con permisos DML (SELECT/INSERT/UPDATE/DELETE) sobre las tablas de negocio, **sin acceso** a `auditoria_usuarios` ni a su secuencia. Configurado en `150_permisos/00_001_000_01_cr_app_db_user.sql`. El backend en `application.yml` usa `investment_app` (credenciales AES-256-GCM).
+- **Propagación del usuario autenticado**: `AuditUserAwareDataSource` (wrapper del `DataSource`) lee `SecurityContextHolder` y ejecuta `set_config('app.audit_user', <username>, false)` en cada `getConnection()`. El valor es consumido por el trigger de auditoría. `AuditContextService.setCurrentUser(username)` (con `Propagation.MANDATORY`) permite forzar el usuario durante el login, antes de que el JWT sea emitido.
 - **Registro de usuarios**: proceso en dos pasos con confirmación por email (token de 6 dígitos, TTL 5 min). Validación de unicidad de `username`, `email` y `(pais_id, celular)`. Asignación de rol según plan (`FREE` → `ROLE_USER`, `PREMIUM` → `ROLE_PREMIUM`).
 - **Borrado de cuenta**: lógico (cambia `activo` a `false`) solo para el propio usuario autenticado. Existe un endpoint adicional de borrado definitivo en cascada para pruebas (solo ADMIN).
 
@@ -631,7 +717,7 @@ sequenceDiagram
 
 - **89 pruebas automatizadas** (integración + unitarias)
 
-- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos, refresh token, registro de usuario, borrado de cuenta.
+- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos, refresh token, registro de usuario, borrado de cuenta, auditoría de usuarios.
 
 - Ejecutar todas: `mvn test`
 
@@ -647,7 +733,7 @@ graph TB
         E["5️⃣ RateLimitIntegrationTest<br/>4 pruebas<br/>Rate limiting anti fuerza bruta"]
         F["6️⃣ PasswordRecoveryIntegrationTest<br/>4 pruebas<br/>Recuperación 2FA SMTP"]
         G["7️⃣ RegisterIntegrationTest<br/>8 pruebas<br/>Registro y borrado de cuenta"]
-        H["8️⃣ LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
+        H["8️⃣ LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService<br/>(incluye verificación de AuditContextService)"]
         I["9️⃣ RegisterServiceTest<br/>11 pruebas<br/>Unitarias de RegisterService"]
     end
 
@@ -786,10 +872,14 @@ graph TB
     - **`sql/`**
       - **`install/`** - Scripts de instalación completa
         - `10_esquemas/` - Esquema y tabla de versiones
+        - `20_extensiones/` - Extensiones PostgreSQL
         - `40_tablas/` - Tablas individuales
         - `70_indices/` - Índices
         - `90_funciones/` - Funciones PL/pgSQL
+        - `110_disparadores/` - Trigger y función de auditoría
         - `140_datos_basicos/` - Datos iniciales
+        - `150_permisos/` - Rol `investment_app` y GRANT/REVOKE
+        - `160_comentarios/` - Comentarios de documentación
       - **`updates/`** - Scripts de migración incremental
       - `aplica.sql` - Script consolidado de instalación (generado)
       - `aplica_00_001_000.sql` - Script de migración para versión 00_001_000 (generado)
@@ -811,7 +901,8 @@ graph TB
                 - `SecurityLoginComponent.java` - Encriptación BCrypt + validación
                 - `TokenBlacklistComponent.java` - Blacklist de tokens JWT
               - **`config/`** - Configuración de Spring
-                - `EncryptedDataSourceConfig.java` - DataSource con desencriptación AES
+                - `AuditUserAwareDataSource.java` - Wrapper del DataSource que propaga el usuario JWT a la sesión PostgreSQL
+                - `EncryptedDataSourceConfig.java` - DataSource con desencriptación AES + wrapper de auditoría
                 - `MailConfig.java` - Configuración SMTP con desencriptación
                 - `SecurityConfig.java` - Spring Security + JWT (permite `/register/**` público)
               - **`controller/`** - Endpoints REST
@@ -860,6 +951,7 @@ graph TB
                 - `RateLimitFilter.java` - Filtro de límite de peticiones
                 - `UserDetailsServiceImpl.java` - Carga de usuarios desde BD
               - **`service/`** - Lógica de negocio
+                - `AuditContextService.java` - Forzar `app.audit_user` durante login (Propagation.MANDATORY)
                 - `ChangeMyPasswordService.java` - Cambio de contraseña propia
                 - `EmailService.java` - Envío de correos SMTP (recuperación y registro)
                 - `EncryptionService.java` - Encriptación AES-GCM
@@ -937,3 +1029,5 @@ graph TB
 - **Control de versiones**: Git/GitHub
 - **Sistema Operativo**: Pop OS 22.04
 - **IDE**: Visual Studio Code
+- **Auditoría**: PostgreSQL trigger + wrapper DataSource en el backend (`AuditUserAwareDataSource`)
+- **Usuario de BD de la app**: `investment_app` (con permisos restringidos, sin acceso a `auditoria_usuarios`)
