@@ -111,8 +111,9 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
   - **Domain**: entidades, value objects, reglas de negocio, interfaces de puertos (repositorios, servicios externos).
   - **Application**: casos de uso, servicios que orquestan la lógica de negocio usando los puertos.
   - **Infrastructure**: implementaciones concretas de adaptadores (JPA, REST controllers, clientes HTTP, etc.).
-- **Funciones con un solo propósito**: cada método debe hacer una única cosa y estar bien nombrado.
+- **Funciones con un solo propósito**: cada método debe hacer una única responsabilidad y estar bien nombrado.
 - **Código limpio**: sin warnings de compilación ni de análisis estático (usar SonarLint o similares). Manejar excepciones adecuadamente, evitar código duplicado y mantener baja complejidad ciclomática.
+- **Cuando una solicitud requiere campos obligatorios**: debe agregar las etiquetas @NotBlank desde el \*Request.java
 - **Pruebas unitarias y de integración**: cubrir todas las capas. Usar mocks para dependencias externas en pruebas unitarias, y `@SpringBootTest` para integración. Las pruebas deben ser deterministas y rápidas.
 - **Uso de DTOs**: para transferencia de datos entre capas, evitar exponer entidades directamente en la API.
 - **Validaciones**: tanto a nivel de controlador (validación de entrada) como a nivel de dominio (invariantes).
