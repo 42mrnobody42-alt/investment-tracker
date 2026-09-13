@@ -41,6 +41,25 @@ Aplicación web para seguimiento de inversiones con arquitectura de microservici
 17. Función `calcular_venta_optima` para determinar el precio mínimo de venta y la cantidad óptima que maximiza la ganancia deseada, considerando las comisiones vigentes.
 18. Historial de cálculos de venta óptima por usuario y plataforma (`calculos_hist`).
 
+### Gestión del Proyecto
+
+El seguimiento de la planeación, avances, backlog e issues se realiza en el tablero de GitHub Projects:
+
+- **Tablero**: [Investment Tracker Pro - Project Board](https://github.com/users/42mrnobody42-alt/projects/2)
+- **Repositorio**: [investment-tracker](https://github.com/42mrnobody42-alt/investment-tracker)
+
+Las tareas del proyecto se organizan en el tablero con los siguientes estados sugeridos:
+
+| Estado        | Descripción                                    |
+| ------------- | ---------------------------------------------- |
+| `Backlog`     | Ideas y funcionalidades no priorizadas         |
+| `Ready`       | Listas para ser tomadas en el siguiente sprint |
+| `In Progress` | En desarrollo activo                           |
+| `In Review`   | Pull Request abierto, pendiente de revisión    |
+| `Done`        | Mergeado a `developer`                         |
+
+> **Nota**: Los issues y Pull Requests deben vincularse al tablero para mantener trazabilidad entre el código y la planeación.
+
 ---
 
 # Investment Tracker Pro - Documentación Completa

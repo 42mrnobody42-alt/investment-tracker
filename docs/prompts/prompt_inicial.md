@@ -167,6 +167,21 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 4. **Todas las respuestas deben incluir, cuando sea aplicable, el uso de los helpers de `BaseIntegrationTest`** (como `printBanner`, `printStep`, `printSubStep`) para mantener consistencia en los logs de pruebas.
 5. **Nunca usar `investor` como usuario JDBC del backend**. Siempre `investment_app`.
 6. **Nunca otorgar permisos sobre `auditoria_usuarios` a `investment_app`**. Si se requiere consultar auditoría, hacerlo con `investor`/`postgres`.
+7. **Toda planeación, avance y seguimiento del proyecto se gestiona en el tablero de GitHub Projects**: https://github.com/users/42mrnobody42-alt/projects/2. Antes de proponer nuevas funcionalidades o priorizar tareas, consultar el tablero para alinear con el estado actual del proyecto.
+8. **Cada nueva feature debe corresponder a un issue del tablero**. Al iniciar una rama `feature/*`, referenciar el número de issue en el nombre de la rama o en el commit (ej: `feat(#12): actualizar perfil de usuario`).
+
+## 📊 Gestión del Proyecto
+
+- **Tablero de GitHub Projects**: https://github.com/users/42mrnobody42-alt/projects/2
+- **Repositorio**: https://github.com/42mrnobody42-alt/investment-tracker
+- **Flujo de trabajo**:
+  1. Idea/Requerimiento → se crea un **issue** en el repositorio.
+  2. El issue se agrega al **tablero** y se prioriza (columna `Backlog` → `Ready`).
+  3. Al iniciar desarrollo, se mueve a `In Progress` y se crea la rama `feature/*`.
+  4. Al abrir el Pull Request, se mueve a `In Review` y se vincula el issue (`Closes #N`).
+  5. Al mergear a `developer`, se mueve a `Done`.
+
+> **Regla**: ninguna funcionalidad se considera "terminada" hasta que el issue asociado esté en `Done` en el tablero y la rama esté mergeada a `developer`.
 
 ---
 
