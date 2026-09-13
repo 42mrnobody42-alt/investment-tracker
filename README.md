@@ -117,6 +117,8 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
 
 - [104. Stack Tecnológico](#104-stack-tecnológico)
 
+- [105. Gestión del Proyecto](#105-gestión-del-proyecto)
+
 ---
 
 ## 1. ARQUITECTURA DEL SISTEMA
@@ -1050,3 +1052,10 @@ graph TB
 - **IDE**: Visual Studio Code
 - **Auditoría**: PostgreSQL trigger + wrapper DataSource en el backend (`AuditUserAwareDataSource`)
 - **Usuario de BD de la app**: `investment_app` (con permisos restringidos, sin acceso a `auditoria_usuarios`)
+
+### 105. Gestión del Proyecto
+
+- **Tablero GitHub Projects**: [Investment Tracker Pro - Project Board](https://github.com/users/42mrnobody42-alt/projects/2)
+- **Repositorio**: [investment-tracker](https://github.com/42mrnobody42-alt/investment-tracker)
+- **Flujo de trabajo**: Backlog → Ready → In Progress → In Review → Done
+- **Trazabilidad**: cada funcionalidad está vinculada a un issue del repositorio y a una tarjeta en el tablero.
