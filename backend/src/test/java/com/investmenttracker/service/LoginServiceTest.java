@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +44,9 @@ class LoginServiceTest {
 
         @Mock
         private RefreshTokenComponent refreshTokenComponent;
+
+        @Mock
+        private AuditContextService auditContextService;
 
         @InjectMocks
         private LoginService loginService;
@@ -113,6 +118,7 @@ class LoginServiceTest {
                 assertEquals("jwt-token-demo-user-xyz123456789", response.getToken());
                 assertEquals("Bearer", response.getTokenType());
                 verify(loginComponent).resetFailedAttempts(demoUser);
+                verify(auditContextService, times(1)).setCurrentUser("demo_user");
 
                 System.out.println("✅ UT-01: Login demo_user exitoso");
         }
@@ -136,6 +142,7 @@ class LoginServiceTest {
                 assertNotNull(response);
                 assertEquals("admin", response.getUsername());
                 assertEquals("jwt-token-admin-abc987654321", response.getToken());
+                verify(auditContextService, times(1)).setCurrentUser("admin");
 
                 System.out.println("✅ UT-02: Login admin exitoso");
         }
@@ -158,6 +165,7 @@ class LoginServiceTest {
 
                 assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
                 verify(loginComponent).recordFailedAttempt("demo_user");
+                verify(auditContextService, never()).setCurrentUser(any(String.class));
 
                 System.out.println("✅ UT-03: Contraseña incorrecta detectada");
         }
@@ -178,6 +186,7 @@ class LoginServiceTest {
                                 () -> loginService.login(request));
 
                 assertEquals(ErrorCode.ACCOUNT_LOCKED, exception.getErrorCode());
+                verify(auditContextService, never()).setCurrentUser(any(String.class));
 
                 System.out.println("✅ UT-04: Usuario bloqueado detectado");
         }
@@ -196,6 +205,7 @@ class LoginServiceTest {
                                 () -> loginService.login(request));
 
                 assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
+                verify(auditContextService, never()).setCurrentUser(any(String.class));
 
                 System.out.println("✅ UT-05: Usuario no encontrado detectado");
         }
@@ -227,6 +237,9 @@ class LoginServiceTest {
                                 "Los tokens deben ser diferentes");
                 assertEquals("demo_user", demoResponse.getUsername());
                 assertEquals("admin", adminResponse.getUsername());
+
+                verify(auditContextService, times(1)).setCurrentUser("demo_user");
+                verify(auditContextService, times(1)).setCurrentUser("admin");
 
                 System.out.println("✅ UT-06: Independencia de tokens verificada");
         }

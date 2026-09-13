@@ -31,6 +31,7 @@
 \ir install/40_tablas//00_001_000_07_cr_comisiones.sql
 \ir install/40_tablas//00_001_000_08_cr_transacciones.sql
 \ir install/40_tablas//00_001_000_09_cr_calculos_hist.sql
+\ir install/40_tablas//00_001_000_10_cr_auditoria_usuarios.sql
 -- =============================================
 -- DIRECTORIO: 50_alter_tablas
 -- =============================================
@@ -41,6 +42,7 @@
 -- DIRECTORIO: 70_indices
 -- =============================================
 \ir install/70_indices//00_001_000_01_cr_indices.sql
+\ir install/70_indices//00_001_000_07_cr_idx_auditoria_usuarios.sql
 -- =============================================
 -- DIRECTORIO: 80_vistas
 -- =============================================
@@ -57,6 +59,7 @@
 -- =============================================
 -- DIRECTORIO: 110_disparadores
 -- =============================================
+\ir install/110_disparadores//00_001_000_01_cr_trg_audit_usuarios.sql
 -- =============================================
 -- DIRECTORIO: 120_eventos
 -- =============================================
@@ -76,7 +79,9 @@
 -- =============================================
 -- DIRECTORIO: 150_permisos
 -- =============================================
+\ir install/150_permisos//00_001_000_01_cr_app_db_user.sql
 -- =============================================
 -- DIRECTORIO: 160_comentarios
 -- =============================================
+\ir install/160_comentarios//00_001_000_01_cr_comentarios_auditoria.sql
 \echo '✅ Instalación completa finalizada (00_001_000)'
