@@ -4,7 +4,7 @@
 - Release = `001`
 - Hotfix = `000`
 
-## Fecha: 2026-09-13
+## Fecha: 2026-09-19
 
 ## Proyecto: Investment Tracker Pro
 
@@ -93,8 +93,17 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
     - [Change My Password](#change-my-password)
     - [Registro de Usuario](#registro-de-usuario)
     - [Borrado de Cuenta](#borrado-de-cuenta)
+    - [Ofuscación de salida (login enmascarado)](#ofuscación-de-salida-login-enmascarado)
+    - [Endpoint de datos propios (sin ofuscar)](#endpoint-de-datos-propios-sin-ofuscar)
   - [Seguridad](#seguridad)
+  - [Ofuscación de datos sensibles](#ofuscación-de-datos-sensibles)
+    - [Componentes](#componentes)
+    - [Formatos de ofuscación](#formatos-de-ofuscación)
+    - [Decisión de diseño](#decisión-de-diseño)
+    - [Cómo extender](#cómo-extender)
+    - [Filtro de logs sensibles](#filtro-de-logs-sensibles)
   - [Pruebas](#pruebas)
+
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
@@ -717,6 +726,56 @@ sequenceDiagram
     B-->>U: 200 OK {message: Usuario eliminado definitivamente}
 ```
 
+#### Ofuscación de salida (login enmascarado)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as Usuario
+    participant F as MaskingFilter
+    participant C as AuthController
+    participant S as LoginService
+    participant DB as PostgreSQL
+    participant J as Jackson + MaskedSerializer
+
+    U->>F: POST /api/auth/login [username, password]
+    F->>F: ¿Path en OWN_DATA_PATHS?
+    Note right of F: NO → enable
+    F->>C: forward
+    C->>S: login(request)
+    S->>DB: SELECT usuario + roles
+    DB-->>S: User [email real, celular real, nombre real]
+    S-->>C: LoginResponse [datos reales]
+    C->>J: serializar(LoginResponse)
+    J->>J: @Masked(EMAIL) → "u***@***.com"
+    J->>J: @Masked(CELULAR) → "***4567"
+    J->>J: @Masked(NOMBRE) → "U*** D***"
+    J-->>U: 200 OK [email, nombreCompleto, celular ofuscados]
+```
+
+#### Endpoint de datos propios (sin ofuscar)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as Usuario
+    participant F as MaskingFilter
+    participant C as Controller
+    participant S as Service
+    participant J as Jackson + MaskedSerializer
+
+    U->>F: POST /api/auth/refresh-token [refreshToken]
+    F->>F: ¿Path en OWN_DATA_PATHS?
+    Note right of F: SÍ → disable
+    F->>C: forward
+    C->>S: refreshAccessToken(refreshToken)
+    S-->>C: LoginResponse [datos reales]
+    C->>J: serializar(LoginResponse)
+    J->>J: MaskingContext.enabled = false
+    J->>J: escribe valores reales
+    J-->>U: 200 OK [email, nombreCompleto, celular reales]
+```
+
 ### Seguridad
 
 - **JWT** con firma HMAC-SHA384
@@ -733,6 +792,87 @@ sequenceDiagram
 - **Propagación del usuario autenticado**: `AuditUserAwareDataSource` (wrapper del `DataSource`) lee `SecurityContextHolder` y ejecuta `set_config('app.audit_user', <username>, false)` en cada `getConnection()`. El valor es consumido por el trigger de auditoría. `AuditContextService.setCurrentUser(username)` (con `Propagation.MANDATORY`) permite forzar el usuario durante el login, antes de que el JWT sea emitido.
 - **Registro de usuarios**: proceso en dos pasos con confirmación por email (token de 6 dígitos, TTL 5 min). Validación de unicidad de `username`, `email` y `(pais_id, celular)`. Asignación de rol según plan (`FREE` → `ROLE_USER`, `PREMIUM` → `ROLE_PREMIUM`).
 - **Borrado de cuenta**: lógico (cambia `activo` a `false`) solo para el propio usuario autenticado. Existe un endpoint adicional de borrado definitivo en cascada para pruebas (solo ADMIN).
+
+### Ofuscación de datos sensibles
+
+Capa transversal del backend que enmascara campos sensibles **a la salida** (serialización JSON), evitando que viajen en claro por la red o aparezcan en logs. Los servicios y validaciones internas siguen operando con datos **reales**, por lo que flujos como login, recovery y change-password no se ven afectados.
+
+#### Componentes
+
+| Componente                      | Rol                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `MaskType` (enum)               | Tipos soportados: `EMAIL`, `CELULAR`, `NOMBRE`. Extensible.                    |
+| `@Masked(MaskType)`             | Anotación que marca un campo de un DTO como sensible.                          |
+| `DataMasking`                   | Utilidad estática con las reglas de ofuscación. Sin estado.                    |
+| `MaskingContext`                | `ThreadLocal<Boolean>` que indica si la ofuscación está activa en la petición. |
+| `MaskedSerializer`              | `JsonSerializer` que aplica la máscara respetando `MaskingContext`.            |
+| `MaskingAnnotationIntrospector` | Introspector Jackson que conecta `@Masked` con `MaskedSerializer`.             |
+| `MaskingFilter`                 | `OncePerRequestFilter` que activa/desactiva `MaskingContext` según el path.    |
+| `JacksonMaskingConfig`          | Configuración Spring que registra el introspector.                             |
+
+#### Formatos de ofuscación
+
+| Tipo      | Ejemplo input            | Ejemplo output   |
+| --------- | ------------------------ | ---------------- |
+| `EMAIL`   | `user@test.com`          | `u***@***.com`   |
+| `EMAIL`   | `maria.lopez@empresa.co` | `m***@***.co`    |
+| `CELULAR` | `3001234567`             | `***4567`        |
+| `NOMBRE`  | `Juan Pérez García`      | `J*** P*** G***` |
+
+#### Decisión de diseño
+
+- Endpoints en `OWN_DATA_PATHS` (por ejemplo `/api/auth/refresh-token`) devuelven datos reales del propio usuario.
+- El resto de endpoints aplican la máscara por defecto.
+- **Estado actual**: `/api/auth/login` devuelve datos **enmascarados** (`email`, `nombreCompleto`, `celular`). Se mantendrá así hasta implementar el servicio de **actualizar perfil de usuario** (`/api/auth/update-my-profile`), que permitirá al usuario consultar y modificar sus datos.
+
+#### Cómo extender
+
+**Agregar un nuevo tipo de ofuscación**:
+
+1. Agregar el tipo al enum `MaskType`.
+2. Agregar su `case` en `DataMasking.mask`.
+3. Anotar cualquier campo de un DTO con `@Masked(MaskType.NUEVO)`.
+4. (Opcional) Registrar el campo en `application.yml → security.sensitive-fields` para evitar que aparezca en logs.
+
+**Marcar un endpoint como "propio"** (sin ofuscar):
+
+1. Agregar la ruta al `Set<String> OWN_DATA_PATHS` en `MaskingFilter`.
+2. Documentar en el commit por qué el endpoint devuelve datos sin enmascarar.
+
+**Que TODAS las respuestas ofusquen**:
+
+1. Vaciar el `Set<String> OWN_DATA_PATHS` en `MaskingFilter`.
+
+#### Filtro de logs sensibles
+
+- `SensitiveFieldsProperties` lee `security.sensitive-fields` desde `application.yml`.
+- `LogSanitizer.sanitize(field, value)` devuelve `[PROTEGIDO]` si el campo está en la lista negra.
+- Campos configurables actuales:
+
+```yaml
+security:
+  sensitive-fields:
+    - email
+    - celular
+    - nombre_completo
+    - password
+    - password_hash
+    - passwordHash
+    - token
+    - refreshToken
+    - actualPassword
+    - nuevoPassword
+    - repetirNuevoPassword
+```
+
+**Uso**:
+
+```java
+log.debug("Usuario {} - Email: {}", username, logSanitizer.sanitize("email", user.getEmail()));
+// → "Usuario admin - Email: [PROTEGIDO]"
+```
+
+La lista se puede modificar sin recompilar, solo reiniciando el backend.
 
 ### Pruebas
 
