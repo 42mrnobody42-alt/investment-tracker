@@ -36,6 +36,21 @@ login:
   lock-duration-minutes: 5
   attempt-window-minutes: 5
 
+# Campos sensibles: nunca aparecen en logs (editable sin recompilar)
+security:
+  sensitive-fields:
+    - email
+    - celular
+    - nombre_completo
+    - password
+    - password_hash
+    - passwordHash
+    - token
+    - refreshToken
+    - actualPassword
+    - nuevoPassword
+    - repetirNuevoPassword
+
 # SMTP Configuration (valores encriptados)
 smtp:
   host: ${SMTP_HOST_ENCRYPTED:DBchFGCWc04I8QWKvkU90V82t0prGi96uRvgMweBZk+lmgIw0ipD/yTM}

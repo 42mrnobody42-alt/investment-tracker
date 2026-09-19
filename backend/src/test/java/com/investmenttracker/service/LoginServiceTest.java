@@ -32,6 +32,7 @@ import com.investmenttracker.model.entity.User;
 import com.investmenttracker.model.enums.ErrorCode;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.response.LoginResponse;
+import com.investmenttracker.util.LogSanitizer;
 
 @ExtendWith(MockitoExtension.class)
 class LoginServiceTest {
@@ -47,6 +48,9 @@ class LoginServiceTest {
 
         @Mock
         private AuditContextService auditContextService;
+
+        @Mock
+        private LogSanitizer logSanitizer;
 
         @InjectMocks
         private LoginService loginService;

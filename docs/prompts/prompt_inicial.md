@@ -10,7 +10,7 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 
 ---
 
-# 🧠 CONDICIONES DE DESARROLLO PARA LA IA (actualizadas al 2026-09-13)
+# 🧠 CONDICIONES DE DESARROLLO PARA LA IA (actualizadas al 2026-09-19)
 
 ## 📁 Estructura de ramas en Git
 

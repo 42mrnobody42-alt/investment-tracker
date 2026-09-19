@@ -16,6 +16,7 @@ import com.investmenttracker.model.entity.User;
 import com.investmenttracker.model.enums.ErrorCode;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.response.LoginResponse;
+import com.investmenttracker.util.LogSanitizer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoginService {
 
+    private final LogSanitizer logSanitizer;
     private final LoginComponent loginComponent;
     private final JwtService jwtService;
     private final RefreshTokenComponent refreshTokenComponent;
@@ -100,6 +102,9 @@ public class LoginService {
                     .indicativoCelular(pais.getIndicativoCelular())
                     .build();
         }
+
+        log.debug("Usuario {} - Email: {}", username, logSanitizer.sanitize("email", user.getEmail()));
+        // → "Usuario admin - Email: [PROTEGIDO]"
 
         return LoginResponse.builder()
                 .token(accessToken)
