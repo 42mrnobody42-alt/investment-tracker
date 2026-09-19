@@ -39,6 +39,10 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 - **Control de versiones**: Git / GitHub
 - **Pruebas**: JUnit 5 + Spring Boot Test (89 pruebas automatizadas)
 - **Auditoría**: PostgreSQL trigger + wrapper `DataSource` (`AuditUserAwareDataSource`)
+- **Ofuscación de datos**: `@Masked` + `MaskedSerializer` (Jackson) + `MaskingFilter`, controlado por `MaskingContext` (ThreadLocal)
+- **Filtro de logs sensibles**: `LogSanitizer` + `SensitiveFieldsProperties` (lista editable vía `application.yml`)
+
+---
 
 ## 🗄️ Usuarios de base de datos
 
@@ -55,6 +59,51 @@ El sistema separa las responsabilidades en **dos roles de PostgreSQL**:
 2. `investment_app` **no puede** leer, modificar ni borrar la auditoría. Ni siquiera `TRUNCATE`. Se lo revoca explícitamente en `150_permisos/00_001_000_01_cr_app_db_user.sql`.
 3. `investor` se usa solo para tareas administrativas (aplicar migraciones, backups, consultas de auditoría, pgAdmin).
 4. El trigger de auditoría corre con `SECURITY DEFINER` (owner `postgres`), de modo que la escritura en `auditoria_usuarios` no requiere privilegios de `investment_app`.
+
+---
+
+## 🎭 Ofuscación de datos sensibles
+
+Capa transversal del backend que enmascara campos sensibles **a la salida** (serialización JSON), evitando que viajen en claro por la red o aparezcan en logs. Los servicios y validaciones internas siguen operando con datos **reales**.
+
+### Principios
+
+1. La ofuscación ocurre **solo en serialización** (Jackson), nunca en el dominio.
+2. Las validaciones internas (login, recovery, change-password) operan con datos **reales**.
+3. Los endpoints en `MaskingFilter.OWN_DATA_PATHS` devuelven datos propios sin enmascarar.
+4. El resto de endpoints enmascara por defecto.
+5. Es **extensible**: agregar un tipo nuevo al enum `MaskType` + su `case` en `DataMasking`.
+
+### Tipos soportados
+
+| Tipo      | Input               | Output           |
+| --------- | ------------------- | ---------------- |
+| `EMAIL`   | `user@test.com`     | `u***@***.com`   |
+| `CELULAR` | `3001234567`        | `***4567`        |
+| `NOMBRE`  | `Juan Pérez García` | `J*** P*** G***` |
+
+### Cómo agregar un campo sensible nuevo
+
+1. Agregar la anotación `@Masked(MaskType.XXX)` al campo del DTO.
+2. (Opcional) Agregar el nombre del campo a `security.sensitive-fields` en `application.yml` para evitar que aparezca en logs.
+3. (Opcional) Si es un tipo nuevo: agregar al enum `MaskType` y su `case` en `DataMasking.mask`.
+
+### Cómo marcar un endpoint como "propio" (sin ofuscar)
+
+1. Agregar la ruta al `Set<String> OWN_DATA_PATHS` en `MaskingFilter`.
+2. Documentar en el commit por qué el endpoint devuelve datos sin enmascarar.
+
+### Estado actual
+
+- `/api/auth/login` **enmascara** los campos `email`, `nombreCompleto`, `celular` (decisión temporal).
+- `/api/auth/refresh-token` está configurado para devolver datos reales (en `OWN_DATA_PATHS`).
+- Cuando se implemente `/api/auth/update-my-profile`, se decidirá si login vuelve a mostrar datos reales al dueño.
+
+### Reglas de logs
+
+- **Nunca** loggear los campos de `security.sensitive-fields` (configurable en `application.yml`).
+- Usar `LogSanitizer.sanitize(fieldName, value)` antes de loggear cualquier dato potencialmente sensible.
+- Campos configurados actualmente: `email`, `celular`, `nombre_completo`, `password`, `password_hash`, `passwordHash`, `token`, `refreshToken`, `actualPassword`, `nuevoPassword`, `repetirNuevoPassword`.
 
 ---
 
@@ -91,6 +140,8 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 - Auditoría de accesos fallidos (a nivel aplicación, tabla separada).
 - Gerenciales, para deteccion de hacking.
 
+---
+
 ## 🔐 Seguridad y autenticación
 
 - **JWT** con firma HMAC-SHA384 (expiración 24h).
@@ -103,25 +154,27 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 - **Registro en dos pasos**: solicitud + confirmación por email (token de 6 dígitos, TTL 5 min).
 - **Borrado de cuenta**: lógico (`activo=false`) para el propio usuario autenticado; borrado definitivo en cascada solo por ADMIN para pruebas (`/api/test/delete-user/{username}`).
 - **Auditoría**: ver sección [🕵️ Auditorías](#-auditorías).
+- **Ofuscación de datos sensibles**: capa transversal `MaskingFilter` + `@Masked` + `MaskedSerializer`. Los campos anotados (`email`, `nombreCompleto`, `celular`) se enmascaran a la salida. Extensible vía `MaskType`.
+- **Filtro de logs**: `LogSanitizer` + `SensitiveFieldsProperties` (lista configurable en `application.yml → security.sensitive-fields`).
 
 ## 📡 Endpoints publicados (API REST)
 
-| Endpoint                           | Método | Auth                   | Descripción                                              |
-| ---------------------------------- | ------ | ---------------------- | -------------------------------------------------------- |
-| `/api/auth/login`                  | POST   | No                     | Login - Retorna JWT + Refresh Token                      |
-| `/api/auth/restart-password`       | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario              |
-| `/api/auth/refresh-token`          | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido   |
-| `/api/auth/register/request`       | POST   | No                     | Solicitar registro - envía token de 6 dígitos por email  |
-| `/api/auth/register/confirm`       | POST   | No                     | Confirmar registro con token y crear usuario             |
-| `/api/auth/delete-account`         | POST   | JWT (propietario)      | Borrado lógico de la cuenta (activo = false)             |
-| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas)   | Borrado definitivo en cascada para pruebas               |
-| `/api/test/health`                 | GET    | No                     | Health check del servicio                                |
-| `/api/encryption/encrypt`          | POST   | ADMIN                  | Encriptar texto con AES-GCM                              |
-| `/api/encryption/decrypt`          | POST   | ADMIN                  | Desencriptar texto con AES-GCM                           |
-| `/api/auth/logout`                 | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token     |
-| `/api/auth/recovery/request`       | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email |
-| `/api/auth/recovery/verify`        | POST   | No                     | Verificar token y cambiar contraseña                     |
-| `/api/auth/change-my-pass`         | POST   | JWT                    | Cambiar contraseña propia con validación actual          |
+| Endpoint                           | Método | Auth                   | Descripción                                                                         |
+| ---------------------------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------- |
+| `/api/auth/login`                  | POST   | No                     | Login - Retorna JWT + Refresh Token (**email, nombreCompleto y celular ofuscados**) |
+| `/api/auth/restart-password`       | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario                                         |
+| `/api/auth/refresh-token`          | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido                              |
+| `/api/auth/register/request`       | POST   | No                     | Solicitar registro - envía token de 6 dígitos por email                             |
+| `/api/auth/register/confirm`       | POST   | No                     | Confirmar registro con token y crear usuario                                        |
+| `/api/auth/delete-account`         | POST   | JWT (propietario)      | Borrado lógico de la cuenta (activo = false)                                        |
+| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas)   | Borrado definitivo en cascada para pruebas                                          |
+| `/api/test/health`                 | GET    | No                     | Health check del servicio                                                           |
+| `/api/encryption/encrypt`          | POST   | ADMIN                  | Encriptar texto con AES-GCM                                                         |
+| `/api/encryption/decrypt`          | POST   | ADMIN                  | Desencriptar texto con AES-GCM                                                      |
+| `/api/auth/logout`                 | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token                                |
+| `/api/auth/recovery/request`       | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email                            |
+| `/api/auth/recovery/verify`        | POST   | No                     | Verificar token y cambiar contraseña                                                |
+| `/api/auth/change-my-pass`         | POST   | JWT                    | Cambiar contraseña propia con validación actual                                     |
 
 ## 🧪 Pruebas automatizadas
 
@@ -159,6 +212,8 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 - **Base de datos (SQL)**: `/prog/datos/investment-tracker/database/sql/`
 - **Documentación**: `/prog/datos/investment-tracker/README.md`
 
+---
+
 ## 🧹 Reglas generales para la IA
 
 1. **Cada comando ejecutado debe tener path absoluto** y no usar variables de entorno (`/prog/datos/investment-tracker`).
@@ -169,6 +224,10 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 6. **Nunca otorgar permisos sobre `auditoria_usuarios` a `investment_app`**. Si se requiere consultar auditoría, hacerlo con `investor`/`postgres`.
 7. **Toda planeación, avance y seguimiento del proyecto se gestiona en el tablero de GitHub Projects**: https://github.com/users/42mrnobody42-alt/projects/2. Antes de proponer nuevas funcionalidades o priorizar tareas, consultar el tablero para alinear con el estado actual del proyecto.
 8. **Cada nueva feature debe corresponder a un issue del tablero**. Al iniciar una rama `feature/*`, referenciar el número de issue en el nombre de la rama o en el commit (ej: `feat(#12): actualizar perfil de usuario`).
+9. **Ofuscación de datos sensibles**: cualquier campo nuevo que exponga `email`, `nombre_completo`, `celular`, montos, saldos o cualquier dato personal/financiero en un DTO de respuesta **debe anotarse con `@Masked(MaskType.XXX)`**.
+10. **Nunca loggear campos sensibles**: usar `LogSanitizer.sanitize(fieldName, value)` antes de escribir cualquier dato que esté en `security.sensitive-fields`. Si el campo no está en la lista y debería estarlo, agregarlo primero a `application.yml`.
+11. **La ofuscación ocurre solo a la salida**: nunca en el dominio ni en las validaciones internas. Los servicios usan datos reales; el JSON los enmascara.
+12. **Si un endpoint debe devolver datos propios sin enmascarar**, agregarlo a `OWN_DATA_PATHS` en `MaskingFilter`. Documentar por qué.
 
 ## 📊 Gestión del Proyecto
 
@@ -201,6 +260,8 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 - **Validaciones**: tanto a nivel de controlador (validación de entrada) como a nivel de dominio (invariantes).
 - **Scripts de migración de base de datos**: deben ser **idempotentes** (es decir, se pueden ejecutar múltiples veces sin causar errores). Usar `CREATE IF NOT EXISTS`, `ALTER IF EXISTS` o bloques `DO $$ ... END $$` con condiciones para evitar fallos si el objeto ya existe.
 - **Auditoría**: cuando se modifiquen datos sensibles, el usuario autenticado se propaga automáticamente vía `AuditUserAwareDataSource`. Si el flujo no tiene JWT (ej: login), invocar explícitamente `AuditContextService.setCurrentUser(username)`.
+- **Ofuscación**: cualquier DTO de respuesta que exponga datos sensibles debe anotar el campo con `@Masked(MaskType.XXX)`. Agregar tipos nuevos a `MaskType` y a `DataMasking.mask` cuando se necesite. No ofuscar en el dominio; solo en serialización.
+- **Logs**: usar `LogSanitizer` antes de loggear datos que estén en `security.sensitive-fields`.
 
 ### Base de Datos (PostgreSQL / PL/pgSQL)
 
@@ -334,6 +395,6 @@ Para facilitar el despliegue y la migración, se generarán dos scripts agregado
 
 ---
 
-**Fecha de actualización del prompt:** 2026-09-13  
-**Versión del proyecto:** v0.1.1 (Auditoría de usuarios + usuario `investment_app` restringido)  
-**Próximo cambio planificado:** el proximo cambio a implementar es el servicio de actualizar usuario despues de haber echo login y solo puedes actualizar tu propio usuario, te dejara cambiar email, nombre completo, pais y celular.
+**Fecha de actualización del prompt:** 2026-09-19  
+**Versión del proyecto:** v0.1.2 (Ofuscación de datos sensibles en backend)  
+**Próximo cambio planificado:** servicio de obtener y actualización de perfil (`/api/auth/get-my-profile`, `/api/auth/update-my-profile`). Solo permite modificar el propio usuario. Campos editables: `email`, `nombre completo`, `país`, `celular`. Al implementarlo, se evaluará si `/api/auth/login` vuelve a devolver datos reales al dueño.
