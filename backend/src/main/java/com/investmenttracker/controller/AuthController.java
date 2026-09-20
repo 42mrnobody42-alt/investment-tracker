@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -21,14 +22,18 @@ import com.investmenttracker.model.request.ChangePasswordRequest;
 import com.investmenttracker.model.request.DeleteAccountRequest;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.request.RestartPasswordRequest;
+import com.investmenttracker.model.request.UpdateMyProfileRequest;
 import com.investmenttracker.model.response.LoginResponse;
+import com.investmenttracker.model.response.ProfileResponse;
 import com.investmenttracker.model.response.SuccessResponse;
 import com.investmenttracker.service.ChangeMyPasswordService;
+import com.investmenttracker.service.GetMyProfileService;
 import com.investmenttracker.service.LoginService;
 import com.investmenttracker.service.LogoutService;
 import com.investmenttracker.service.RefreshTokenService;
 import com.investmenttracker.service.RegisterService;
 import com.investmenttracker.service.RestartUserPasswordService;
+import com.investmenttracker.service.UpdateMyProfileService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +49,8 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final ChangeMyPasswordService changeMyPasswordService;
     private final RegisterService registerService;
+    private final GetMyProfileService getMyProfileService;
+    private final UpdateMyProfileService updateMyProfileService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -120,6 +127,30 @@ public class AuthController {
                     "No puedes eliminar la cuenta de otro usuario");
         }
         SuccessResponse response = registerService.deleteAccount(request.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Obtiene el perfil del propio usuario autenticado.
+     * El username se extrae del JWT; el usuario no puede consultar perfiles ajenos.
+     */
+    @GetMapping("/get-my-profile")
+    public ResponseEntity<ProfileResponse> getMyProfile(Authentication authentication) {
+        String authenticatedUsername = Objects.requireNonNull(authentication.getName(), "Username no puede ser null");
+        ProfileResponse response = getMyProfileService.getProfile(authenticatedUsername);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Actualiza el perfil del propio usuario autenticado.
+     * El username e id del request deben coincidir con el usuario del JWT.
+     */
+    @PostMapping("/update-my-profile")
+    public ResponseEntity<SuccessResponse> updateMyProfile(
+            @Valid @RequestBody UpdateMyProfileRequest request,
+            Authentication authentication) {
+        String authenticatedUsername = Objects.requireNonNull(authentication.getName(), "Username no puede ser null");
+        SuccessResponse response = updateMyProfileService.updateProfile(request, authenticatedUsername);
         return ResponseEntity.ok(response);
     }
 }

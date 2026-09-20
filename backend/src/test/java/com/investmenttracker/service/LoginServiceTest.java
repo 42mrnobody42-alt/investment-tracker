@@ -112,15 +112,13 @@ class LoginServiceTest {
                 when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
                 when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
                 when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token-demo-user-xyz123456789");
-                when(jwtService.getExpirationTime()).thenReturn(86400000L);
                 when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
 
                 LoginResponse response = loginService.login(request);
 
                 assertNotNull(response);
-                assertEquals("demo_user", response.getUsername());
                 assertEquals("jwt-token-demo-user-xyz123456789", response.getToken());
-                assertEquals("Bearer", response.getTokenType());
+                assertEquals("test-refresh-token", response.getRefreshToken());
                 verify(loginComponent).resetFailedAttempts(demoUser);
                 verify(auditContextService, times(1)).setCurrentUser("demo_user");
 
@@ -138,14 +136,13 @@ class LoginServiceTest {
                 when(loginComponent.findUserByUsername("admin")).thenReturn(Optional.of(adminUser));
                 when(loginComponent.isUserLocked("admin")).thenReturn(false);
                 when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token-admin-abc987654321");
-                when(jwtService.getExpirationTime()).thenReturn(86400000L);
                 when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
 
                 LoginResponse response = loginService.login(request);
 
                 assertNotNull(response);
-                assertEquals("admin", response.getUsername());
                 assertEquals("jwt-token-admin-abc987654321", response.getToken());
+                assertEquals("test-refresh-token", response.getRefreshToken());
                 verify(auditContextService, times(1)).setCurrentUser("admin");
 
                 System.out.println("✅ UT-02: Login admin exitoso");
@@ -220,8 +217,7 @@ class LoginServiceTest {
                 when(loginComponent.findUserByUsername("demo_user")).thenReturn(Optional.of(demoUser));
                 when(loginComponent.isUserLocked("demo_user")).thenReturn(false);
                 when(jwtService.generateToken(demoUser)).thenReturn("token-unico-demo-user-123456789");
-                when(jwtService.getExpirationTime()).thenReturn(86400000L);
-                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
+                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("refresh-demo");
 
                 LoginResponse demoResponse = loginService.login(
                                 LoginRequest.builder().username("demo_user").password("Demo123!").build());
@@ -229,8 +225,7 @@ class LoginServiceTest {
                 when(loginComponent.findUserByUsername("admin")).thenReturn(Optional.of(adminUser));
                 when(loginComponent.isUserLocked("admin")).thenReturn(false);
                 when(jwtService.generateToken(adminUser)).thenReturn("token-unico-admin-456987123");
-                when(jwtService.getExpirationTime()).thenReturn(86400000L);
-                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("test-refresh-token");
+                when(refreshTokenComponent.generateRefreshToken(any(String.class))).thenReturn("refresh-admin");
 
                 LoginResponse adminResponse = loginService.login(
                                 LoginRequest.builder().username("admin").password("Admin123!").build());
@@ -239,8 +234,10 @@ class LoginServiceTest {
                                 Objects.requireNonNull(demoResponse.getToken(), "Token demo no puede ser null"),
                                 Objects.requireNonNull(adminResponse.getToken(), "Token admin no puede ser null"),
                                 "Los tokens deben ser diferentes");
-                assertEquals("demo_user", demoResponse.getUsername());
-                assertEquals("admin", adminResponse.getUsername());
+                assertNotEquals(
+                                Objects.requireNonNull(demoResponse.getRefreshToken(), "Refresh demo no puede ser null"),
+                                Objects.requireNonNull(adminResponse.getRefreshToken(), "Refresh admin no puede ser null"),
+                                "Los refresh tokens deben ser diferentes");
 
                 verify(auditContextService, times(1)).setCurrentUser("demo_user");
                 verify(auditContextService, times(1)).setCurrentUser("admin");

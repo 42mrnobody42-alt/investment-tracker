@@ -40,7 +40,6 @@ class RefreshTokenIntegrationTest extends BaseIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists())
             .andExpect(jsonPath("$.refreshToken").exists())
-            .andExpect(jsonPath("$.tokenType").value("Bearer"))
             .andReturn();
 
         accessToken = extractField(result, "token");
@@ -66,7 +65,7 @@ class RefreshTokenIntegrationTest extends BaseIntegrationTest {
                 .content("{\"refreshToken\":\"" + refreshToken + "\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists())
-            .andExpect(jsonPath("$.username").value("admin"))
+            .andExpect(jsonPath("$.refreshToken").exists())
             .andReturn();
 
         String newAccessToken = extractField(result, "token");

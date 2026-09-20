@@ -24,12 +24,12 @@ public class RefreshTokenService {
     private final UserRepository userRepository;
 
     /**
-     * Refresca el access token usando el refresh token
+     * Refresca el access token usando el refresh token.
+     * Solo retorna el nuevo access token y el refresh token vigente.
      */
     public LoginResponse refreshAccessToken(String refreshToken) {
         Objects.requireNonNull(refreshToken, "Refresh token no puede ser null");
 
-        // Validar refresh token y obtener username
         String username = refreshTokenComponent.validateAndGetUsername(refreshToken);
 
         if (username == null) {
@@ -37,24 +37,16 @@ public class RefreshTokenService {
             throw new AuthenticationException(ErrorCode.TOKEN_EXPIRED);
         }
 
-        // Buscar usuario
         User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new AuthenticationException(ErrorCode.USER_NOT_FOUND));
 
-        // Generar nuevo access token
         String newAccessToken = jwtService.generateToken(user);
 
         log.info("Access token renovado para usuario: {}", username);
 
         return LoginResponse.builder()
                 .token(newAccessToken)
-                .tokenType("Bearer")
-                .expiresIn(jwtService.getExpirationTime())
                 .refreshToken(refreshToken)
-                .refreshTokenExpiresIn((long) java.time.Duration.ofHours(1).toMillis())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .nombreCompleto(user.getNombreCompleto())
                 .build();
     }
 }

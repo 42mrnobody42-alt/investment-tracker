@@ -10,7 +10,7 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 
 ---
 
-# 🧠 CONDICIONES DE DESARROLLO PARA LA IA (actualizadas al 2026-09-19)
+# 🧠 CONDICIONES DE DESARROLLO PARA LA IA (actualizadas al 2026-09-20)
 
 ## 📁 Estructura de ramas en Git
 
@@ -41,6 +41,8 @@ Quiero que guardes este promp en un directorio de promps para el proyecto en for
 - **Auditoría**: PostgreSQL trigger + wrapper `DataSource` (`AuditUserAwareDataSource`)
 - **Ofuscación de datos**: `@Masked` + `MaskedSerializer` (Jackson) + `MaskingFilter`, controlado por `MaskingContext` (ThreadLocal)
 - **Filtro de logs sensibles**: `LogSanitizer` + `SensitiveFieldsProperties` (lista editable vía `application.yml`)
+- **Validación**: Jakarta Bean Validation (`@Valid`) + validaciones de servicio. Los errores de `@Valid` se reportan como `SYS-03` (500) sin detalle.
+- **Perfil de usuario**: `/api/auth/get-my-profile` (GET) y `/api/auth/update-my-profile` (POST).
 
 ---
 
@@ -157,24 +159,57 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 - **Ofuscación de datos sensibles**: capa transversal `MaskingFilter` + `@Masked` + `MaskedSerializer`. Los campos anotados (`email`, `nombreCompleto`, `celular`) se enmascaran a la salida. Extensible vía `MaskType`.
 - **Filtro de logs**: `LogSanitizer` + `SensitiveFieldsProperties` (lista configurable en `application.yml → security.sensitive-fields`).
 
-## 📡 Endpoints publicados (API REST)
+## 👤 Perfil de Usuario
 
-| Endpoint                           | Método | Auth                   | Descripción                                                                         |
-| ---------------------------------- | ------ | ---------------------- | ----------------------------------------------------------------------------------- |
-| `/api/auth/login`                  | POST   | No                     | Login - Retorna JWT + Refresh Token (**email, nombreCompleto y celular ofuscados**) |
-| `/api/auth/restart-password`       | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario                                         |
-| `/api/auth/refresh-token`          | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido                              |
-| `/api/auth/register/request`       | POST   | No                     | Solicitar registro - envía token de 6 dígitos por email                             |
-| `/api/auth/register/confirm`       | POST   | No                     | Confirmar registro con token y crear usuario                                        |
-| `/api/auth/delete-account`         | POST   | JWT (propietario)      | Borrado lógico de la cuenta (activo = false)                                        |
-| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas)   | Borrado definitivo en cascada para pruebas                                          |
-| `/api/test/health`                 | GET    | No                     | Health check del servicio                                                           |
-| `/api/encryption/encrypt`          | POST   | ADMIN                  | Encriptar texto con AES-GCM                                                         |
-| `/api/encryption/decrypt`          | POST   | ADMIN                  | Desencriptar texto con AES-GCM                                                      |
-| `/api/auth/logout`                 | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token                                |
-| `/api/auth/recovery/request`       | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email                            |
-| `/api/auth/recovery/verify`        | POST   | No                     | Verificar token y cambiar contraseña                                                |
-| `/api/auth/change-my-pass`         | POST   | JWT                    | Cambiar contraseña propia con validación actual                                     |
+Servicios para que el usuario autenticado consulte y modifique **su propio** perfil.
+
+### Reglas de negocio
+
+1. **Solo el propio usuario**: el `username` del request debe coincidir con el del JWT. También el `id` del request debe coincidir con el del usuario autenticado.
+2. **Campos editables**: `email`, `nombreCompleto`, `paisId`, `celular`.
+3. **Campos NO editables**: `username`, `password_hash`, `activo`, `roles`, `id`, `ultimo_login`.
+4. **Todos los campos son obligatorios** (`@NotNull`/`@NotBlank` en `UpdateMyProfileRequest`).
+5. **Unicidad case-insensitive**: se valida que `email` y `(pais_id, celular)` no estén en uso por OTRO usuario. La comparación es case-insensitive pero el valor **se guarda tal cual** lo envía el usuario (solo `trim`).
+6. **País debe existir y estar activo**.
+7. **Auditoría automática**: el trigger `trg_audit_usuarios` registra el UPDATE con `operacion='U'` y `usuario_aplicacion=<username del JWT>`.
+
+### Respuesta de éxito (update)
+
+```json
+{
+  "code": "UPT-0001",
+  "message": "Actualización del usuario con éxito!!",
+  "timestamp": "2026-09-19T16:24:32.252"
+}
+```
+
+---
+
+## 2.4 — Tabla de Endpoints publicados
+
+**Ubicación**: sección `## 📡 Endpoints publicados (API REST)`.
+
+**Reemplazar la tabla completa** por:
+
+````markdown
+| Endpoint                           | Método | Auth                   | Descripción                                                              |
+| ---------------------------------- | ------ | ---------------------- | ------------------------------------------------------------------------ |
+| `/api/auth/login`                  | POST   | No                     | Login - Retorna **solo** `token` y `refreshToken`                        |
+| `/api/auth/refresh-token`          | POST   | No (usa refresh token) | Renueva el access token - Retorna `token` y `refreshToken`               |
+| `/api/auth/logout`                 | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token                     |
+| `/api/auth/restart-password`       | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario                              |
+| `/api/auth/change-my-pass`         | POST   | JWT                    | Cambiar contraseña propia con validación actual                          |
+| `/api/auth/delete-account`         | POST   | JWT (propietario)      | Borrado lógico de la cuenta                                              |
+| `/api/auth/get-my-profile`         | GET    | JWT                    | Obtener perfil del usuario autenticado                                   |
+| `/api/auth/update-my-profile`      | POST   | JWT (propietario)      | Actualizar perfil propio: `email`, `nombreCompleto`, `paisId`, `celular` |
+| `/api/auth/register/request`       | POST   | No                     | Solicitar registro - envía token 6 dígitos por email                     |
+| `/api/auth/register/confirm`       | POST   | No                     | Confirmar registro con token                                             |
+| `/api/auth/recovery/request`       | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email                 |
+| `/api/auth/recovery/verify`        | POST   | No                     | Verificar token y cambiar contraseña                                     |
+| `/api/encryption/encrypt`          | POST   | ADMIN                  | Encriptar texto con AES-GCM                                              |
+| `/api/encryption/decrypt`          | POST   | ADMIN                  | Desencriptar texto con AES-GCM                                           |
+| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas)   | Borrado definitivo en cascada                                            |
+| `/api/test/health`                 | GET    | No                     | Health check del servicio                                                |
 
 ## 🧪 Pruebas automatizadas
 
@@ -228,6 +263,10 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 10. **Nunca loggear campos sensibles**: usar `LogSanitizer.sanitize(fieldName, value)` antes de escribir cualquier dato que esté en `security.sensitive-fields`. Si el campo no está en la lista y debería estarlo, agregarlo primero a `application.yml`.
 11. **La ofuscación ocurre solo a la salida**: nunca en el dominio ni en las validaciones internas. Los servicios usan datos reales; el JSON los enmascara.
 12. **Si un endpoint debe devolver datos propios sin enmascarar**, agregarlo a `OWN_DATA_PATHS` en `MaskingFilter`. Documentar por qué.
+13. **Manejo de errores de validación Jakarta (`@Valid`)**: se reportan con el código `SYS-03` (`INVALID_ARGUMENTS`) y HTTP 500. **Nunca** exponer al cliente el detalle de los campos que fallaron. El detalle se registra en logs con `log.warn`. Los errores de validación de negocio (en el servicio) siguen usando sus códigos específicos (`PWD-*`, `VAL-005`, etc.) con HTTP 400.
+14. **Login minimalista**: `/api/auth/login` y `/api/auth/refresh-token` retornan **únicamente** `token` y `refreshToken`. No exponer `username`, `email`, `nombreCompleto`, `celular`, `pais`, `tokenType`, `expiresIn` ni `refreshTokenExpiresIn`. Los datos personales se consultan por separado con `/api/auth/get-my-profile`.
+15. **Perfil propio**: los endpoints `/api/auth/get-my-profile` y `/api/auth/update-my-profile` solo operan sobre el usuario autenticado. El `username` e `id` del request deben coincidir con el JWT. Agregar `/api/auth/get-my-profile` a `OWN_DATA_PATHS` del `MaskingFilter` si devuelve datos reales.
+16. **Email/nombreCompleto preservados**: al registrar o actualizar, guardar el email y `nombreCompleto` tal cual los envía el usuario (solo `trim`). Las comparaciones de unicidad son **case-insensitive**, pero el valor **almacenado** conserva el case original.
 
 ## 📊 Gestión del Proyecto
 
@@ -262,6 +301,9 @@ Sección dedicada a la **bitácora de cambios** del sistema. Por ahora solo se i
 - **Auditoría**: cuando se modifiquen datos sensibles, el usuario autenticado se propaga automáticamente vía `AuditUserAwareDataSource`. Si el flujo no tiene JWT (ej: login), invocar explícitamente `AuditContextService.setCurrentUser(username)`.
 - **Ofuscación**: cualquier DTO de respuesta que exponga datos sensibles debe anotar el campo con `@Masked(MaskType.XXX)`. Agregar tipos nuevos a `MaskType` y a `DataMasking.mask` cuando se necesite. No ofuscar en el dominio; solo en serialización.
 - **Logs**: usar `LogSanitizer` antes de loggear datos que estén en `security.sensitive-fields`.
+- **Validación de campos**: usar `@NotBlank`/`@NotNull` en `*Request.java` para validación sintáctica. Los errores de `@Valid` se manejan en `GlobalExceptionHandler.handleValidationException()` y se reportan como `SYS-03` (500) sin detalle. Las validaciones de negocio van en el servicio y devuelven códigos específicos con 400.
+- **Endpoints de "mi propio X"**: cuando un endpoint solo opera sobre el usuario autenticado (ej: `get-my-profile`, `update-my-profile`, `change-my-pass`), validar siempre que el `username`/`id` del request coincida con el JWT. Si no coincide → `AUTH-007` (403).
+- **Preservación de datos de usuario**: no forzar `toLowerCase()` ni transformaciones sobre `email`/`nombreCompleto` al persistir. Solo `trim()`.
 
 ### Base de Datos (PostgreSQL / PL/pgSQL)
 
@@ -395,6 +437,12 @@ Para facilitar el despliegue y la migración, se generarán dos scripts agregado
 
 ---
 
-**Fecha de actualización del prompt:** 2026-09-19  
-**Versión del proyecto:** v0.1.2 (Ofuscación de datos sensibles en backend)  
-**Próximo cambio planificado:** servicio de obtener y actualización de perfil (`/api/auth/get-my-profile`, `/api/auth/update-my-profile`). Solo permite modificar el propio usuario. Campos editables: `email`, `nombre completo`, `país`, `celular`. Al implementarlo, se evaluará si `/api/auth/login` vuelve a devolver datos reales al dueño.
+\*Fecha de actualización del prompt:** 2026-09-20  
+**Versión del proyecto:** v0.1.3 (Perfil de usuario + `SYS-03` + login minimalista)  
+**Próximo cambio planificado:\*\*
+
+- Implementar frontend para website para pc, celular, tablet que sea auto configurable con el ancho de la pantalla, y si es de celular se hara una configuración especial por su manejo vertical, en vez del horizontal del pc, tv o tablet.
+- Se deben implementar con traducción internacional i18n para ingles y español.
+- Empezaremos creando los componentes (botones, pop-up info/warning/error, tablas, espacio de graficos con amplicación de pantalla, etc), crearemos vista (login, logut, home, consulta de datos, edición de datos) las vistas internas deben mantener un esquema dividido en 3 partes una barra superior informativa, barra lateral izquierda de procesos plegables, espacio de trabajo debajo de la barra superior y la lado derecho de la barra de procesos.
+- PASAR POR LA IA PARA que analise y me pregunte para crear un RPA (solicitud de requisitos) del frontend que llevamos (manejo de usuarios), pero con proyección para lo que vamos a necesitar del proyecto para centralizar sus inversiones y obtener información de valor que le permita aprovechar oporunidades de compra y venta de acciones del interes del usuario, apartir de un analisis tecnico o social (elección del usuario)
+````

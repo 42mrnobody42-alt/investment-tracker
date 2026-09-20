@@ -1,6 +1,7 @@
 package com.investmenttracker.exception;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -44,21 +45,33 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
+    /**
+     * Maneja los errores de validación de Jakarta Bean Validation (@Valid).
+     * <p>
+     * Se registra el detalle del fallo en logs (nivel WARN) para debugging,
+     * pero NO se expone en la respuesta al cliente. Todos los fallos de
+     * validación se reportan con el mismo código {@code SYS-03} y status 500
+     * para no filtrar información sobre qué campos específicos fallaron.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
         String details = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .reduce((a, b) -> a + "; " + b)
                 .orElse("Error de validación");
+        log.warn("Validación fallida: {}", details);
 
         ErrorResponse error = ErrorResponse.builder()
-                .code("VAL-001")
-                .message("Error de validación")
+                .code(ErrorCode.INVALID_ARGUMENTS.getCode())
+                .message(ErrorCode.INVALID_ARGUMENTS.getMessage())
                 .timestamp(LocalDateTime.now())
-                .details(details)
                 .build();
 
-        return ResponseEntity.badRequest().body(error);
+        HttpStatusCode status = Objects.requireNonNull(
+                ErrorCode.INVALID_ARGUMENTS.getHttpStatus(),
+                "HttpStatus no puede ser null");
+
+        return ResponseEntity.status(status).body(error);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -73,7 +86,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        log.error("Error no controlado: ", ex); // <-- esto imprime el stacktrace
+        log.error("Error no controlado: ", ex);
         ErrorResponse error = ErrorResponse.builder()
                 .code(ErrorCode.INTERNAL_ERROR.getCode())
                 .message(ErrorCode.INTERNAL_ERROR.getMessage())

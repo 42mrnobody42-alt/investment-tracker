@@ -44,7 +44,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(@NonNull HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> 
+            .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
@@ -59,6 +59,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/restart-password").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/auth/change-my-pass").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/auth/delete-account").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/auth/update-my-profile").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/auth/get-my-profile").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/encryption/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -67,7 +69,7 @@ public class SecurityConfig {
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
             .logout(logout -> logout.disable());
-        
+
         return http.build();
     }
 }

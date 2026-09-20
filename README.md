@@ -82,6 +82,11 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
 
 - [3. Backend - Java Spring Boot](#3-backend---java-spring-boot-3x)
   - [Servicios Publicados](#servicios-publicados)
+    - [🔐 Seguridad](#-seguridad)
+    - [🔑 Login](#-login)
+    - [👤 Usuarios](#-usuarios)
+    - [💼 Negocio](#-negocio)
+    - [🧪 Sistema / Utilidades](#-sistema--utilidades)
   - [Diagrama de Secuencia de los Servicios](#diagrama-de-secuencia-de-los-servicios-publicados)
     - [Login](#login-1)
     - [Restart Password (solo ADMIN)](#restart-password-solo-admin)
@@ -93,15 +98,19 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
     - [Change My Password](#change-my-password)
     - [Registro de Usuario](#registro-de-usuario)
     - [Borrado de Cuenta](#borrado-de-cuenta)
+    - [Obtener Perfil Propio (GET)](#obtener-perfil-propio-get)
+    - [Actualizar Perfil Propio (POST)](#actualizar-perfil-propio-post)
     - [Ofuscación de salida (login enmascarado)](#ofuscación-de-salida-login-enmascarado)
     - [Endpoint de datos propios (sin ofuscar)](#endpoint-de-datos-propios-sin-ofuscar)
   - [Seguridad](#seguridad)
+  - [Perfil de Usuario](#perfil-de-usuario)
   - [Ofuscación de datos sensibles](#ofuscación-de-datos-sensibles)
     - [Componentes](#componentes)
     - [Formatos de ofuscación](#formatos-de-ofuscación)
     - [Decisión de diseño](#decisión-de-diseño)
     - [Cómo extender](#cómo-extender)
     - [Filtro de logs sensibles](#filtro-de-logs-sensibles)
+  - [Códigos de Error](#códigos-de-error)
   - [Pruebas](#pruebas)
 
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
@@ -440,22 +449,70 @@ Cada registro guarda:
 
 ### Servicios Publicados
 
-| Endpoint                           | Método | Auth                   | Descripción                                              |
-| ---------------------------------- | ------ | ---------------------- | -------------------------------------------------------- |
-| `/api/auth/login`                  | POST   | No                     | Login - Retorna JWT + Refresh Token                      |
-| `/api/auth/restart-password`       | POST   | ADMIN                  | Restablecer contraseña de cualquier usuario              |
-| `/api/auth/refresh-token`          | POST   | No (usa refresh token) | Renueva el access token usando un refresh token válido   |
-| `/api/auth/logout`                 | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token     |
-| `/api/auth/register/request`       | POST   | No                     | Solicitar registro - envía token de 6 dígitos por email  |
-| `/api/auth/register/confirm`       | POST   | No                     | Confirmar registro con token y crear usuario             |
-| `/api/auth/delete-account`         | POST   | JWT (propietario)      | Borrado lógico de la cuenta (activo = false)             |
-| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas)   | Borrado definitivo en cascada para pruebas               |
-| `/api/auth/recovery/request`       | POST   | No                     | Solicitar recuperación - envía token 6 dígitos por email |
-| `/api/auth/recovery/verify`        | POST   | No                     | Verificar token y cambiar contraseña                     |
-| `/api/auth/change-my-pass`         | POST   | JWT                    | Cambiar contraseña propia con validación actual          |
-| `/api/encryption/encrypt`          | POST   | ADMIN                  | Encriptar texto con AES-GCM                              |
-| `/api/encryption/decrypt`          | POST   | ADMIN                  | Desencriptar texto con AES-GCM                           |
-| `/api/test/health`                 | GET    | No                     | Health check del servicio                                |
+#### 🔐 Seguridad
+
+Servicios criptográficos de uso administrativo.
+
+| Endpoint                  | Método | Auth  | Descripción                        |
+| ------------------------- | ------ | ----- | ---------------------------------- |
+| `/api/encryption/encrypt` | POST   | ADMIN | Encriptar texto con AES-256-GCM    |
+| `/api/encryption/decrypt` | POST   | ADMIN | Desencriptar texto con AES-256-GCM |
+
+#### 🔑 Login
+
+Autenticación, renovación de sesión y cierre de sesión.
+
+| Endpoint                  | Método | Auth                   | Descripción                                                |
+| ------------------------- | ------ | ---------------------- | ---------------------------------------------------------- |
+| `/api/auth/login`         | POST   | No                     | Login - Retorna **solo** `token` y `refreshToken`          |
+| `/api/auth/refresh-token` | POST   | No (usa refresh token) | Renueva el access token - Retorna `token` y `refreshToken` |
+| `/api/auth/logout`        | POST   | JWT                    | Cerrar sesión - invalida el token y el refresh token       |
+
+#### 👤 Usuarios
+
+Registro, recuperación, cambio de contraseña y gestión del perfil propio.
+
+| Endpoint                      | Método | Auth              | Descripción                                                              |
+| ----------------------------- | ------ | ----------------- | ------------------------------------------------------------------------ |
+| `/api/auth/register/request`  | POST   | No                | Solicitar registro - envía token 6 dígitos por email                     |
+| `/api/auth/register/confirm`  | POST   | No                | Confirmar registro con token y crear usuario                             |
+| `/api/auth/recovery/request`  | POST   | No                | Solicitar recuperación - envía token 6 dígitos por email                 |
+| `/api/auth/recovery/verify`   | POST   | No                | Verificar token y cambiar contraseña                                     |
+| `/api/auth/change-my-pass`    | POST   | JWT               | Cambiar contraseña propia con validación actual                          |
+| `/api/auth/restart-password`  | POST   | ADMIN             | Restablecer contraseña de cualquier usuario                              |
+| `/api/auth/delete-account`    | POST   | JWT (propietario) | Borrado lógico de la cuenta (`activo = false`)                           |
+| `/api/auth/get-my-profile`    | GET    | JWT               | Obtener el perfil del usuario autenticado (datos reales)                 |
+| `/api/auth/update-my-profile` | POST   | JWT (propietario) | Actualizar perfil propio: `email`, `nombreCompleto`, `paisId`, `celular` |
+
+#### 💼 Negocio
+
+**Endpoints planificados** (aún no implementados). Se documentarán cuando se construyan las features asociadas.
+
+| Endpoint esperado               | Método | Auth        | Descripción                                          |
+| ------------------------------- | ------ | ----------- | ---------------------------------------------------- |
+| `/api/plataformas`              | GET    | JWT         | Listar plataformas del usuario autenticado           |
+| `/api/plataformas`              | POST   | JWT         | Registrar una nueva plataforma                       |
+| `/api/plataformas/{id}`         | PUT    | JWT (dueño) | Actualizar una plataforma                            |
+| `/api/plataformas/{id}`         | DELETE | JWT (dueño) | Borrado lógico de una plataforma                     |
+| `/api/comisiones`               | GET    | JWT         | Consultar comisiones vigentes por plataforma         |
+| `/api/transacciones`            | GET    | JWT         | Listar transacciones del usuario (con filtros)       |
+| `/api/transacciones`            | POST   | JWT         | Registrar compra/venta de acciones                   |
+| `/api/transacciones/{id}`       | GET    | JWT (dueño) | Detalle de una transacción                           |
+| `/api/transacciones/resumen`    | GET    | JWT         | Resumen de posiciones actuales por símbolo           |
+| `/api/calculadora/venta-optima` | POST   | JWT/PREMIUM | Calcular precio mínimo y cantidad óptima de venta    |
+| `/api/calculadora/historial`    | GET    | JWT         | Historial de cálculos de venta óptima                |
+| `/api/dashboard/resumen`        | GET    | JWT         | Total de movimientos y resultado (positivo/negativo) |
+
+> Los endpoints de negocio implementarán las funciones PL/pgSQL `obtener_comision_actual`, `calcular_comision`, `resumen_inversiones` y `calcular_venta_optima` documentadas en [Funciones PL/pgSQL Disponibles](#funciones-plpgsql-disponibles).
+
+#### 🧪 Sistema / Utilidades
+
+Endpoints de diagnóstico y pruebas (no para producción).
+
+| Endpoint                           | Método | Auth                 | Descripción                                |
+| ---------------------------------- | ------ | -------------------- | ------------------------------------------ |
+| `/api/test/health`                 | GET    | No                   | Health check del servicio                  |
+| `/api/test/delete-user/{username}` | DELETE | ADMIN (solo pruebas) | Borrado definitivo en cascada para pruebas |
 
 ### Diagrama de secuencia de Los Servicios publicados:
 
@@ -473,9 +530,9 @@ sequenceDiagram
     B->>B: Validar: bloqueo? activo? BCrypt.verify()? intentos?
     alt Login exitoso
         B->>B: Reset intentos fallidos
-        B->>B: Generar JWT (HMAC-SHA384, expiración 24h)
+        B->>B: Generar JWT (HMAC-SHA384)
         B->>B: Generar Refresh Token (aleatorio 64 bytes, TTL 1h)
-        B-->>U: 200 OK [token, refreshToken, tokenType, expiresIn, refreshTokenExpiresIn, username, email, nombreCompleto]
+        B-->>U: 200 OK [token, refreshToken]
     else Contraseña incorrecta
         B->>B: Registrar intento fallido (máx 3)
         B-->>U: 401 [code: AUTH-001, message: Credenciales inválidas]
@@ -483,6 +540,8 @@ sequenceDiagram
         B-->>U: 423 [code: AUTH-002, message: Cuenta bloqueada]
     end
 ```
+
+> **Nota**: la respuesta del login solo contiene `token` y `refreshToken`. Los datos personales se consultan por separado en `/api/auth/get-my-profile`.
 
 #### Restart Password (solo ADMIN)
 
@@ -726,6 +785,59 @@ sequenceDiagram
     B-->>U: 200 OK {message: Usuario eliminado definitivamente}
 ```
 
+#### Obtener Perfil Propio (GET)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant B as Backend
+    participant F as MaskingFilter
+    participant S as GetMyProfileService
+    participant DB as PostgreSQL
+
+    U->>F: GET /api/auth/get-my-profile
+    Note right of U: Header: Authorization: Bearer JWT
+    F->>F: ¿Path en OWN_DATA_PATHS?
+    Note right of F: SÍ → disable masking
+    F->>B: forward
+    B->>B: Extraer username del JWT
+    B->>S: getProfile(username)
+    S->>DB: SELECT usuario + pais
+    DB-->>S: User
+    S-->>B: ProfileResponse [id, username, email, nombreCompleto, celular, pais, activo, ultimoLogin, createdAt]
+    B-->>U: 200 OK [datos reales sin ofuscar]
+```
+
+#### Actualizar Perfil Propio (POST)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant B as Backend
+    participant S as UpdateMyProfileService
+    participant DB as PostgreSQL
+
+    U->>B: POST /api/auth/update-my-profile [id, username, email, nombreCompleto, paisId, celular]
+    Note right of U: Header: Authorization: Bearer JWT
+    B->>B: Extraer username del JWT
+    B->>S: updateProfile(request, jwtUsername)
+    S->>S: Validar campos obligatorios (Jakarta @Valid)
+    S->>DB: SELECT usuario por username
+    DB-->>S: User
+    S->>S: ¿username del JWT == username del request? (no → 403)
+    S->>S: ¿id del request == id del usuario? (no → 403)
+    S->>S: ¿usuario activo? (no → 403)
+    S->>DB: ¿email ya registrado por OTRO? (sí → 409)
+    S->>DB: ¿(paisId, celular) ya registrado por OTRO? (sí → 409)
+    S->>DB: SELECT pais por paisId
+    DB-->>S: Pais activo
+    S->>DB: UPDATE usuarios SET email, nombreCompleto, pais_id, celular
+    Note over DB: Trigger registra operacion='U' con usuario_aplicacion
+    DB-->>S: OK
+    S-->>B: SuccessResponse
+    B-->>U: 200 OK [code: UPT-0001, message: Actualización del usuario con éxito!!]
+```
+
 #### Ofuscación de salida (login enmascarado)
 
 ```mermaid
@@ -792,6 +904,59 @@ sequenceDiagram
 - **Propagación del usuario autenticado**: `AuditUserAwareDataSource` (wrapper del `DataSource`) lee `SecurityContextHolder` y ejecuta `set_config('app.audit_user', <username>, false)` en cada `getConnection()`. El valor es consumido por el trigger de auditoría. `AuditContextService.setCurrentUser(username)` (con `Propagation.MANDATORY`) permite forzar el usuario durante el login, antes de que el JWT sea emitido.
 - **Registro de usuarios**: proceso en dos pasos con confirmación por email (token de 6 dígitos, TTL 5 min). Validación de unicidad de `username`, `email` y `(pais_id, celular)`. Asignación de rol según plan (`FREE` → `ROLE_USER`, `PREMIUM` → `ROLE_PREMIUM`).
 - **Borrado de cuenta**: lógico (cambia `activo` a `false`) solo para el propio usuario autenticado. Existe un endpoint adicional de borrado definitivo en cascada para pruebas (solo ADMIN).
+- **Login minimalista**: el endpoint `/api/auth/login` retorna **únicamente** `token` y `refreshToken`.
+- **Consultar datos personales** del usuario JWT en el endpoint `/api/auth/get-my-profile`.
+- **Actualización de perfil propio**: `/api/auth/update-my-profile` solo permite actualizar el **propio** usuario. Valida que el `username` e `id` del request coincidan con el JWT. Campos editables: `email`, `nombreCompleto`, `paisId`, `celular`. El email y `nombreCompleto` se guardan **tal cual** los envía el usuario (solo trim), preservando mayúsculas/minúsculas.
+- **Unicidad case-insensitive**: tanto el registro como la actualización comparan email con `equalsIgnoreCase` y `findByEmailIgnoreCase`, pero el valor **almacenado** conserva el case original del usuario.
+
+### Perfil de Usuario
+
+Servicios para que el usuario autenticado consulte y modifique **su propio** perfil. Solo operan sobre el usuario autenticado vía JWT; no permiten leer ni modificar datos de terceros.
+
+#### Reglas de negocio
+
+1. **Solo el propio usuario**: el `username` del request debe coincidir con el del JWT. Adicionalmente, el `id` del request debe coincidir con el `id` del usuario autenticado.
+2. **Campos editables**: `email`, `nombreCompleto`, `paisId`, `celular`.
+3. **Campos NO editables**: `username`, `password_hash`, `activo`, `roles`, `id`, `ultimo_login`.
+4. **Todos los campos son obligatorios**: el `UpdateMyProfileRequest` usa `@NotNull`/`@NotBlank` en todos sus campos.
+5. **Unicidad case-insensitive**: se valida que `email` y `(pais_id, celular)` no estén en uso por OTRO usuario. La comparación es case-insensitive (`equalsIgnoreCase` + `findByEmailIgnoreCase`) pero el valor **se guarda tal cual** lo envía el usuario (solo `trim`), preservando mayúsculas/minúsculas.
+6. **País debe existir y estar activo**.
+7. **Auditoría automática**: el trigger `trg_audit_usuarios` registra el UPDATE con `operacion='U'` y `usuario_aplicacion=<username del JWT>`.
+
+#### Respuesta de éxito (update)
+
+```json
+{
+  "code": "UPT-0001",
+  "message": "Actualización del usuario con éxito!!",
+  "timestamp": "2026-09-19T16:24:32.252"
+}
+```
+
+#### Códigos de error relevantes
+
+| Situación                         | Código                | HTTP |
+| --------------------------------- | --------------------- | ---- |
+| Campos vacíos (Jakarta `@Valid`)  | `SYS-03`              | 500  |
+| `username`/`id` ajenos            | `AUTH-007`            | 403  |
+| Email ya registrado por otro      | `REG-002`             | 409  |
+| `(paisId, celular)` ya registrado | `REG-003`             | 409  |
+| País inexistente o inactivo       | `REG-007`             | 404  |
+| Usuario no encontrado             | `BIZ-001`             | 404  |
+| Sin JWT (Spring Security)         | _(formato Spring)_    | 403  |
+| JWT inválido o expirado           | `AUTH-005`/`AUTH-006` | 401  |
+
+#### Modelos
+
+- **Request (`UpdateMyProfileRequest`)**: `id` (UUID), `username` (String), `email` (String), `nombreCompleto` (String), `paisId` (UUID), `celular` (Long). Todos obligatorios.
+- **Response GET (`ProfileResponse`)**: `id`, `username`, `email`, `nombreCompleto`, `celular`, `pais` (PaisDTO), `activo`, `ultimoLogin`, `createdAt`.
+- **Response POST (update)**: `SuccessResponse` con `code = UPT-0001`.
+
+#### Ofuscación
+
+- `/api/auth/get-my-profile` está en `OWN_DATA_PATHS` del `MaskingFilter` → devuelve datos **reales** al dueño (email, `nombreCompleto`, `celular` sin enmascarar).
+- `/api/auth/login` y `/api/auth/refresh-token` **no retornan datos personales** (solo `token` y `refreshToken`).
+- El resto de endpoints aplica la máscara por defecto según `MaskType`.
 
 ### Ofuscación de datos sensibles
 
@@ -823,7 +988,11 @@ Capa transversal del backend que enmascara campos sensibles **a la salida** (ser
 
 - Endpoints en `OWN_DATA_PATHS` (por ejemplo `/api/auth/refresh-token`) devuelven datos reales del propio usuario.
 - El resto de endpoints aplican la máscara por defecto.
-- **Estado actual**: `/api/auth/login` devuelve datos **enmascarados** (`email`, `nombreCompleto`, `celular`). Se mantendrá así hasta implementar el servicio de **actualizar perfil de usuario** (`/api/auth/update-my-profile`), que permitirá al usuario consultar y modificar sus datos.
+- **Estado actual**:
+  - `/api/auth/login` **no retorna datos personales** (solo `token` y `refreshToken`).
+  - `/api/auth/refresh-token` **no retorna datos personales** (solo `token` y `refreshToken`).
+  - `/api/auth/get-my-profile` está en `OWN_DATA_PATHS`
+  - El resto de endpoints aplica la máscara por defecto.
 
 #### Cómo extender
 
@@ -874,11 +1043,57 @@ log.debug("Usuario {} - Email: {}", username, logSanitizer.sanitize("email", use
 
 La lista se puede modificar sin recompilar, solo reiniciando el backend.
 
+### Códigos de Error
+
+El backend utiliza un esquema de códigos agrupados por dominio. Se devuelven en el campo `code` de `ErrorResponse`.
+
+#### Códigos por dominio
+
+| Prefijo  | Dominio                               | Ejemplos                                                                                 |
+| -------- | ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `AUTH-*` | Autenticación y autorización          | `AUTH-001` credenciales inválidas, `AUTH-007` acceso denegado, `AUTH-008` no autenticado |
+| `REG-*`  | Registro y unicidad                   | `REG-001` username existe, `REG-002` email existe, `REG-007` país no encontrado          |
+| `REC-*`  | Recuperación de contraseña (2FA SMTP) | `REC-001` intentos excedidos, `REC-004` usuario no coincide                              |
+| `PWD-*`  | Contraseña                            | `PWD-001` no coinciden, `PWD-002` no cumple criterios, `PWD-003` actual incorrecta       |
+| `VAL-*`  | Validaciones de negocio               | `VAL-001` error de validación, `VAL-005` campos vacíos                                   |
+| `ENC-*`  | Encriptación AES-GCM                  | `ENC-001` error al encriptar, `ENC-003` texto null/vacío                                 |
+| `BIZ-*`  | Reglas de negocio                     | `BIZ-001` usuario no encontrado, `BIZ-002` plataforma no encontrada                      |
+| `RATE-*` | Rate limiting                         | `RATE-001` demasiadas peticiones                                                         |
+| `SYS-*`  | Errores internos y sistema            | `SYS-001` error interno, `SYS-02` error de conexión, `SYS-03` argumentos inválidos       |
+
+#### Cambio destacado: `SYS-03` — Argumentos Inválidos
+
+A partir de la fecha de esta versión, los errores de **Jakarta Bean Validation** (`@Valid` en el controller, disparados por `@NotNull`, `@NotBlank`, `@Size`, etc.) se reportan con el código `SYS-03` y HTTP **500**:
+
+```json
+{
+  "code": "SYS-03",
+  "message": "Argumentos invalidos",
+  "timestamp": "2026-09-19T16:24:32.252383273"
+}
+```
+
+**Motivación**: no exponer al cliente detalles internos sobre qué campos específicos fallaron. El detalle **sí** se registra en logs del backend con `log.warn("Validación fallida: {}", details)`.
+
+**Distinción importante**:
+
+| Tipo de error                                          | Código                   | HTTP | Detalle en la respuesta |
+| ------------------------------------------------------ | ------------------------ | ---- | ----------------------- |
+| Validación Jakarta (`@Valid`, `@NotBlank`, `@NotNull`) | `SYS-03`                 | 500  | ❌ No expone detalle    |
+| Validación de negocio (servicio)                       | `PWD-*`, `VAL-005`, etc. | 400  | ✅ Mensaje específico   |
+
+**Ejemplos**:
+
+- `POST /api/auth/update-my-profile` con campos vacíos → `SYS-03` (500)
+- `POST /api/auth/restart-password` con passwords que no coinciden → `PWD-001` (400)
+- `POST /api/auth/change-my-pass` con password muy corta → `SYS-03` (500, disparado por `@Size`)
+- `POST /api/auth/login` con usuario bloqueado → `AUTH-002` (423)
+
 ### Pruebas
 
-- **89 pruebas automatizadas** (integración + unitarias)
+- **100 pruebas automatizadas** (integración + unitarias)
 
-- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos, refresh token, registro de usuario, borrado de cuenta, auditoría de usuarios.
+- Cobertura: login, restart-password, change-my-password, recuperación 2FA SMTP, encriptación AES-GCM, control de roles, bloqueos, refresh token, registro de usuario, borrado de cuenta, auditoría de usuarios, perfil propio (get/update).
 
 - Ejecutar todas: `mvn test`
 
@@ -886,7 +1101,7 @@ La lista se puede modificar sin recompilar, solo reiniciando el backend.
 
 ```mermaid
 graph TB
-    subgraph "ORDEN DE EJECUCIÓN DE PRUEBAS - 89 tests"
+    subgraph "ORDEN DE EJECUCIÓN DE PRUEBAS - 100 tests"
         A["1️⃣ ChangeMyPasswordIntegrationTest<br/>11 pruebas<br/>Cambio de contraseña propia"]
         B["2️⃣ AuthIntegrationTest<br/>31 pruebas<br/>Login, restart-password, logout"]
         C["3️⃣ EncryptionIntegrationTest<br/>7 pruebas<br/>Encriptación AES-256-GCM"]
@@ -894,22 +1109,24 @@ graph TB
         E["5️⃣ RateLimitIntegrationTest<br/>4 pruebas<br/>Rate limiting anti fuerza bruta"]
         F["6️⃣ PasswordRecoveryIntegrationTest<br/>4 pruebas<br/>Recuperación 2FA SMTP"]
         G["7️⃣ RegisterIntegrationTest<br/>8 pruebas<br/>Registro y borrado de cuenta"]
-        H["8️⃣ LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService<br/>(incluye verificación de AuditContextService)"]
-        I["9️⃣ RegisterServiceTest<br/>11 pruebas<br/>Unitarias de RegisterService"]
+        H["8️⃣ ProfileIntegrationTest<br/>10 pruebas<br/>Get/Update perfil propio"]
+        I["9️⃣ LoginServiceTest<br/>6 pruebas<br/>Unitarias de LoginService"]
+        J["🔟 RegisterServiceTest<br/>11 pruebas<br/>Unitarias de RegisterService"]
     end
 
-    A --> J["BaseIntegrationTest<br/>Helpers comunes"]
-    B --> J
-    C --> J
-    D --> J
-    E --> J
-    F --> J
-    G --> J
-    H --> J
-    I --> J
+    A --> K["BaseIntegrationTest<br/>Helpers comunes"]
+    B --> K
+    C --> K
+    D --> K
+    E --> K
+    F --> K
+    G --> K
+    H --> K
+    I --> K
+    J --> K
 
-    J --> K["TestConfig<br/>Variables desde .unitTestEnv"]
-    K --> L[".unitTestEnv<br/>src/test/resources/"]
+    K --> L["TestConfig<br/>Variables desde .unitTestEnv"]
+    L --> M[".unitTestEnv<br/>src/test/resources/"]
 ```
 
 **Arquitectura de pruebas:**
@@ -920,6 +1137,8 @@ graph TB
   **Nota:** En el método `clearBlacklist()` (ejecutado en `@BeforeEach`) se limpian la blacklist de tokens JWT y el rate limiter, pero **no** se limpian los refresh tokens. Esto es intencional para permitir que las pruebas de `RefreshTokenIntegrationTest` generen un refresh token en una prueba y lo reutilicen en pruebas posteriores dentro de la misma suite.
 
 - `TestConfig`: variables centralizadas desde `.unitTestEnv`
+
+- `ProfileIntegrationTest`: usa @BeforeAll para obtener el token y el id real de demo_user (vía GET /api/auth/get-my-profile). Restaura el nombreCompleto original al final de cada test que lo modifica.
 
 - `@BeforeEach`: se utiliza en la mayoría de las pruebas para obtener un token fresco (login) antes de cada test, garantizando independencia total entre ellos.  
   **Excepciones:**
@@ -1192,6 +1411,8 @@ graph TB
 - **IDE**: Visual Studio Code
 - **Auditoría**: PostgreSQL trigger + wrapper DataSource en el backend (`AuditUserAwareDataSource`)
 - **Usuario de BD de la app**: `investment_app` (con permisos restringidos, sin acceso a `auditoria_usuarios`)
+- **Validación**: Jakarta Bean Validation (`@Valid`) + validaciones de servicio. Los errores de `@Valid` se reportan como `SYS-03` (500) sin detalle al cliente.
+- **Perfil de usuario**: `/api/auth/get-my-profile` (GET) y `/api/auth/update-my-profile` (POST). El `username` e `id` deben coincidir con el JWT.
 
 ### 105. Gestión del Proyecto
 
