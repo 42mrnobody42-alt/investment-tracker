@@ -77,3 +77,4 @@ backups/
 # =============================================
 logs/
 *.log
+docs/scrum/kanban/.kanban-config.env
