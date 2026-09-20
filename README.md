@@ -1217,7 +1217,7 @@ graph TB
 
 ### 101. Estructura del Proyecto
 
-#### Estructura detallada de archivos (185 archivos, 82 directorios)
+#### Estructura detallada de archivos
 
 - **`investment-tracker/`** - Raíz del proyecto
   - `.gitignore` - Archivos ignorados por Git
@@ -1280,20 +1280,30 @@ graph TB
                 - `RefreshTokenComponent.java` - Gestión de refresh tokens
                 - `SecurityLoginComponent.java` - Encriptación BCrypt + validación
                 - `TokenBlacklistComponent.java` - Blacklist de tokens JWT
+                - **`masking/`** - Ofuscación de datos sensibles
+                  - `MaskType.java` - Enum de tipos de ofuscación (EMAIL, CELULAR, NOMBRE)
+                  - `Masked.java` - Anotación `@Masked(MaskType)` para marcar campos sensibles
+                  - `DataMasking.java` - Utilidad estática con las reglas de ofuscación
+                  - `MaskingContext.java` - `ThreadLocal<Boolean>` con el estado de ofuscación
+                  - `MaskedSerializer.java` - `JsonSerializer` que aplica la máscara
+                  - `MaskingAnnotationIntrospector.java` - Introspector Jackson que conecta `@Masked`
+                  - `MaskingFilter.java` - `OncePerRequestFilter` que activa/desactiva por path
               - **`config/`** - Configuración de Spring
                 - `AuditUserAwareDataSource.java` - Wrapper del DataSource que propaga el usuario JWT a la sesión PostgreSQL
                 - `EncryptedDataSourceConfig.java` - DataSource con desencriptación AES + wrapper de auditoría
+                - `JacksonMaskingConfig.java` - Registra el introspector de masking en Jackson
                 - `MailConfig.java` - Configuración SMTP con desencriptación
                 - `SecurityConfig.java` - Spring Security + JWT (permite `/register/**` público)
+                - `SensitiveFieldsProperties.java` - Lista negra de campos sensibles para logs
               - **`controller/`** - Endpoints REST
-                - `AuthController.java` - Login, restart-password, logout, change-my-pass, delete-account
+                - `AuthController.java` - Login, refresh-token, logout, change-my-pass, delete-account, get-my-profile, update-my-profile, restart-password
                 - `EncryptionController.java` - Encriptación/desencriptación AES-GCM
                 - `PasswordRecoveryController.java` - Recuperación de contraseña (2FA SMTP)
                 - `RegisterController.java` - Registro de usuario (request/confirm)
                 - `TestValidationController.java` - Health check y delete-user (solo pruebas)
               - **`exception/`** - Manejo de excepciones
                 - `AuthenticationException.java` - Excepción personalizada
-                - `GlobalExceptionHandler.java` - Manejador global de excepciones (logs detallados)
+                - `GlobalExceptionHandler.java` - Manejador global de excepciones (logs detallados + `SYS-03` para `@Valid`)
               - **`model/`** - Modelos de datos
                 - **`dto/`** - Data Transfer Objects
                   - `PaisDTO.java` - País para respuestas
@@ -1303,10 +1313,10 @@ graph TB
                   - `Role.java` - Entidad de roles
                   - `User.java` - Usuario (incluye celular y país)
                 - **`enums/`** - Enumeraciones de respuesta
-                  - `ErrorCode.java` - Códigos de error (incluye errores de registro)
+                  - `ErrorCode.java` - Códigos de error (incluye `SYS-03 INVALID_ARGUMENTS`)
                   - `LockLevel.java` - Niveles de bloqueo
                   - `Plan.java` - Planes (FREE, PREMIUM)
-                  - `SuccessfulCode.java` - Códigos de éxito (incluye registro)
+                  - `SuccessfulCode.java` - Códigos de éxito (incluye `UPT-0001 UPDATE_USER_DATA`)
                 - **`request/`** - Objetos de petición
                   - `ChangePasswordRequest.java` - Cambio de contraseña
                   - `DeleteAccountRequest.java` - Borrado de cuenta
@@ -1317,15 +1327,17 @@ graph TB
                   - `RegisterRequest.java` - Solicitud de registro
                   - `RestartPasswordRequest.java` - Reinicio (admin)
                   - `TokenVerificationRequest.java` - Verificación de token
+                  - `UpdateMyProfileRequest.java` - Actualización de perfil propio (id, username, email, nombreCompleto, paisId, celular)
                 - **`response/`** - Objetos de respuesta
                   - `EncryptionResponse.java` - Respuesta de encriptación
                   - `ErrorResponse.java` - Respuesta de error
-                  - `LoginResponse.java` - Respuesta de login (incluye celular y país)
+                  - `LoginResponse.java` - Respuesta de login/refresh (solo `token` y `refreshToken`)
+                  - `ProfileResponse.java` - Perfil del usuario autenticado (id, username, email, nombreCompleto, celular, pais, activo, ultimoLogin, createdAt)
                   - `SuccessResponse.java` - Respuesta de éxito
               - **`repository/`** - Repositorios JPA
                 - `PaisRepository.java` - País
                 - `RoleRepository.java` - Roles
-                - `UserRepository.java` - Usuarios (incluye findByUsernameIgnoreCase y existsByPaisIdAndCelular)
+                - `UserRepository.java` - Usuarios (incluye `findByUsernameIgnoreCase`, `findByEmailIgnoreCase`, `existsByPaisIdAndCelular`)
               - **`security/`** - Capa de seguridad
                 - `JwtAuthFilter.java` - Filtro de autenticación JWT
                 - `RateLimitFilter.java` - Filtro de límite de peticiones
@@ -1335,15 +1347,19 @@ graph TB
                 - `ChangeMyPasswordService.java` - Cambio de contraseña propia
                 - `EmailService.java` - Envío de correos SMTP (recuperación y registro)
                 - `EncryptionService.java` - Encriptación AES-GCM
-                - `JwtService.java` - Generación/validación JWT
-                - `LoginService.java` - Autenticación + control de intentos
+                - `GetMyProfileService.java` - Consulta del perfil propio
+                - `JwtService.java` - Generación/validación JWT (sin claim `email`)
+                - `LoginService.java` - Autenticación + control de intentos (retorna solo tokens)
                 - `LogoutService.java` - Cierre de sesión con blacklist
                 - `PasswordRecoveryService.java` - Recuperación con 2FA
                 - `RefreshTokenService.java` - Servicio de refresh tokens
                 - `RegisterService.java` - Registro con confirmación por email y borrado lógico
                 - `RestartUserPasswordService.java` - Restablecer contraseña (ADMIN)
+                - `UpdateMyProfileService.java` - Actualización del perfil propio
+              - **`util/`** - Utilidades transversales
+                - `LogSanitizer.java` - Sanitiza valores antes de escribirlos en logs
         - **`resources/`**
-          - `application.yml` - Configuración (DB encriptada, JWT, SMTP, puerto 7700)
+          - `application.yml` - Configuración (DB encriptada, JWT, SMTP, sensitive-fields, puerto 7700)
       - **`test/`** - Pruebas
         - **`java/`**
           - **`com/`**
@@ -1353,15 +1369,16 @@ graph TB
               - **`controller/`** - Pruebas de integración
                 - `AuthIntegrationTest.java` - Pruebas de autenticación (31 casos)
                 - `BaseIntegrationTest.java` - Clase base para pruebas (helpers comunes)
-                - `ChangeMyPasswordIntegrationTest.java` - Pruebas de cambio de contraseña
-                - `EncryptionIntegrationTest.java` - Pruebas de encriptación
-                - `PasswordRecoveryIntegrationTest.java` - Pruebas de recuperación
-                - `RateLimitIntegrationTest.java` - Pruebas de rate limit
-                - `RefreshTokenIntegrationTest.java` - Pruebas de refresh token
-                - `RegisterIntegrationTest.java` - Pruebas de registro (flujo completo FREE/PREMIUM)
+                - `ChangeMyPasswordIntegrationTest.java` - Pruebas de cambio de contraseña (11 casos)
+                - `EncryptionIntegrationTest.java` - Pruebas de encriptación (7 casos)
+                - `PasswordRecoveryIntegrationTest.java` - Pruebas de recuperación (4 casos)
+                - `ProfileIntegrationTest.java` - Pruebas de perfil propio (10 casos)
+                - `RateLimitIntegrationTest.java` - Pruebas de rate limit (4 casos)
+                - `RefreshTokenIntegrationTest.java` - Pruebas de refresh token (7 casos)
+                - `RegisterIntegrationTest.java` - Pruebas de registro (8 casos, flujo completo FREE/PREMIUM)
               - **`service/`** - Pruebas unitarias
-                - `LoginServiceTest.java` - Pruebas del servicio de login
-                - `RegisterServiceTest.java` - Pruebas del servicio de registro
+                - `LoginServiceTest.java` - Pruebas del servicio de login (6 casos)
+                - `RegisterServiceTest.java` - Pruebas del servicio de registro (11 casos)
         - **`resources/`**
           - `.unitTestEnv` - Datos de prueba (usuarios, emails, contraseñas, etc.)
     - **`target/`** - Compilados y reportes (generado por Maven)
