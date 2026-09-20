@@ -163,9 +163,7 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                                                 "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.token").exists())
-                                .andExpect(jsonPath("$.username").value(username))
-                                .andExpect(jsonPath("$.celular").exists())
-                                .andExpect(jsonPath("$.pais").exists())
+                                .andExpect(jsonPath("$.refreshToken").exists())
                                 .andReturn();
                 printSubStep("✅ Login exitoso");
 
@@ -250,9 +248,7 @@ class RegisterIntegrationTest extends BaseIntegrationTest {
                                                 "JSON no puede ser null")))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.token").exists())
-                                .andExpect(jsonPath("$.username").value(username))
-                                .andExpect(jsonPath("$.celular").exists())
-                                .andExpect(jsonPath("$.pais").exists())
+                                .andExpect(jsonPath("$.refreshToken").exists())
                                 .andReturn();
                 printSubStep("✅ Login exitoso");
 

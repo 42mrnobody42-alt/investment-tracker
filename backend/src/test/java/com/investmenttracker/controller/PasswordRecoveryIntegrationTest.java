@@ -1,10 +1,17 @@
 package com.investmenttracker.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.investmenttracker.model.request.PasswordRecoveryRequest;
-import com.investmenttracker.model.request.TokenVerificationRequest;
-import com.investmenttracker.service.PasswordRecoveryService;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Objects;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,11 +19,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Objects;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.investmenttracker.model.request.PasswordRecoveryRequest;
+import com.investmenttracker.model.request.TokenVerificationRequest;
+import com.investmenttracker.service.PasswordRecoveryService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -69,17 +75,17 @@ class PasswordRecoveryIntegrationTest {
         printSubStep("Nueva contraseña: " + NEW_PASSWORD);
 
         PasswordRecoveryRequest request = PasswordRecoveryRequest.builder()
-            .username(USERNAME)
-            .email(EMAIL)
-            .nuevoPassword(NEW_PASSWORD)
-            .build();
+                .username(USERNAME)
+                .email(EMAIL)
+                .nuevoPassword(NEW_PASSWORD)
+                .build();
 
         MvcResult result = mockMvc.perform(post("/api/auth/recovery/request")
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value("REC-0001"))
-            .andReturn();
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("REC-0001"))
+                .andReturn();
 
         printSubStep("✅ Respuesta: " + result.getResponse().getContentAsString());
         printStep("REC-01", "✅ Correo de recuperación solicitado");
@@ -90,25 +96,25 @@ class PasswordRecoveryIntegrationTest {
     @DisplayName("REC-02: Verificar token REAL y cambiar contraseña")
     void testVerifyTokenAndChangePassword() throws Exception {
         printStep("REC-02", "Verificar token real y cambiar contraseña");
-        
+
         // Obtener el token REAL generado por el servicio
         String realToken = passwordRecoveryService.getTokenForTest(USERNAME);
         assertNotNull(realToken, "El token no debe ser null");
         printSubStep("Token real del servicio: " + realToken);
 
         TokenVerificationRequest request = TokenVerificationRequest.builder()
-            .username(USERNAME)
-            .email(EMAIL)
-            .token(realToken)
-            .nuevoPassword(NEW_PASSWORD)
-            .build();
+                .username(USERNAME)
+                .email(EMAIL)
+                .token(realToken)
+                .nuevoPassword(NEW_PASSWORD)
+                .build();
 
         mockMvc.perform(post("/api/auth/recovery/verify")
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content(Objects.requireNonNull(toJson(request), "JSON no puede ser null")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.code").value("REC-0002"))
-            .andExpect(jsonPath("$.message").value("Contraseña actualizada exitosamente"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("REC-0002"))
+                .andExpect(jsonPath("$.message").value("Contraseña actualizada exitosamente"));
 
         printStep("REC-02", "✅ Contraseña actualizada con token real");
     }
@@ -123,9 +129,8 @@ class PasswordRecoveryIntegrationTest {
         mockMvc.perform(post("/api/auth/login")
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content("{\"username\":\"" + USERNAME + "\",\"password\":\"" + NEW_PASSWORD + "\"}"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").exists())
-            .andExpect(jsonPath("$.username").value(USERNAME));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
 
         printStep("REC-03", "✅ Login exitoso con nueva contraseña");
     }
@@ -135,21 +140,22 @@ class PasswordRecoveryIntegrationTest {
     @DisplayName("REC-04: Restaurar contraseña original (cleanup)")
     void testRestoreOriginalPassword() throws Exception {
         printStep("REC-04", "Restaurar contraseña original de incognito");
-        
+
         MvcResult adminLogin = mockMvc.perform(post("/api/auth/login")
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .content("{\"username\":\"admin\",\"password\":\"Admin123!\"}"))
-            .andExpect(status().isOk())
-            .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
 
         String adminToken = objectMapper.readTree(adminLogin.getResponse().getContentAsString())
-            .get("token").asText();
+                .get("token").asText();
 
         mockMvc.perform(post("/api/auth/restart-password")
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON, "MediaType no puede ser null"))
                 .header("Authorization", "Bearer " + adminToken)
-                .content("{\"username\":\"incognito\",\"email\":\"42mrnobody42@gmail.com\",\"nombreCompleto\":\"Usuario Premium incognito\",\"nuevoPassword\":\"C4mb14m3!Urgente\",\"repetirNuevoPassword\":\"C4mb14m3!Urgente\"}"))
-            .andExpect(status().isOk());
+                .content(
+                        "{\"username\":\"incognito\",\"email\":\"42mrnobody42@gmail.com\",\"nombreCompleto\":\"Usuario Premium incognito\",\"nuevoPassword\":\"C4mb14m3!Urgente\",\"repetirNuevoPassword\":\"C4mb14m3!Urgente\"}"))
+                .andExpect(status().isOk());
 
         printStep("REC-04", "✅ Contraseña original restaurada");
         System.out.println("=".repeat(70));

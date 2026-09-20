@@ -2,6 +2,7 @@ package com.investmenttracker.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.DelegatingDataSource;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -9,6 +10,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * Wrapper del DataSource que propaga el usuario autenticado (extraído del JWT
@@ -39,15 +41,19 @@ public class AuditUserAwareDataSource extends DelegatingDataSource {
     }
 
     @Override
+    @NonNull
     public Connection getConnection() throws SQLException {
-        Connection conn = super.getConnection();
+        Connection conn = Objects.requireNonNull(
+                super.getConnection(), "Connection no puede ser null");
         applyAuditUser(conn);
         return conn;
     }
 
     @Override
+    @NonNull
     public Connection getConnection(String username, String password) throws SQLException {
-        Connection conn = super.getConnection(username, password);
+        Connection conn = Objects.requireNonNull(
+                super.getConnection(username, password), "Connection no puede ser null");
         applyAuditUser(conn);
         return conn;
     }

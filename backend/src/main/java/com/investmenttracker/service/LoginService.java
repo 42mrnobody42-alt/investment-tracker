@@ -1,7 +1,5 @@
 package com.investmenttracker.service;
 
-import java.util.stream.Collectors;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,13 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.investmenttracker.component.LoginComponent;
 import com.investmenttracker.component.RefreshTokenComponent;
 import com.investmenttracker.exception.AuthenticationException;
-import com.investmenttracker.model.dto.PaisDTO;
-import com.investmenttracker.model.entity.Pais;
 import com.investmenttracker.model.entity.User;
 import com.investmenttracker.model.enums.ErrorCode;
 import com.investmenttracker.model.request.LoginRequest;
 import com.investmenttracker.model.response.LoginResponse;
-import com.investmenttracker.util.LogSanitizer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoginService {
 
-    private final LogSanitizer logSanitizer;
     private final LoginComponent loginComponent;
     private final JwtService jwtService;
     private final RefreshTokenComponent refreshTokenComponent;
@@ -73,50 +67,20 @@ public class LoginService {
                             lockInfo.remainingAttempts()));
         }
 
-        // === AUDITORÍA: forzar el usuario que se está logueando ===
-        // Aún no hay JWT, por lo que SecurityContextHolder está vacío y el
-        // wrapper pondría 'desconocido'. Esto lo sobrescribe con el username real
-        // antes de que resetFailedAttempts() ejecute el UPDATE de ultimo_login.
+        // AUDITORÍA: forzar el usuario que se está logueando
         auditContextService.setCurrentUser(user.getUsername());
 
         loginComponent.resetFailedAttempts(user);
 
-        // Generar access token y refresh token
+        // Generar tokens
         String accessToken = jwtService.generateToken(user);
         String refreshToken = refreshTokenComponent.generateRefreshToken(user.getUsername());
 
-        String roles = user.getRoles().stream()
-                .map(role -> role.getNombre())
-                .collect(Collectors.joining(", "));
-
-        log.info("Login exitoso para usuario: {} con roles: {}", user.getUsername(), roles);
-
-        // Mapear Pais a PaisDTO (si existe)
-        PaisDTO paisDTO = null;
-        Pais pais = user.getPais();
-        if (pais != null) {
-            paisDTO = PaisDTO.builder()
-                    .id(pais.getId())
-                    .nombre(pais.getNombre())
-                    .codigoIso(pais.getCodigoIso())
-                    .indicativoCelular(pais.getIndicativoCelular())
-                    .build();
-        }
-
-        log.debug("Usuario {} - Email: {}", username, logSanitizer.sanitize("email", user.getEmail()));
-        // → "Usuario admin - Email: [PROTEGIDO]"
+        log.info("Login exitoso para usuario: {}", user.getUsername());
 
         return LoginResponse.builder()
                 .token(accessToken)
-                .tokenType("Bearer")
-                .expiresIn(jwtService.getExpirationTime())
                 .refreshToken(refreshToken)
-                .refreshTokenExpiresIn((long) java.time.Duration.ofHours(1).toMillis())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .nombreCompleto(user.getNombreCompleto())
-                .celular(user.getCelular())
-                .pais(paisDTO)
                 .build();
     }
 

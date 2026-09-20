@@ -17,16 +17,16 @@ import jakarta.servlet.http.HttpServletResponse;
  * según el endpoint invocado.
  *
  * <p>
- * Endpoints que devuelven datos propios del usuario autenticado (login,
- * refresh-token, etc.) desactivan la ofuscación para que el usuario vea sus
- * datos reales. El resto de endpoints mantiene la ofuscación activa.
+ * Endpoints que devuelven datos propios del usuario autenticado desactivan
+ * la ofuscación para que el usuario vea sus datos reales. El resto de
+ * endpoints mantiene la ofuscación activa.
  */
 @Component
 public class MaskingFilter extends OncePerRequestFilter {
 
     /** Rutas donde el usuario ve sus propios datos reales. */
     private static final Set<String> OWN_DATA_PATHS = Set.of(
-            "/api/auth/refresh-token");
+            "/api/auth/get-my-profile");
 
     @Override
     protected void doFilterInternal(
