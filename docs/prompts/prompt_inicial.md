@@ -267,19 +267,179 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 14. **Login minimalista**: `/api/auth/login` y `/api/auth/refresh-token` retornan **únicamente** `token` y `refreshToken`. No exponer `username`, `email`, `nombreCompleto`, `celular`, `pais`, `tokenType`, `expiresIn` ni `refreshTokenExpiresIn`. Los datos personales se consultan por separado con `/api/auth/get-my-profile`.
 15. **Perfil propio**: los endpoints `/api/auth/get-my-profile` y `/api/auth/update-my-profile` solo operan sobre el usuario autenticado. El `username` e `id` del request deben coincidir con el JWT. Agregar `/api/auth/get-my-profile` a `OWN_DATA_PATHS` del `MaskingFilter` si devuelve datos reales.
 16. **Email/nombreCompleto preservados**: al registrar o actualizar, guardar el email y `nombreCompleto` tal cual los envía el usuario (solo `trim`). Las comparaciones de unicidad son **case-insensitive**, pero el valor **almacenado** conserva el case original.
+17. **Nunca iniciar trabajo sin haber movido el issue correspondiente a In progress en el tablero**. Antes de tocar código, verificar el estado con gh project item-list.
+18. **Nunca commitear sin referenciar el issue con Closes** #N (cierra automáticamente) o Refs #N (solo referencia). **El commit debe tener formato\*** tipo(#N): descripción.
+19. **Siempre comentar el SHA en el issue al cerrar una tarea.** Usar kanban-comment.sh o directamente gh issue comment con el formato establecido.
+20. **Nunca mergear a lastest directamente.** Todo pasa por PR desde feature/\* hacia developer, y luego developer hacia lastest mediante PR revisado.
+21. **Consultar docs/scrum/kanban/kanban-ids.env antes de ejecutar cualquier script que requiera IDs de issues**. Este archivo se regenera al crear cada capability.
+22. **Mantener sincronizado docs/scrum/kanban/ con los issues de GitHub.** Cuando se cree una capability nueva, actualizar kanban-ids.env y agregar el .md correspondiente en capabilities/.
 
 ## 📊 Gestión del Proyecto
 
-- **Tablero de GitHub Projects**: https://github.com/users/42mrnobody42-alt/projects/2
-- **Repositorio**: https://github.com/42mrnobody42-alt/investment-tracker
-- **Flujo de trabajo**:
-  1. Idea/Requerimiento → se crea un **issue** en el repositorio.
-  2. El issue se agrega al **tablero** y se prioriza (columna `Backlog` → `Ready`).
-  3. Al iniciar desarrollo, se mueve a `In Progress` y se crea la rama `feature/*`.
-  4. Al abrir el Pull Request, se mueve a `In Review` y se vincula el issue (`Closes #N`).
-  5. Al mergear a `developer`, se mueve a `Done`.
+### Tablero
+
+- URL: https://github.com/users/42mrnobody42-alt/projects/2/views/1
+- Columnas: Backlog · Ready · In progress · In review · Done
+- Owner: 42mrnobody42-alt · Project number: 2
+- Project ID (GraphQL): PVT_kwHOER7McM4BjVIW
 
 > **Regla**: ninguna funcionalidad se considera "terminada" hasta que el issue asociado esté en `Done` en el tablero y la rama esté mergeada a `developer`.
+
+### Estructura local
+
+Toda la planificación vive versionada en `docs/scrum/kanban/`:
+
+docs/scrum/kanban/
+├── README.md # Guía local del kanban
+├── kanban-ids.env # IDs vigentes de la CAP activa
+├── .kanban-config.env # IDs del Project V2 (auto-generado)
+├── capabilities/ # CAP-XX.md — plan maestro
+├── features/ # FT-XXX.md
+├── user-stories/ # US-XXX.md
+├── tasks/ # TS-XXX.md
+└── scripts/
+├── create-cap01.sh # Crea CAP + FT + US + TS en GitHub
+├── kanban-move.sh # Mueve issue entre estados del tablero
+├── kanban-comment.sh # Comenta SHA + cambios en el issue
+└── retry-links.sh # Re-vincula sub-issues si falla
+
+### Jerarquía de issues
+
+CAP-XX Capability → 1 sola por objetivo de negocio
+└── FT-XXX Feature → agrupa user stories de un módulo
+└── US-XXX User Story
+└── TS-XXX Task (≤4h)
+
+Cada nivel lleva su label (`capability`, `feature`, `user-story`, `task`)
+y se vincula como **sub-issue** del nivel inmediatamente superior.
+
+### Estados del tablero (Projects V2 #2)
+
+| Nombre exacto | Alias en `kanban-move.sh` | Significado                      |
+| ------------- | ------------------------- | -------------------------------- |
+| `Backlog`     | `backlog`                 | Ideas / pendientes sin priorizar |
+| `Ready`       | `ready`                   | Priorizado, listo para trabajar  |
+| `In progress` | `progress`                | En desarrollo activo             |
+| `In review`   | `review`                  | PR abierto / pendiente revisión  |
+| `Done`        | `done`                    | Mergeado a `developer`           |
+
+> ⚠️ **Atención**: los nombres reales en GitHub son `In progress` y
+> `In review` (segunda palabra en **minúscula**). El script `kanban-move.sh`
+> acepta alias case-insensitive.
+
+### Flujo obligatorio de la IA por cada unidad de trabajo
+
+**Antes de empezar cualquier CAP / FT / US / TS:**
+
+**1. Consultar el estado actual del issue en el tablero**
+
+```bash
+gh project item-list 2 --owner 42mrnobody42-alt --format json --limit 500 \
+  --jq ".items[] | select(.content.number == <N>) | \"#\(.content.number) → \(.status)\""
+```
+
+**2. Crear la rama desde developer con nomenclatura**
+
+```bash
+cd /prog/datos/investment-tracker
+git checkout developer
+git pull origin developer
+git checkout -b feature/<ID>-<slug>
+```
+
+Ejemplos de nombres válidos:
+
+- feature/CAP-01-frontend-base
+- feature/FT-001-setup
+- feature/US-003-i18n
+- feature/TS-006-i18n-files
+
+**3. Mover el issue y sus hijos directos a In progress**
+
+```bash
+cd /prog/datos/investment-tracker/docs/scrum/kanban
+source kanban-ids.env
+
+# Padre
+./scripts/kanban-move.sh <N> progress
+
+# Hijos directos (si aplica)
+for child in <N1> <N2> <N3>; do
+  ./scripts/kanban-move.sh "$child" progress
+done
+```
+
+> Regla: nunca dejar tareas huérfanas en Backlog mientras se trabaja activamente en ellas.
+
+Al terminar una TS / US / FT / CAP:
+
+**4. Commit con referencia al issue (Closes #N o Refs #N)**
+
+```bash
+git add <archivos>
+git commit -m "feat(#<N>): <descripción>
+
+<cuerpo opcional>
+
+Closes #<N>"
+git push -u origin feature/<ID>-<slug>
+```
+
+**5. Comentar en el issue con SHA y lista de cambios**
+
+```bash
+./scripts/kanban-comment.sh <N> "$(git rev-parse --short HEAD)" \
+  "<título del commit>" \
+  "$(git show --stat --oneline HEAD | tail -n +2)"
+```
+
+El comentario debe incluir obligatoriamente:
+
+- SHA del commit que entrega la solución.
+- Lista de archivos modificados y su propósito.
+- Notas de decisiones o deuda técnica si aplica.
+
+**6. Mover el issue a In review**
+
+```bash
+./scripts/kanban-move.sh <N> review
+```
+
+**7. Abrir PR a developer con Closes #N**
+
+```bash
+gh pr create --base developer --head feature/<ID>-<slug> \
+  --title "<título>" \
+  --body "Closes #<N>
+
+## Cambios
+- ...
+
+## Checklist
+- [ ] Tests pasan
+- [ ] Lint OK
+- [ ] Documentación actualizada"
+```
+
+Al mergear a developer:
+
+**8. Mover el issue a Done (GitHub lo hace automáticamente si el PR**
+usa Closes #N; si no, forzar manualmente):
+
+```bash
+./scripts/kanban-move.sh <N> done
+```
+
+### Scripts disponibles
+
+### Scripts disponibles
+
+| Script | Función | Uso |
+|--------|---------|-----|
+| `create-cap01.sh` | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh` |
+| `kanban-move.sh` | Mueve un issue entre estados | `./scripts/kanban-move.sh <N> progress` |
+| `kanban-comment.sh` | Comenta SHA + cambios en el issue | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
+| `retry-links.sh` | Re-vincula sub-issues si el link falló | `./scripts/retry-links.sh` |
 
 ---
 

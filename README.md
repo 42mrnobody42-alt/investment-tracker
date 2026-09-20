@@ -54,8 +54,8 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
 | ------------- | ---------------------------------------------- |
 | `Backlog`     | Ideas y funcionalidades no priorizadas         |
 | `Ready`       | Listas para ser tomadas en el siguiente sprint |
-| `In Progress` | En desarrollo activo                           |
-| `In Review`   | Pull Request abierto, pendiente de revisión    |
+| `In progress` | En desarrollo activo                           |
+| `In review`   | Pull Request abierto, pendiente de revisión    |
 | `Done`        | Mergeado a `developer`                         |
 
 > **Nota**: Los issues y Pull Requests deben vincularse al tablero para mantener trazabilidad entre el código y la planeación.
@@ -136,6 +136,8 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
 - [104. Stack Tecnológico](#104-stack-tecnológico)
 
 - [105. Gestión del Proyecto](#105-gestión-del-proyecto)
+
+- [106. Gestión Scrum con GitHub Projects](#106-gestión-scrum-con-github-projects)
 
 ---
 
@@ -1162,6 +1164,8 @@ graph TB
  */
 ```
 
+## 100. Servicios Docker
+
 ### Servicios
 
 | Servicio    | Puerto | URL                   |
@@ -1215,7 +1219,7 @@ graph TB
 
 ./docker/shellTest/restore-db.sh <archivo.sql>
 
-### 101. Estructura del Proyecto
+## 101. Estructura del Proyecto
 
 #### Estructura detallada de archivos
 
@@ -1410,11 +1414,11 @@ graph TB
   - **`backups/`** - Copias de seguridad de la base de datos
     - `investment_tracker_20260710_121428.sql` - Backup de BD
 
-### 103. Requisitos Funcionales
+## 103. Requisitos Funcionales
 
 1. Sistema de autenticación con JWT y refresh token.
 
-### 104. Stack Tecnológico
+## 104. Stack Tecnológico
 
 - **Backend**: Java LTS 21 (Spring Boot 3.x)
 - **Base de datos**: PostgreSQL 16
@@ -1431,9 +1435,110 @@ graph TB
 - **Validación**: Jakarta Bean Validation (`@Valid`) + validaciones de servicio. Los errores de `@Valid` se reportan como `SYS-03` (500) sin detalle al cliente.
 - **Perfil de usuario**: `/api/auth/get-my-profile` (GET) y `/api/auth/update-my-profile` (POST). El `username` e `id` deben coincidir con el JWT.
 
-### 105. Gestión del Proyecto
+## 105. Gestión del Proyecto
 
 - **Tablero GitHub Projects**: [Investment Tracker Pro - Project Board](https://github.com/users/42mrnobody42-alt/projects/2)
 - **Repositorio**: [investment-tracker](https://github.com/42mrnobody42-alt/investment-tracker)
-- **Flujo de trabajo**: Backlog → Ready → In Progress → In Review → Done
+- **Flujo de trabajo**: Backlog → Ready → In progress → In review → Done
 - **Trazabilidad**: cada funcionalidad está vinculada a un issue del repositorio y a una tarjeta en el tablero.
+
+## 106. Gestión Scrum con GitHub Projects
+
+### Estructura local
+
+Toda la planificación vive en `docs/scrum/kanban/`:
+docs/scrum/kanban/
+├── README.md
+├── kanban-ids.env
+├── capabilities/ # CAP-XX.md
+├── features/ # FT-XXX.md
+├── user-stories/ # US-XXX.md
+├── tasks/ # TS-XXX.md
+└── scripts/
+├── create-cap01.sh
+├── kanban-move.sh
+├── kanban-comment.sh
+└── retry-links.sh
+
+### Jerarquía de issues
+
+CAP-XX Capability → 1 sola por objetivo de negocio
+└── FT-XXX Feature → agrupa user stories de un módulo
+└── US-XXX User Story
+└── TS-XXX Task (≤4h)
+
+Cada nivel lleva su label (`capability`, `feature`, `user-story`, `task`)
+y se vincula como **sub-issue** del nivel inmediatamente superior.
+
+### Estados del tablero (Projects V2 #2)
+
+| Nombre exacto | Alias en `kanban-move.sh` | Significado                      |
+| ------------- | ------------------------- | -------------------------------- |
+| `Backlog`     | `backlog`                 | Ideas / pendientes sin priorizar |
+| `Ready`       | `ready`                   | Priorizado, listo para trabajar  |
+| `In progress` | `progress`                | En desarrollo activo             |
+| `In review`   | `review`                  | PR abierto / pendiente revisión  |
+| `Done`        | `done`                    | Mergeado a `developer`           |
+
+> ⚠️ **Atención**: los nombres reales en GitHub son `In progress` y
+> `In review` (segunda palabra en **minúscula**). El script `kanban-move.sh`
+> acepta alias case-insensitive.
+
+### Flujo de trabajo
+
+| Paso | Acción                       | Comando                                            |
+| ---- | ---------------------------- | -------------------------------------------------- |
+| 1    | Consultar tablero            | `gh project item-list 2 --owner 42mrnobody42-alt`  |
+| 2    | Crear rama desde `developer` | `git checkout -b feature/<ID>-<slug>`              |
+| 3    | Mover issue a `In progress`  | `./scripts/kanban-move.sh <N> progress`            |
+| 4    | Commit con `Closes #N`       | `git commit -m "feat(#N): ... Closes #N"`          |
+| 5    | Comentar SHA en el issue     | `./scripts/kanban-comment.sh <N> <sha> "<título>"` |
+| 6    | Mover a `In review`          | `./scripts/kanban-move.sh <N> review`              |
+| 7    | Abrir PR a `developer`       | `gh pr create --base developer`                    |
+| 8    | Mover a `Done` (post-merge)  | `./scripts/kanban-move.sh <N> done`                |
+
+### Comandos de consulta
+
+```bash
+# Ver estado de un issue específico
+gh project item-list 2 --owner 42mrnobody42-alt --format json \
+  --jq ".items[] | select(.content.number == <N>)"
+
+# Ver todos los items de la CAP activa
+cd /prog/datos/investment-tracker/docs/scrum/kanban
+source kanban-ids.env
+for iss in $CAP $FT001 $US001 $TS001; do
+  gh project item-list 2 --owner 42mrnobody42-alt --format json \
+    --jq ".items[] | select(.content.number == $iss) | \"#\(.content.number) \(.status) \(.content.title)\""
+done
+```
+
+### Scripts disponibles
+
+### Scripts disponibles
+
+| Script | Función | Uso |
+|--------|---------|-----|
+| `create-cap01.sh` | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh` |
+| `kanban-move.sh` | Mueve un issue entre estados | `./scripts/kanban-move.sh <N> progress` |
+| `kanban-comment.sh` | Comenta SHA + cambios en el issue | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
+| `retry-links.sh` | Re-vincula sub-issues si el link falló | `./scripts/retry-links.sh` |
+
+### Reglas de commits
+
+- Formato: tipo(#N): descripción — feat, fix, docs, refactor, test, chore.
+- Siempre referenciar el issue padre con Closes #N o Refs #N.
+- Nunca commitear directo a lastest (protegida).
+- Los cambios se integran a developer vía PR.
+
+### Estructura de ramas
+
+- lastest — rama principal protegida (solo PRs desde developer).
+- developer — rama de desarrollo activo (push directo permitido).
+- feature/\* — ramas por CAP / FT / US / TS (creadas desde developer).
+
+### Tablero
+
+- URL: https://github.com/users/42mrnobody42-alt/projects/2/views/1
+- Owner: 42mrnobody42-alt · Project number: 2
+- Project ID (GraphQL): PVT_kwHOER7McM4BjVIW
