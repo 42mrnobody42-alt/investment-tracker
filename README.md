@@ -62,6 +62,31 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
 
 ---
 
+## 📚 Documentos de referencia obligatoria
+
+Este README es la fuente principal del proyecto, pero existen documentos complementarios que deben consultarse antes de cualquier cambio. Jerarquía en caso de conflicto: **README.md** → **prompt_inicial.md** → **agentes por capa**.
+
+1. **`docs/prompts/prompt_inicial.md`**
+   - Idea general del proyecto, requisitos funcionales, reglas para la IA, directrices por capa (backend, DB, frontend) y flujo obligatorio por issue del tablero.
+   - Ruta: `docs/prompts/prompt_inicial.md`.
+
+2. **`docs/prompts/agente-frontend.md`**
+   - Reglas obligatorias de arquitectura y desarrollo del frontend: estructura de directorios, vistas por orientación (horizontal/vertical), design system, i18n, assets editables en runtime, Storybook, testing, a11y, performance, seguridad, solicitud de archivos y definición de "Done" por PR.
+   - Ruta: `docs/prompts/agente-frontend.md`.
+
+3. **`docs/prompts/agente-backend.md`** (planificado)
+   - Reglas equivalentes para el backend (arquitectura hexagonal, DTOs, ofuscación, auditoría, códigos de error, seguridad).
+
+4. **`docs/prompts/agente-database.md`** (planificado)
+   - Reglas equivalentes para la base de datos (nomenclatura SQL, idempotencia, permisos `investor`/`investment_app`, auditoría, migraciones).
+
+5. **`docs/frontend/*.md`** y **`docs/sql/*.sql`**
+   - Profundizan en arquitectura, design system, i18n, assets, storybook, testing y consultas de referencia.
+
+**Regla de solicitud de archivos**: cuando un agente (humano o IA) necesite contexto que no está en los documentos anteriores, DEBE solicitar los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras. El procedimiento detallado vive en `docs/prompts/agente-frontend.md` sección 21 y en `docs/prompts/prompt_inicial.md` (Reglas generales para la IA, reglas 24-28).
+
+**Consistencia**: cualquier cambio en endpoints, DTOs, roles, códigos de error o convenciones de frontend debe reflejarse en el mismo PR en este README, en `prompt_inicial.md` y/o en el agente correspondiente.
+
 # Investment Tracker Pro - Documentación Completa
 
 ## ÍNDICE
@@ -1434,6 +1459,10 @@ graph TB
 - **Usuario de BD de la app**: `investment_app` (con permisos restringidos, sin acceso a `auditoria_usuarios`)
 - **Validación**: Jakarta Bean Validation (`@Valid`) + validaciones de servicio. Los errores de `@Valid` se reportan como `SYS-03` (500) sin detalle al cliente.
 - **Perfil de usuario**: `/api/auth/get-my-profile` (GET) y `/api/auth/update-my-profile` (POST). El `username` e `id` deben coincidir con el JWT.
+- **Reglas del frontend**: ver `docs/agente-frontend.md` (estructura, vistas por orientación, design system, i18n, assets, Storybook, testing, a11y, DoD).
+- **Reglas del backend**: ver `docs/agente-backend.md` (planificado).
+- **Reglas de base de datos**: ver `docs/agente-database.md` (planificado).
+- **Idea general y reglas para la IA**: ver `docs/prompts/prompt_inicial.md`.
 
 ## 105. Gestión del Proyecto
 
@@ -1517,12 +1546,12 @@ done
 
 ### Scripts disponibles
 
-| Script | Función | Uso |
-|--------|---------|-----|
-| `create-cap01.sh` | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh` |
-| `kanban-move.sh` | Mueve un issue entre estados | `./scripts/kanban-move.sh <N> progress` |
-| `kanban-comment.sh` | Comenta SHA + cambios en el issue | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
-| `retry-links.sh` | Re-vincula sub-issues si el link falló | `./scripts/retry-links.sh` |
+| Script              | Función                                 | Uso                                                |
+| ------------------- | --------------------------------------- | -------------------------------------------------- |
+| `create-cap01.sh`   | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
+| `kanban-move.sh`    | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
+| `kanban-comment.sh` | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
+| `retry-links.sh`    | Re-vincula sub-issues si el link falló  | `./scripts/retry-links.sh`                         |
 
 ### Reglas de commits
 

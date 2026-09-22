@@ -8,6 +8,29 @@ El versionamiento de todos los archivos seran llevados en un nuevo proyecto de g
 Quiero que crees un paso a paso del procedimiento de toda la programación con diagramas, modelo MER y documentos.
 Quiero que guardes este promp en un directorio de promps para el proyecto en formato MD
 
+## 📚 Documentos de referencia obligatoria
+
+Antes de generar cualquier propuesta, código, script o decisión arquitectónica, la IA DEBE consultar y respetar los siguientes documentos. Son las fuentes de verdad del proyecto:
+
+1. `README.md` (raíz de `investment-tracker/`)
+   - Estado general del proyecto, versión vigente (Version/Release/Hotfix), arquitectura, endpoints publicados, stack, modelo de datos, seguridad, ofuscación, auditoría y Scrum.
+   - Fuente principal para endpoints, DTOs, códigos de error, roles y reglas de seguridad.
+
+2. `docs/prompts/prompt_inicial.md` (este archivo)
+   - Idea general del proyecto, requisitos funcionales, reglas para la IA y directrices por capa.
+
+3. `docs/prompts/agente-frontend.md`
+   - Reglas obligatorias para construir el frontend: estructura de directorios, vistas por orientación, componentes, i18n, assets, testing, a11y, performance, seguridad, solicitud de archivos y DoD por PR.
+
+4. `docs/prompts/agente-backend.md` y `docs/prompts/agente-database.md` (planificados)
+   - Mismas reglas, pero para el backend y la base de datos.
+
+**Jerarquía en caso de conflicto**: `README.md` → `prompt_inicial.md` → `agente-frontend.md` → documentos satélite.
+
+Si la IA detecta una contradicción, debe señalarla, proponer la corrección y actualizar el documento correspondiente en el mismo PR.
+
+**Regla de solicitud de archivos**: si para avanzar la IA necesita contexto que no está en estos documentos, DEBE solicitar explícitamente los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras.
+
 ---
 
 # 🧠 CONDICIONES DE DESARROLLO PARA LA IA (actualizadas al 2026-09-20)
@@ -185,13 +208,8 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
 ---
 
-## 2.4 — Tabla de Endpoints publicados
+## Tabla de Endpoints publicados
 
-**Ubicación**: sección `## 📡 Endpoints publicados (API REST)`.
-
-**Reemplazar la tabla completa** por:
-
-````markdown
 | Endpoint                           | Método | Auth                   | Descripción                                                              |
 | ---------------------------------- | ------ | ---------------------- | ------------------------------------------------------------------------ |
 | `/api/auth/login`                  | POST   | No                     | Login - Retorna **solo** `token` y `refreshToken`                        |
@@ -252,27 +270,65 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 ## 🧹 Reglas generales para la IA
 
 1. **Cada comando ejecutado debe tener path absoluto** y no usar variables de entorno (`/prog/datos/investment-tracker`).
+
 2. **El archivo `README.md` contiene la información CRÍTICA y el estado general del proyecto**. Siempre consultarlo antes de responder.
+
 3. **El código recomendado debe ajustarse al código ya implementado**. Si no se tiene contexto de un archivo, función o script, **pedirlo explícitamente** antes de dar una respuesta. Luego, entregar una respuesta basada en el código real de la aplicación.
+
 4. **Todas las respuestas deben incluir, cuando sea aplicable, el uso de los helpers de `BaseIntegrationTest`** (como `printBanner`, `printStep`, `printSubStep`) para mantener consistencia en los logs de pruebas.
+
 5. **Nunca usar `investor` como usuario JDBC del backend**. Siempre `investment_app`.
+
 6. **Nunca otorgar permisos sobre `auditoria_usuarios` a `investment_app`**. Si se requiere consultar auditoría, hacerlo con `investor`/`postgres`.
+
 7. **Toda planeación, avance y seguimiento del proyecto se gestiona en el tablero de GitHub Projects**: https://github.com/users/42mrnobody42-alt/projects/2. Antes de proponer nuevas funcionalidades o priorizar tareas, consultar el tablero para alinear con el estado actual del proyecto.
+
 8. **Cada nueva feature debe corresponder a un issue del tablero**. Al iniciar una rama `feature/*`, referenciar el número de issue en el nombre de la rama o en el commit (ej: `feat(#12): actualizar perfil de usuario`).
+
 9. **Ofuscación de datos sensibles**: cualquier campo nuevo que exponga `email`, `nombre_completo`, `celular`, montos, saldos o cualquier dato personal/financiero en un DTO de respuesta **debe anotarse con `@Masked(MaskType.XXX)`**.
+
 10. **Nunca loggear campos sensibles**: usar `LogSanitizer.sanitize(fieldName, value)` antes de escribir cualquier dato que esté en `security.sensitive-fields`. Si el campo no está en la lista y debería estarlo, agregarlo primero a `application.yml`.
+
 11. **La ofuscación ocurre solo a la salida**: nunca en el dominio ni en las validaciones internas. Los servicios usan datos reales; el JSON los enmascara.
+
 12. **Si un endpoint debe devolver datos propios sin enmascarar**, agregarlo a `OWN_DATA_PATHS` en `MaskingFilter`. Documentar por qué.
+
 13. **Manejo de errores de validación Jakarta (`@Valid`)**: se reportan con el código `SYS-03` (`INVALID_ARGUMENTS`) y HTTP 500. **Nunca** exponer al cliente el detalle de los campos que fallaron. El detalle se registra en logs con `log.warn`. Los errores de validación de negocio (en el servicio) siguen usando sus códigos específicos (`PWD-*`, `VAL-005`, etc.) con HTTP 400.
+
 14. **Login minimalista**: `/api/auth/login` y `/api/auth/refresh-token` retornan **únicamente** `token` y `refreshToken`. No exponer `username`, `email`, `nombreCompleto`, `celular`, `pais`, `tokenType`, `expiresIn` ni `refreshTokenExpiresIn`. Los datos personales se consultan por separado con `/api/auth/get-my-profile`.
+
 15. **Perfil propio**: los endpoints `/api/auth/get-my-profile` y `/api/auth/update-my-profile` solo operan sobre el usuario autenticado. El `username` e `id` del request deben coincidir con el JWT. Agregar `/api/auth/get-my-profile` a `OWN_DATA_PATHS` del `MaskingFilter` si devuelve datos reales.
+
 16. **Email/nombreCompleto preservados**: al registrar o actualizar, guardar el email y `nombreCompleto` tal cual los envía el usuario (solo `trim`). Las comparaciones de unicidad son **case-insensitive**, pero el valor **almacenado** conserva el case original.
+
 17. **Nunca iniciar trabajo sin haber movido el issue correspondiente a In progress en el tablero**. Antes de tocar código, verificar el estado con gh project item-list.
+
 18. **Nunca commitear sin referenciar el issue con Closes** #N (cierra automáticamente) o Refs #N (solo referencia). **El commit debe tener formato\*** tipo(#N): descripción.
+
 19. **Siempre comentar el SHA en el issue al cerrar una tarea.** Usar kanban-comment.sh o directamente gh issue comment con el formato establecido.
+
 20. **Nunca mergear a lastest directamente.** Todo pasa por PR desde feature/\* hacia developer, y luego developer hacia lastest mediante PR revisado.
+
 21. **Consultar docs/scrum/kanban/kanban-ids.env antes de ejecutar cualquier script que requiera IDs de issues**. Este archivo se regenera al crear cada capability.
+
 22. **Mantener sincronizado docs/scrum/kanban/ con los issues de GitHub.** Cuando se cree una capability nueva, actualizar kanban-ids.env y agregar el .md correspondiente en capabilities/.
+
+23. **Consultar `docs/agente-frontend.md` antes de cualquier tarea de frontend**. Ese documento define estructura de directorios, componentes obligatorios, i18n, assets, testing, a11y, performance, seguridad y DoD por PR. Ante conflicto, prevalece `README.md` → este archivo → `agente-frontend.md`.
+
+24. **Nunca inventar contexto**. Si falta un endpoint, un DTO, un campo, un código de error, un rol, un diseño o una regla de negocio, **solicitar el archivo concreto** (ruta + motivo) antes de continuar. Formato sugerido:
+
+    Para avanzar necesito los siguientes archivos:
+    1. <ruta/archivo.ext> — <motivo breve>
+    2. <ruta/archivo.ext> — <motivo breve>
+       Con esos archivos continúo con: <entregable esperado>.
+
+25. **Pedir solo lo necesario** para el siguiente paso, no todo el repositorio. Priorizar: `README.md`, `docs/prompts/prompt_inicial.md`, `docs/agente-frontend.md`, luego código real (servicios, DTOs, vistas existentes, tests, configuración).
+
+26. **No avanzar con supuestos silenciosos**. Si se hace un supuesto por continuidad, declararlo explícitamente y marcarlo como pendiente de validación antes de generar código.
+
+27. **Mantener sincronizados los documentos**. Si cambia una convención de frontend en `docs/agente-frontend.md`, actualizar el `README.md` (sección de estructura) y, si aplica, este archivo, en el mismo PR. Si cambia un endpoint en `README.md`, actualizar los servicios y tipos del frontend que lo consumen.
+
+28. **Cuando el usuario pida "crear la vista X" sin contrato**, el agente debe solicitar antes: (a) endpoints exactos (ver `README.md` o código real), (b) DTO de request, (c) DTO de response, (d) roles con acceso, (e) reglas de negocio y validaciones.
 
 ## 📊 Gestión del Proyecto
 
@@ -434,12 +490,12 @@ usa Closes #N; si no, forzar manualmente):
 
 ### Scripts disponibles
 
-| Script | Función | Uso |
-|--------|---------|-----|
-| `create-cap01.sh` | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh` |
-| `kanban-move.sh` | Mueve un issue entre estados | `./scripts/kanban-move.sh <N> progress` |
-| `kanban-comment.sh` | Comenta SHA + cambios en el issue | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
-| `retry-links.sh` | Re-vincula sub-issues si el link falló | `./scripts/retry-links.sh` |
+| Script              | Función                                 | Uso                                                |
+| ------------------- | --------------------------------------- | -------------------------------------------------- |
+| `create-cap01.sh`   | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
+| `kanban-move.sh`    | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
+| `kanban-comment.sh` | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
+| `retry-links.sh`    | Re-vincula sub-issues si el link falló  | `./scripts/retry-links.sh`                         |
 
 ---
 
@@ -572,15 +628,29 @@ Para facilitar el despliegue y la migración, se generarán dos scripts agregado
 
 ### Frontend (React + CSS)
 
-- **Componentes funcionales y hooks**: usar componentes funcionales con React Hooks (useState, useEffect, useContext, etc.). Evitar clases.
+> Este proyecto sigue las reglas de `docs/prompts/agente-frontend.md`. Antes de escribir código, consultar también `README.md` (endpoints, DTOs, roles, códigos de error, versión vigente) y la sección de requisitos funcionales de este archivo.
+
+- **Fuentes de verdad**: `README.md`, `docs/prompts/prompt_inicial.md` y `docs/prompts/agente-frontend.md`. No inventar endpoints, DTOs, códigos de error ni roles.
+- **Componentes funcionales y hooks**: usar componentes funcionales con React Hooks. Evitar clases.
+- **Separación por orientación**: las vistas horizontales (PC, Smart TV, tablet apaisada) y verticales (móvil, tablet retrato) viven en directorios independientes (`frontend/src/views/horizontal` y `frontend/src/views/vertical`). No se importan entre sí; la lógica común se extrae a `shared/`.
+- **Layout interno obligatorio**: toda vista autenticada usa `AppShell` (TopBar + Sidebar plegable + Workspace) definido en `docs/prompts/agente-frontend.md` sección 3.2.
 - **Separación de responsabilidades**:
-  - **Presentación**: componentes UI puros (stateless) que reciben props y renderizan.
-  - **Contenedores**: componentes con estado y lógica de negocio (o usar hooks personalizados para aislar lógica).
-  - **Servicios**: módulos que encapsulan las llamadas a la API (Axios) y manejan la autenticación.
-- **Estilos modernos**: usar CSS Modules, Styled Components o Tailwind CSS para mantener estilos encapsulados y escalables. Evitar CSS global siempre que sea posible.
-- **Manejo de estado global**: si es necesario, usar Context API o Redux (preferir Context para casos simples).
-- **Pruebas**: escribir pruebas unitarias para componentes (React Testing Library) y pruebas de integración para flujos completos.
-- **Rendimiento**: usar `React.memo`, `useCallback` y `useMemo` cuando sea apropiado para evitar renders innecesarios.
+  - Presentación: componentes UI puros que reciben props y renderizan.
+  - Contenedores: componentes con estado y lógica de negocio (o hooks personalizados).
+  - Servicios: módulos que encapsulan las llamadas a la API (`frontend/src/shared/services/*`), alineados con los endpoints publicados en `README.md`.
+- **Estilos modernos**: CSS Modules + CSS Custom Properties + Container Queries. Tokens centralizados en `frontend/src/styles/tokens.css`. Prohibido hardcodear colores o espaciados.
+- **i18n obligatorio**: `i18next` + `react-i18next`. Estructura `frontend/src/i18n/<locale>/<componente>/*.json`. Idiomas: `es` (fallback) y `en`. Cero textos hardcodeados en JSX.
+- **Assets editables en runtime**: logos, imágenes corporativas y fuentes viven en `frontend/public/assets/` y se resuelven vía `useAsset()` leyendo `manifest.json`. Nunca importar estos assets desde `src/` con el bundler.
+- **Storybook (History Book)**: obligatorio en `frontend/.storybook/`. Cada componente atómico/molecular/organismo tiene su `.stories.tsx` con Default, Variants, States, Responsive y DarkMode.
+- **Manejo de estado**: estado local con hooks; estado global UI con Zustand; estado de servidor con TanStack Query. No duplicar estado de servidor en el store global.
+- **Cliente HTTP único** en `frontend/src/shared/utils/http.ts` con interceptores JWT y refresh automático. Mapear códigos de error del backend a claves i18n en `shared/constants/httpStatus.ts`.
+- **Pruebas**: unitarias (Vitest + Testing Library) por componente, integración por flujo (login → home → consulta) y E2E (Playwright) en 5 configuraciones (mobile-chrome, mobile-safari, tablet, desktop, tv). Auditoría a11y con `@axe-core/playwright`.
+- **Rendimiento**: code splitting por ruta, lazy load de vistas pesadas, virtualización de listas > 100 filas, memoización selectiva justificada.
+- **Seguridad**: nada de secretos en el bundle; solo variables con prefijo `VITE_`. Sanitización con DOMPurify. CSP estricta en `index.html` y en `docker/nginx/default.conf`. No loggear datos sensibles.
+- **Accesibilidad**: WCAG 2.2 AA mínimo. Foco visible, navegación por teclado, `aria-live` en toasts y validaciones, `prefers-reduced-motion`.
+- **Trazabilidad con el tablero**: cada vista o componente nace de un issue del tablero. Commits con formato `tipo(#N): descripción` y `Closes #N` o `Refs #N`. Ver README.md sección 106.
+- **Definición de "Done" por PR**: la de `docs/prompts/agente-frontend.md` sección 18. Incluye i18n completo, stories, tests unitarios + integración + E2E, a11y, Lighthouse >= 90, assets mutables, documentación y referencia al issue.
+- **Solicitud de archivos**: si falta contexto, ver sección "🧹 Reglas generales para la IA" y `docs/prompts/agente-frontend.md` sección 21.
 
 ---
 
@@ -605,4 +675,7 @@ Para facilitar el despliegue y la migración, se generarán dos scripts agregado
 - Se deben implementar con traducción internacional i18n para ingles y español.
 - Empezaremos creando los componentes (botones, pop-up info/warning/error, tablas, espacio de graficos con amplicación de pantalla, etc), crearemos vista (login, logut, home, consulta de datos, edición de datos) las vistas internas deben mantener un esquema dividido en 3 partes una barra superior informativa, barra lateral izquierda de procesos plegables, espacio de trabajo debajo de la barra superior y la lado derecho de la barra de procesos.
 - PASAR POR LA IA PARA que analise y me pregunte para crear un RPA (solicitud de requisitos) del frontend que llevamos (manejo de usuarios), pero con proyección para lo que vamos a necesitar del proyecto para centralizar sus inversiones y obtener información de valor que le permita aprovechar oporunidades de compra y venta de acciones del interes del usuario, apartir de un analisis tecnico o social (elección del usuario)
-````
+
+```
+
+```
