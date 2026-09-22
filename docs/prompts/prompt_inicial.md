@@ -22,8 +22,8 @@ Antes de generar cualquier propuesta, código, script o decisión arquitectónic
 3. `docs/prompts/agente-frontend.md`
    - Reglas obligatorias para construir el frontend: estructura de directorios, vistas por orientación, componentes, i18n, assets, testing, a11y, performance, seguridad, solicitud de archivos y DoD por PR.
 
-4. `docs/prompts/agente-backend.md` y `docs/prompts/agente-database.md` (planificados)
-   - Mismas reglas, pero para el backend y la base de datos.
+4. `docs/prompts/agente-backend.md` y `docs/prompts/agente-database.md`
+   - Reglas hermanas para el backend y la base de datos. Mismo patrón (secciones 0-22), mismos principios de fuentes de verdad y solicitud de archivos.
 
 **Jerarquía en caso de conflicto**: `README.md` → `prompt_inicial.md` → `agente-frontend.md` → documentos satélite.
 

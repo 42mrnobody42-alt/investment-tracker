@@ -348,8 +348,8 @@ Solo se listan las ramas relevantes al frontend y a los contenedores. Las ramas 
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
     - `agente-frontend.md` - Este documento
-    - `agente-backend.md` - (planificado) Reglas del backend
-    - `agente-database.md` - (planificado) Reglas de la base de datos
+    - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
+    - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
     - **`prompts/`**
       - `prompt_inicial.md` - Idea general del proyecto (fuente de verdad, ver sección 0)
       - `prompt_frontend.md` - Prompt específico del frontend
@@ -770,7 +770,7 @@ Ejemplos:
 - README.md (raíz del proyecto): estado general, versión vigente, endpoints publicados, stack, arquitectura, modelo de datos, seguridad, ofuscación, auditoría, Scrum. Es la fuente principal.
 - docs/prompts/prompt_inicial.md: idea general del proyecto, requisitos funcionales, reglas para la IA, directrices por capa y flujo obligatorio por issue.
 - docs/agente-frontend.md: este documento. Reglas de construcción del frontend.
-- docs/agente-backend.md y docs/agente-database.md: documentos hermanos (planificados). Deben respetar las mismas reglas de fuentes de verdad y solicitud de archivos.
+- docs/prompts/agente-backend.md y docs/prompts/agente-database.md: documentos hermanos. Respetan las mismas reglas de fuentes de verdad y solicitud de archivos.
 - docs/frontend/\*.md: profundizan en arquitectura, design system, i18n, assets, storybook, testing y deploy.
 
 Regla de consistencia:

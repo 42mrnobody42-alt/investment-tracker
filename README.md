@@ -74,11 +74,13 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
    - Reglas obligatorias de arquitectura y desarrollo del frontend: estructura de directorios, vistas por orientación (horizontal/vertical), design system, i18n, assets editables en runtime, Storybook, testing, a11y, performance, seguridad, solicitud de archivos y definición de "Done" por PR.
    - Ruta: `docs/prompts/agente-frontend.md`.
 
-3. **`docs/prompts/agente-backend.md`** (planificado)
-   - Reglas equivalentes para el backend (arquitectura hexagonal, DTOs, ofuscación, auditoría, códigos de error, seguridad).
+3. **`docs/prompts/agente-backend.md`**
+   - Reglas del backend: arquitectura hexagonal, DTOs, manejo de errores por dominio, seguridad (JWT, refresh token, AES-256-GCM, BCrypt), ofuscación (`@Masked`), auditoría (`AuditUserAwareDataSource`), testing y DoD por PR.
+   - Ruta: `docs/prompts/agente-backend.md`.
 
-4. **`docs/prompts/agente-database.md`** (planificado)
-   - Reglas equivalentes para la base de datos (nomenclatura SQL, idempotencia, permisos `investor`/`investment_app`, auditoría, migraciones).
+4. **`docs/prompts/agente-database.md`**
+   - Reglas de la base de datos: estructura de `database/sql/`, nomenclatura `Version_Release_Hotfix_Orden_Prefijo_Nombre.sql`, idempotencia, permisos `investor`/`investment_app`, auditoría con `SECURITY DEFINER`, funciones PL/pgSQL y migraciones.
+   - Ruta: `docs/prompts/agente-database.md`.
 
 5. **`docs/frontend/*.md`** y **`docs/sql/*.sql`**
    - Profundizan en arquitectura, design system, i18n, assets, storybook, testing y consultas de referencia.
@@ -1432,6 +1434,9 @@ graph TB
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
     - **`prompts/`**
       - `prompt_inicial.md` - Prompt original
+      - `agente-frontend.md` - (planificado) Reglas del frontend
+      - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
+      - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
     - **`sql/`**
@@ -1460,8 +1465,8 @@ graph TB
 - **Validación**: Jakarta Bean Validation (`@Valid`) + validaciones de servicio. Los errores de `@Valid` se reportan como `SYS-03` (500) sin detalle al cliente.
 - **Perfil de usuario**: `/api/auth/get-my-profile` (GET) y `/api/auth/update-my-profile` (POST). El `username` e `id` deben coincidir con el JWT.
 - **Reglas del frontend**: ver `docs/agente-frontend.md` (estructura, vistas por orientación, design system, i18n, assets, Storybook, testing, a11y, DoD).
-- **Reglas del backend**: ver `docs/agente-backend.md` (planificado).
-- **Reglas de base de datos**: ver `docs/agente-database.md` (planificado).
+- **Reglas del backend**: ver `docs/prompts/agente-backend.md`.
+- **Reglas de base de datos**: ver `docs/prompts/agente-database.md`.
 - **Idea general y reglas para la IA**: ver `docs/prompts/prompt_inicial.md`.
 
 ## 105. Gestión del Proyecto
