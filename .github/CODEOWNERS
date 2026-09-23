@@ -1,0 +1,24 @@
+# =========================================================
+
+# CODEOWNERS — Investment Tracker
+
+# Todo PR que toque estos paths requiere review de @RootKaizer
+
+# =========================================================
+
+# Revisión obligatoria para todo el repositorio
+
+-                       @RootKaizer
+
+# Reforzado en rutas críticas
+
+/backend/ @RootKaizer
+/database/ @RootKaizer
+/docker/ @RootKaizer
+/docs/prompts/ @RootKaizer
+/docs/scrum/ @RootKaizer
+/frontend/ @RootKaizer
+
+# El propio CODEOWNERS solo puede cambiarlo RootKaizer
+
+.github/CODEOWNERS @RootKaizer
