@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `000`
+- Hotfix = `001`
 
 ## Fecha: 2026-09-19
 
