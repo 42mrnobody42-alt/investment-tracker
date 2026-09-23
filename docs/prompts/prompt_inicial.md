@@ -330,6 +330,12 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
 28. **Cuando el usuario pida "crear la vista X" sin contrato**, el agente debe solicitar antes: (a) endpoints exactos (ver `README.md` o código real), (b) DTO de request, (c) DTO de response, (d) roles con acceso, (e) reglas de negocio y validaciones.
 
+29. **Todo issue (CAP/FT/US/TS) DEBE incluir**: `## Contexto`, `## Alcance`
+    (o `## Entregable` en TS), `## Criterios de aceptación` (checkboxes `- [ ]`)
+    y `## Dependencias`. En TS además `## Estimación` (≤4h) y `## US padre`.
+    Las plantillas viven en `docs/scrum/kanban/templates/`. Un issue no se
+    cierra (`Done`) hasta que TODOS los checkboxes estén marcados.
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero
