@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # =========================================================
 # create-cap01.sh — Crea CAP-01 + FT + US + TS en GitHub
+# Estructura: 9 FT · 41 US · 143 TS
+# Alineado a README.md, prompt_inicial.md, agente-frontend.md,
+# agente-backend.md y agente-database.md.
 # =========================================================
 set -euo pipefail
 
@@ -10,55 +13,103 @@ PROJECT_NUMBER=2
 KANBAN_DIR="/prog/datos/investment-tracker/docs/scrum/kanban"
 
 echo "══════════════════════════════════════════════════════"
-echo "  Creando CAP-01 en $REPO"
+echo "  Creando CAP-01 (completo) en $REPO"
 echo "══════════════════════════════════════════════════════"
 
 # ---------------------------------------------------------
 # 1) LABELS
 # ---------------------------------------------------------
 echo "==> [1/7] Creando labels..."
-gh label create "capability"  --repo "$REPO" --color "6f42c1" --description "Capability del proyecto" --force
-gh label create "feature"     --repo "$REPO" --color "0e8a16" --description "Feature dentro de una capability" --force
-gh label create "user-story"  --repo "$REPO" --color "1d76db" --description "User Story dentro de una feature" --force
-gh label create "task"        --repo "$REPO" --color "fbca04" --description "Tarea técnica (<=4h)" --force
-gh label create "frontend"    --repo "$REPO" --color "5319e7" --description "Relacionado con frontend React" --force
-gh label create "i18n"        --repo "$REPO" --color "c5def5" --description "Internacionalización" --force
-gh label create "responsive"  --repo "$REPO" --color "bfd4f2" --description "Diseño responsive" --force
+gh label create "capability"      --repo "$REPO" --color "6f42c1" --description "Capability del proyecto" --force
+gh label create "feature"         --repo "$REPO" --color "0e8a16" --description "Feature dentro de una capability" --force
+gh label create "user-story"      --repo "$REPO" --color "1d76db" --description "User Story dentro de una feature" --force
+gh label create "task"            --repo "$REPO" --color "fbca04" --description "Tarea técnica (<=4h)" --force
+gh label create "frontend"        --repo "$REPO" --color "5319e7" --description "Relacionado con frontend React" --force
+gh label create "i18n"            --repo "$REPO" --color "c5def5" --description "Internacionalización" --force
+gh label create "responsive"      --repo "$REPO" --color "bfd4f2" --description "Diseño responsive" --force
+gh label create "design-system"   --repo "$REPO" --color "d4c5f9" --description "Componentes del Design System" --force
+gh label create "storybook"       --repo "$REPO" --color "ff8c00" --description "History Book / Storybook" --force
+gh label create "tokens"          --repo "$REPO" --color "c2e0c6" --description "Design tokens y theming" --force
+gh label create "runtime-assets"  --repo "$REPO" --color "f9d0c4" --description "Assets editables post-deploy" --force
+gh label create "testing"         --repo "$REPO" --color "0e8a16" --description "Tests unitarios / integración / E2E" --force
+gh label create "a11y"            --repo "$REPO" --color "1d76db" --description "Accesibilidad WCAG 2.2 AA" --force
+gh label create "performance"     --repo "$REPO" --color "fbca04" --description "Performance y presupuesto" --force
+gh label create "e2e"             --repo "$REPO" --color "5319e7" --description "End-to-end Playwright" --force
+gh label create "public-page"     --repo "$REPO" --color "c5def5" --description "Vista pública pre-login" --force
 
 # ---------------------------------------------------------
-# 2) CAPABILITY
+# 2) HELPERS
+# ---------------------------------------------------------
+create_ft() {
+  local title="$1" body="$2"
+  gh issue create --repo "$REPO" --title "$title" --label "feature,frontend" \
+    --body "$(printf '%b' "$body")" | grep -oE '[0-9]+$'
+}
+
+create_us() {
+  local title="$1" labels="$2" body="$3"
+  gh issue create --repo "$REPO" --title "$title" --label "$labels" \
+    --body "$(printf '%b' "$body")" | grep -oE '[0-9]+$'
+}
+
+create_task() {
+  local title="$1" us="$2" hours="$3" desc="$4"
+  gh issue create --repo "$REPO" --title "$title" --label "task,frontend" \
+    --body "$(printf '## Descripción\n%s\n\n## Estimación\n%s\n\n## US padre\n%s' "$desc" "$hours" "$us")" \
+    | grep -oE '[0-9]+$'
+}
+
+# ---------------------------------------------------------
+# 3) CAPABILITY
 # ---------------------------------------------------------
 echo "==> [2/7] Creando Capability CAP-01..."
 CAP=$(gh issue create --repo "$REPO" \
-  --title "CAP-01 — Crear frontend para login, home, datos del usuario y edición" \
+  --title "CAP-01 — Frontend React: infraestructura, design system, InitPage, autenticación y perfil" \
   --label "capability,frontend" \
   --body "$(cat <<'BODY'
 ## Objetivo
-Implementar el frontend React 18 del sistema para autenticación, home, consulta y edición de perfil de usuario.
+Implementar el frontend React 18 + TypeScript + Vite del sistema, alineado a `docs/prompts/agente-frontend.md` v1.3.0.
 
 ## Alcance
-- Setup React 18 + Vite + TypeScript
-- i18n (EN/ES) con namespaces por funcionalidad
-- Diseño responsive (PC, tablet, móvil vertical)
-- Componentes base: botones, modales, tablas, gráficos, formularios
-- Vistas: Login, Home, Perfil, Edición de perfil
-- Layout: top bar + sidebar plegable + work area
+- Setup completo (Vite, TS estricto, ESLint, Prettier, Stylelint, Husky, commitlint).
+- Storybook (History Book) con stories obligatorias por componente.
+- Design System completo: átomos, moléculas, organismos, layout.
+- Design tokens + theming (light/dark/high-contrast).
+- i18n con namespaces por componente (es/en).
+- Assets editables en runtime vía `manifest.json` + `useAsset()`.
+- AppShell (TopBar + Sidebar plegable + Workspace) con `OrientationGate`.
+- Vistas por orientación: `views/horizontal/` y `views/vertical/`.
+- Guards: PublicRoute, ProtectedRoute, RoleRoute, OnboardingRoute.
+- InitPage público con botones **Contáctenos**, **Login**, **Registrar**.
+- Login, logout, registro (2 pasos), recuperación (2 pasos), cambio de contraseña.
+- Home / Dashboard, Perfil (consulta, edición, eliminación lógica).
+- Vistas de error 404/403/500.
+- Testing: Vitest + Testing Library + Playwright (5 configs) + `@axe-core/playwright`.
+- Calidad: Lighthouse ≥ 90, a11y WCAG 2.2 AA, presupuesto de bundle.
 
 ## Features
 - FT-001 — Setup e infraestructura base
-- FT-002 — Librería de componentes base
-- FT-003 — Módulo de autenticación
-- FT-004 — Vista Home / Dashboard
-- FT-005 — Gestión de perfil de usuario
+- FT-002 — Design tokens, i18n y assets runtime
+- FT-003 — Design System: átomos
+- FT-004 — Design System: moléculas
+- FT-005 — Design System: organismos y layout
+- FT-006 — AppShell, routing y guards
+- FT-007 — InitPage público (presentación del proyecto)
+- FT-008 — Autenticación, registro y recuperación
+- FT-009 — Home, perfil y calidad transversal
 
 ## Criterios de aceptación
-- [ ] Login funcional contra /api/auth/login
-- [ ] Refresh token automático
-- [ ] Rutas protegidas por rol
-- [ ] Home con perfil resumido
-- [ ] Consulta y edición de perfil
-- [ ] i18n operativo (EN/ES sin recargar)
-- [ ] Responsive en 3 breakpoints
+- [ ] Login funcional contra `POST /api/auth/login` (manejo AUTH-001, AUTH-002, RATE-001).
+- [ ] Refresh automático contra `POST /api/auth/refresh-token`.
+- [ ] Rutas protegidas por rol (ADMIN, USER, PREMIUM).
+- [ ] InitPage pública con CTA a Contáctenos, Login, Registrar.
+- [ ] Home con perfil resumido contra `GET /api/auth/get-my-profile`.
+- [ ] Consulta y edición de perfil contra `POST /api/auth/update-my-profile` (manejo UPT-0001 y REG-002/003/007, AUTH-007, SYS-03).
+- [ ] Eliminación lógica contra `POST /api/auth/delete-account`.
+- [ ] i18n operativo (es/en sin recargar).
+- [ ] Responsive en horizontal (PC/tablet apaisada/TV) y vertical (móvil/tablet retrato).
+- [ ] Storybook con stories de todos los componentes.
+- [ ] Playwright 5 configs verdes + a11y sin violaciones críticas.
 
 **Rama base:** developer
 **Rama de trabajo:** feature/CAP-01-frontend-base
@@ -67,409 +118,429 @@ BODY
 echo "   CAP-01 = #$CAP"
 
 # ---------------------------------------------------------
-# 3) FEATURES
+# 4) FEATURES
 # ---------------------------------------------------------
 echo "==> [3/7] Creando Features..."
+declare -A FT
+FT[FT-001]=$(create_ft "FT-001 — Setup e infraestructura base" \
+"Configuración inicial del proyecto: Vite + React 18 + TypeScript estricto, ESLint/Prettier/Stylelint, Storybook, testing (Vitest + Playwright), Husky, variables de entorno y proxy /api.\n\n## User Stories\n- US-001 a US-006\n\n## Dependencias\nNinguna. Base para las demás features.")
 
-FT001=$(gh issue create --repo "$REPO" \
-  --title "FT-001 — Setup e infraestructura base del frontend" \
-  --label "feature,frontend" \
-  --body "Configuración inicial: Vite + React 18 + TS, estructura de carpetas, i18n, sistema responsive, Axios con interceptores y enrutamiento base.
+FT[FT-002]=$(create_ft "FT-002 — Design tokens, i18n y assets runtime" \
+"Sistema de diseño base: tokens CSS, temas light/dark/high-contrast, i18n con namespaces por componente (es/en), assets editables en runtime vía manifest.json y useAsset().\n\n## User Stories\n- US-007 a US-009\n\n## Dependencias\nFT-001.")
 
-## User Stories
-- US-001 — Configurar proyecto React 18 con Vite + TypeScript
-- US-002 — Definir arquitectura de carpetas y convenciones
-- US-003 — Configurar i18n (inglés/español)
-- US-004 — Configurar sistema responsive y tema visual
-- US-005 — Configurar Axios, interceptores y manejo de tokens
-- US-006 — Configurar enrutamiento y layout raíz
+FT[FT-003]=$(create_ft "FT-003 — Design System: átomos" \
+"Átomos obligatorios del Design System: Button, Input, Textarea, Select, Checkbox, Radio, Switch, Icon, Badge, Tag, Avatar, Tooltip, Spinner, Divider, Skeleton. Cada uno con .tsx, .module.css, .types.ts, .test.tsx, .stories.tsx e index.ts.\n\n## User Stories\n- US-010, US-011\n\n## Dependencias\nFT-001, FT-002.")
 
-## Dependencias
-Ninguna. Base para las demás features." | grep -oE '[0-9]+$')
+FT[FT-004]=$(create_ft "FT-004 — Design System: moléculas" \
+"Moléculas obligatorias: Modal (info/warning/error/success/confirm), Toast, Popover, Dropdown, Tabs, Accordion, Breadcrumbs, Pagination, FormField, SearchBar, LanguageSwitcher, ThemeSwitcher.\n\n## User Stories\n- US-012 a US-014\n\n## Dependencias\nFT-003.")
 
-FT002=$(gh issue create --repo "$REPO" \
-  --title "FT-002 — Librería de componentes base reutilizables" \
-  --label "feature,frontend" \
-  --body "Componentes UI reutilizables: layout, botones, inputs, modales, toasts, tablas, gráficos y formularios validados.
+FT[FT-005]=$(create_ft "FT-005 — Design System: organismos y layout" \
+"Organismos: DataTable, ChartPanel, MediaPlayer, FileUploader, Wizard, SidebarMenu, NotificationCenter, UserMenu. Layout: SafeAreaView, KeyboardAwareView, PublicHeader, Footer, OrientationGate.\n\n## User Stories\n- US-015 a US-018\n\n## Dependencias\nFT-004.")
 
-## User Stories
-- US-007 — Componentes de layout
-- US-008 — Botones y controles básicos
-- US-009 — Modales y pop-ups
-- US-010 — Tablas de datos
-- US-011 — Espacio de gráficos con ampliación
-- US-012 — Formularios y validación
+FT[FT-006]=$(create_ft "FT-006 — AppShell, routing y guards" \
+"AppShell (TopBar + Sidebar plegable + Workspace), React Router v6 con lazy loading, paths, guards (Public/Protected/Role/Onboarding), detección de viewport/orientación/dispositivo y cliente HTTP con interceptores JWT + refresh.\n\n## User Stories\n- US-019 a US-023\n\n## Dependencias\nFT-002, FT-004, FT-005.")
 
-## Dependencias
-FT-001." | grep -oE '[0-9]+$')
+FT[FT-007]=$(create_ft "FT-007 — InitPage público (presentación del proyecto)" \
+"Vista pública pre-login con hero, beneficios, cómo funciona, partners, casos de éxito, footer. Incluye botones **Contáctenos**, **Login** y **Registrar** en la barra superior, que redirigen a /contact, /login y /register respectivamente. Versión horizontal (PC, tablet apaisada, TV) y vertical (móvil, tablet retrato).\n\n## User Stories\n- US-024 a US-026\n\n## Dependencias\nFT-002, FT-005, FT-006.")
 
-FT003=$(gh issue create --repo "$REPO" \
-  --title "FT-003 — Módulo de autenticación (login / logout / sesión)" \
-  --label "feature,frontend" \
-  --body "Vista de Login, gestión de sesión con JWT + Refresh Token, logout y rutas protegidas por rol.
+FT[FT-008]=$(create_ft "FT-008 — Autenticación, registro y recuperación" \
+"LoginView (horizontal + vertical), AuthContext, useRefreshToken, logout, registro en 2 pasos, recuperación de contraseña en 2 pasos y cambio de contraseña propia. Todos los flujos consumen endpoints reales del README y manejan códigos de error por dominio.\n\n## User Stories\n- US-027 a US-034\n\n## Dependencias\nFT-002, FT-006.")
 
-## User Stories
-- US-013 — Vista de Login
-- US-014 — Gestión de sesión y refresh automático
-- US-015 — Logout y cierre de sesión
-- US-016 — Rutas protegidas y control de roles
+FT[FT-009]=$(create_ft "FT-009 — Home, perfil y calidad transversal" \
+"HomeView, widget de perfil resumido, ProfileView, EditProfileView, eliminación lógica de cuenta, vistas de error 404/403/500. Cierra con auditoría a11y completa (axe-core), presupuesto de performance (Lighthouse ≥ 90) y E2E Playwright en 5 configuraciones.\n\n## User Stories\n- US-035 a US-041\n\n## Dependencias\nFT-006, FT-008.")
 
-## Dependencias
-FT-001, FT-002." | grep -oE '[0-9]+$')
-
-FT004=$(gh issue create --repo "$REPO" \
-  --title "FT-004 — Vista Home / Dashboard" \
-  --label "feature,frontend" \
-  --body "Home con widgets de resumen, estado del sistema y perfil rápido. Placeholders para futuros endpoints de negocio.
-
-## User Stories
-- US-017 — Dashboard inicial
-- US-018 — Perfil rápido en Home
-
-## Dependencias
-FT-002, FT-003." | grep -oE '[0-9]+$')
-
-FT005=$(gh issue create --repo "$REPO" \
-  --title "FT-005 — Gestión de perfil de usuario" \
-  --label "feature,frontend" \
-  --body "Consulta y edición del perfil del usuario autenticado, incluyendo borrado lógico de cuenta.
-
-## User Stories
-- US-019 — Consulta de perfil
-- US-020 — Edición de perfil
-- US-021 — Eliminación de cuenta (lógica)
-
-## Dependencias
-FT-002, FT-003." | grep -oE '[0-9]+$')
-
-echo "   FT-001=#$FT001 FT-002=#$FT002 FT-003=#$FT003 FT-004=#$FT004 FT-005=#$FT005"
+echo "   FT creadas: 001..009"
 
 # ---------------------------------------------------------
-# 4) USER STORIES
+# 5) USER STORIES
 # ---------------------------------------------------------
 echo "==> [4/7] Creando User Stories..."
+declare -A US
+declare -A US_PARENT
 
-US001=$(gh issue create --repo "$REPO" \
-  --title "US-001 — Configurar proyecto React 18 con Vite + TypeScript" \
-  --label "user-story,frontend" \
-  --body "Eliminar frontend actual e inicializar proyecto desde cero con Vite + React 18 + TS, ESLint y Prettier.
+# ---- FT-001 -------------------------------------------------------------
+US[US-001]=$(create_us "US-001 — Inicializar proyecto Vite + React 18 + TypeScript estricto" \
+  "user-story,frontend" \
+"## Objetivo\nEliminar el frontend actual y arrancar un proyecto limpio con Vite + React 18 + TypeScript en modo estricto.\n\n## Tareas\n- TS-001 Inicializar Vite + React 18 + TS (2h)\n- TS-002 ESLint + Prettier + tsconfig estricto (2h)\n- TS-003 Stylelint para CSS Modules (1h)\n- TS-004 Eliminar frontend/ actual (1h)\n\n## Criterios\n- [ ] npm run dev levanta sin errores\n- [ ] npm run build sin warnings\n- [ ] ESLint/Prettier/Stylelint limpios")
+US_PARENT[US-001]=FT-001
 
-## Tareas
-- TS-050: Eliminar carpeta frontend/ actual (1h)
-- TS-001: Inicializar proyecto Vite + React 18 + TS (2h)
-- TS-002: Configurar ESLint, Prettier y tsconfig estricto (2h)
+US[US-002]=$(create_us "US-002 — Estructura de carpetas, alias y convenciones" \
+  "user-story,frontend" \
+"## Objetivo\nDefinir la estructura src/ y alias de imports (@app, @components, @views, @shared, @i18n, @styles).\n\n## Tareas\n- TS-005 Estructura src/ (2h)\n- TS-006 Alias en tsconfig + vite (1h)\n- TS-007 Documentar convenciones en frontend/README.md (1h)")
+US_PARENT[US-002]=FT-001
 
-## Criterios de aceptación
-- [ ] npm run dev levanta sin errores
-- [ ] npm run build sin warnings
-- [ ] ESLint y Prettier pasan limpios" | grep -oE '[0-9]+$')
+US[US-003]=$(create_us "US-003 — Configurar Storybook (History Book)" \
+  "user-story,frontend,storybook" \
+"## Objetivo\nStorybook operativo con decoradores globales (ThemeProvider, I18nextProvider, Router) y build estático.\n\n## Tareas\n- TS-008 Instalar y configurar Storybook (2h)\n- TS-009 Decoradores globales (2h)\n- TS-010 Story DesignTokens/Overview (2h)\n- TS-011 Build estático (1h)")
+US_PARENT[US-003]=FT-001
 
-US002=$(gh issue create --repo "$REPO" \
-  --title "US-002 — Definir arquitectura de carpetas y convenciones" \
-  --label "user-story,frontend" \
-  --body "Estructura de carpetas del frontend y documentación de convenciones.
+US[US-004]=$(create_us "US-004 — Testing setup (Vitest + Playwright + axe)" \
+  "user-story,frontend,testing" \
+"## Objetivo\nInfraestructura de pruebas: unitarias con Vitest + Testing Library, E2E con Playwright en 5 configs y auditoría a11y con @axe-core/playwright.\n\n## Tareas\n- TS-012 Vitest + Testing Library + setup.ts (2h)\n- TS-013 Playwright 5 proyectos (3h)\n- TS-014 @axe-core/playwright (2h)\n- TS-015 Scripts npm (1h)")
+US_PARENT[US-004]=FT-001
 
-## Tareas
-- TS-003: Crear estructura de carpetas (2h)
-- TS-004: Documentar convenciones en frontend/README.md (1h)" | grep -oE '[0-9]+$')
+US[US-005]=$(create_us "US-005 — Husky + lint-staged + commitlint" \
+  "user-story,frontend" \
+"## Objetivo\nHooks de Git que garantizan calidad antes de commit/push.\n\n## Tareas\n- TS-016 Husky + pre-commit (2h)\n- TS-017 commitlint + commit-msg (1h)\n- TS-018 pre-push (1h)")
+US_PARENT[US-005]=FT-001
 
-US003=$(gh issue create --repo "$REPO" \
-  --title "US-003 — Configurar i18n (inglés/español)" \
-  --label "user-story,frontend,i18n" \
-  --body "Integrar react-i18next con namespaces por funcionalidad y persistencia de idioma.
+US[US-006]=$(create_us "US-006 — Variables de entorno y proxy /api" \
+  "user-story,frontend" \
+"## Objetivo\nVariables VITE_* tipadas y proxy /api hacia el backend en desarrollo.\n\n## Tareas\n- TS-019 .env.example + .env.development/staging/production (1h)\n- TS-020 vite.config.ts con proxy /api (2h)\n- TS-021 env.d.ts tipado (1h)")
+US_PARENT[US-006]=FT-001
 
-## Estructura
-src/i18n/
-├── config.ts
-├── en/{comun,seguridad,login,usuarioPerfiles,negocio}.json
-└── es/{comun,seguridad,login,usuarioPerfiles,negocio}.json
+# ---- FT-002 -------------------------------------------------------------
+US[US-007]=$(create_us "US-007 — Design tokens y theming (light/dark/high-contrast)" \
+  "user-story,frontend,tokens" \
+"## Objetivo\nTokens CSS (color, spacing, radius, typography, z-index) y 3 temas con data-theme en <html>.\n\n## Tareas\n- TS-022 tokens.css (3h)\n- TS-023 themes/light.css, dark.css, high-contrast.css (3h)\n- TS-024 ThemeProvider con persistencia (2h)\n\n## Criterios\n- [ ] Cambio de tema sin recargar\n- [ ] Preferencia persistida en localStorage")
+US_PARENT[US-007]=FT-002
 
-## Tareas
-- TS-005: Instalar y configurar react-i18next con namespaces (2h)
-- TS-006: Crear subcarpetas en/ y es/ con un archivo por funcionalidad (3h)
-- TS-007: Selector de idioma con persistencia (2h)
+US[US-008]=$(create_us "US-008 — i18n con namespaces por componente" \
+  "user-story,frontend,i18n" \
+"## Objetivo\nreact-i18next con namespaces por componente (estructura i18n/<locale>/<componente>/), scripts check-i18n y gen-i18n-types.\n\n## Tareas\n- TS-026 i18next + LanguageDetector (2h)\n- TS-027 Estructura i18n/es/<componente>/ y i18n/en/... (3h)\n- TS-028 Namespaces + common/errors/validations (2h)\n- TS-030 check-i18n.mjs y gen-i18n-types.mjs (3h)\n\n## Criterios\n- [ ] Cambio es/en sin recargar\n- [ ] common/errors.json incluye claves AUTH-*, REG-*, REC-*, PWD-*, RATE-*, SYS-*")
+US_PARENT[US-008]=FT-002
 
-## Criterios de aceptación
-- [ ] Cambio EN/ES sin recargar
-- [ ] Idioma persiste en localStorage
-- [ ] Cada vista consume su namespace
-- [ ] comun.json incluye error.sysGenerico" | grep -oE '[0-9]+$')
+US[US-009]=$(create_us "US-009 — Assets runtime y useAsset()" \
+  "user-story,frontend,runtime-assets" \
+"## Objetivo\npublic/assets/ con logos, imágenes por dominio, iconos y fuentes. manifest.json + useAsset() + gen-assets-manifest.mjs.\n\n## Tareas\n- TS-031 public/assets/ estructura + placeholders (2h)\n- TS-032 manifest.json + gen-assets-manifest.mjs (2h)\n- TS-033 useAsset hook (1h)\n- TS-034 fonts.css con @font-face swap (1h)")
+US_PARENT[US-009]=FT-002
 
-US004=$(gh issue create --repo "$REPO" \
-  --title "US-004 — Configurar sistema responsive y tema visual" \
-  --label "user-story,frontend,responsive" \
-  --body "Breakpoints, tema visual con CSS variables y helpers para orientación vertical en móvil.
+# ---- FT-003 -------------------------------------------------------------
+US[US-010]=$(create_us "US-010 — Átomos: botones y controles de formulario" \
+  "user-story,frontend,design-system,storybook" \
+"## Objetivo\nButton (primary/secondary/ghost/danger), Input, Textarea, Select, Checkbox, Radio, Switch. Cada uno con plantilla completa (tsx, module.css, types, test, stories, index).\n\n## Tareas\n- TS-035 Button con variantes (3h)\n- TS-036 Input y Textarea (2h)\n- TS-037 Select, Checkbox, Radio, Switch (3h)")
+US_PARENT[US-010]=FT-003
 
-## Tareas
-- TS-008: Definir breakpoints (2h)
-- TS-009: ThemeContext con CSS variables (3h)
-- TS-010: Helpers para orientación vertical en móvil (2h)" | grep -oE '[0-9]+$')
+US[US-011]=$(create_us "US-011 — Átomos: presentación (Icon, Badge, Tag, Avatar, Tooltip, Spinner, Divider, Skeleton)" \
+  "user-story,frontend,design-system,storybook" \
+"## Objetivo\nÁtomos de presentación con stories y tests.\n\n## Tareas\n- TS-038 Icon, Badge, Tag, Avatar (3h)\n- TS-039 Tooltip, Spinner, Divider, Skeleton (3h)")
+US_PARENT[US-011]=FT-003
 
-US005=$(gh issue create --repo "$REPO" \
-  --title "US-005 — Configurar Axios, interceptores y manejo de tokens" \
-  --label "user-story,frontend" \
-  --body "Axios con interceptores para adjuntar JWT y refrescar token automáticamente.
+# ---- FT-004 -------------------------------------------------------------
+US[US-012]=$(create_us "US-012 — Moléculas: feedback (Modal, Toast, Popover)" \
+  "user-story,frontend,design-system,storybook,a11y" \
+"## Objetivo\nModal con variantes info/warning/error/success/confirm, sistema de toasts con aria-live, popover anclado. Focus trap obligatorio.\n\n## Tareas\n- TS-040 Modal base + focus trap (4h)\n- TS-041 Variantes Info/Warning/Error/Success/Confirm (3h)\n- TS-042 Toast + ToastProvider + aria-live (3h)\n- TS-043 Popover (3h)")
+US_PARENT[US-012]=FT-004
 
-## Tareas
-- TS-011: apiClient con base URL desde env (2h)
-- TS-012: Interceptor de request (2h)
-- TS-013: Interceptor de response con refresh automático (4h)" | grep -oE '[0-9]+$')
+US[US-013]=$(create_us "US-013 — Moléculas: navegación (Dropdown, Tabs, Accordion, Breadcrumbs, Pagination)" \
+  "user-story,frontend,design-system,storybook" \
+"## Tareas\n- TS-044 Dropdown (3h)\n- TS-045 Tabs (3h)\n- TS-046 Accordion (2h)\n- TS-047 Breadcrumbs (2h)\n- TS-048 Pagination (2h)")
+US_PARENT[US-013]=FT-004
 
-US006=$(gh issue create --repo "$REPO" \
-  --title "US-006 — Configurar enrutamiento y layout raíz" \
-  --label "user-story,frontend" \
-  --body "React Router v6 con rutas públicas/privadas y layout raíz con top bar + sidebar + work area.
+US[US-014]=$(create_us "US-014 — Moléculas: formularios (FormField, SearchBar, LanguageSwitcher, ThemeSwitcher)" \
+  "user-story,frontend,design-system,storybook,i18n" \
+"## Tareas\n- TS-049 FormField con error i18n (2h)\n- TS-050 SearchBar con debounce (2h)\n- TS-051 LanguageSwitcher (2h)\n- TS-052 ThemeSwitcher (2h)")
+US_PARENT[US-014]=FT-004
 
-## Tareas
-- TS-014: React Router v6 (3h)
-- TS-015: AppLayout con top bar + sidebar plegable + work area (4h)" | grep -oE '[0-9]+$')
+# ---- FT-005 -------------------------------------------------------------
+US[US-015]=$(create_us "US-015 — Organismos: datos (DataTable, ChartPanel)" \
+  "user-story,frontend,design-system,storybook" \
+"## Objetivo\nDataTable con paginación, sorting, filtros, estados loading/empty/error y virtualización >100 filas. ChartPanel con botón de pantalla completa.\n\n## Tareas\n- TS-053 DataTable (5h)\n- TS-054 Estado vacío + skeleton (2h)\n- TS-055 ChartContainer con Recharts (3h)\n- TS-056 FullscreenChartModal (3h)")
+US_PARENT[US-015]=FT-005
 
-US007=$(gh issue create --repo "$REPO" \
-  --title "US-007 — Componentes de layout" \
-  --label "user-story,frontend" \
-  --body "Componentes de estructura: TopBar, Sidebar plegable, WorkArea.
+US[US-016]=$(create_us "US-016 — Organismos: contenido (MediaPlayer, FileUploader, Wizard)" \
+  "user-story,frontend,design-system,storybook" \
+"## Tareas\n- TS-057 MediaPlayer con fullscreen y PiP (4h)\n- TS-058 FileUploader con drag & drop (4h)\n- TS-059 Wizard multi-paso (4h)")
+US_PARENT[US-016]=FT-005
 
-## Tareas
-- TS-016: TopBar informativa (3h)
-- TS-017: Sidebar plegable (4h)
-- TS-018: WorkArea contenedor (2h)" | grep -oE '[0-9]+$')
+US[US-017]=$(create_us "US-017 — Organismos: layout (SidebarMenu, NotificationCenter, UserMenu)" \
+  "user-story,frontend,design-system,storybook" \
+"## Tareas\n- TS-060 SidebarMenu plegable (4h)\n- TS-061 NotificationCenter (3h)\n- TS-062 UserMenu (2h)")
+US_PARENT[US-017]=FT-005
 
-US008=$(gh issue create --repo "$REPO" \
-  --title "US-008 — Botones y controles básicos" \
-  --label "user-story,frontend" \
-  --body "Botones con variantes y controles de formulario con estados de error.
+US[US-018]=$(create_us "US-018 — Layout helpers (SafeAreaView, KeyboardAwareView, PublicHeader, Footer, OrientationGate)" \
+  "user-story,frontend,design-system,responsive" \
+"## Tareas\n- TS-063 SafeAreaView (1h)\n- TS-064 KeyboardAwareView (2h)\n- TS-065 PublicHeader (2h)\n- TS-066 Footer (2h)\n- TS-067 OrientationGate (2h)")
+US_PARENT[US-018]=FT-005
 
-## Tareas
-- TS-019: Button con variantes (2h)
-- TS-020: Input, Select, Checkbox (3h)" | grep -oE '[0-9]+$')
+# ---- FT-006 -------------------------------------------------------------
+US[US-019]=$(create_us "US-019 — AppShell (TopBar + Sidebar + Workspace)" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nLayout obligatorio para vistas autenticadas: TopBar informativa, Sidebar plegable con persistencia, Workspace con scroll propio.\n\n## Tareas\n- TS-068 AppShell con grid (4h)\n- TS-069 TopBar (3h)\n- TS-070 Sidebar persistente (3h)\n- TS-071 Workspace (2h)")
+US_PARENT[US-019]=FT-006
 
-US009=$(gh issue create --repo "$REPO" \
-  --title "US-009 — Modales y pop-ups" \
-  --label "user-story,frontend" \
-  --body "Modal base, modales específicos y sistema de toasts.
+US[US-020]=$(create_us "US-020 — React Router v6 + lazy + paths" \
+  "user-story,frontend" \
+"## Tareas\n- TS-072 createBrowserRouter + lazyViews (3h)\n- TS-073 paths.ts (1h)\n- TS-074 routes.config.ts con metadata de orientación (2h)")
+US_PARENT[US-020]=FT-006
 
-## Tareas
-- TS-021: Modal base con overlay y accesibilidad (4h)
-- TS-022: InfoModal, WarningModal, ErrorModal (3h)
-- TS-023: Toast para notificaciones (3h)" | grep -oE '[0-9]+$')
+US[US-021]=$(create_us "US-021 — Guards (Public/Protected/Role/Onboarding)" \
+  "user-story,frontend" \
+"## Tareas\n- TS-075 PublicRoute (1h)\n- TS-076 ProtectedRoute (2h)\n- TS-077 RoleRoute (2h)\n- TS-078 OnboardingRoute (2h)")
+US_PARENT[US-021]=FT-006
 
-US010=$(gh issue create --repo "$REPO" \
-  --title "US-010 — Tablas de datos" \
-  --label "user-story,frontend" \
-  --body "DataTable con paginación, ordenamiento, filtros y estados de carga.
+US[US-022]=$(create_us "US-022 — Detección de viewport, orientación y dispositivo" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nHooks compartidos: useViewport, useOrientation, useDeviceClass, useKeyboardInset, useSafeAreaInsets.\n\n## Tareas\n- TS-079 useViewport (3h)\n- TS-080 useOrientation (1h)\n- TS-081 useDeviceClass (1h)\n- TS-082 useKeyboardInset (2h)\n- TS-083 useSafeAreaInsets (1h)")
+US_PARENT[US-022]=FT-006
 
-## Tareas
-- TS-024: DataTable (4h)
-- TS-025: Estado vacío y skeleton loader (2h)" | grep -oE '[0-9]+$')
+US[US-023]=$(create_us "US-023 — Cliente HTTP con interceptores JWT + refresh" \
+  "user-story,frontend" \
+"## Objetivo\nhttp.ts único con interceptor de request (JWT), response (refresh automático ante 401) y mapeo de códigos de error a i18n.\n\n## Tareas\n- TS-084 http.ts con Axios (2h)\n- TS-085 Interceptor request (2h)\n- TS-086 Interceptor response con refresh (4h)\n- TS-087 httpStatus.ts con mapeo a i18n (2h)\n- TS-088 tokenStorage (2h)")
+US_PARENT[US-023]=FT-006
 
-US011=$(gh issue create --repo "$REPO" \
-  --title "US-011 — Espacio de gráficos con ampliación" \
-  --label "user-story,frontend" \
-  --body "Contenedor responsive de gráficos e implementación de modal de pantalla completa.
+# ---- FT-007 (InitPage) --------------------------------------------------
+US[US-024]=$(create_us "US-024 — InitPage horizontal (presentación del proyecto)" \
+  "user-story,frontend,public-page,responsive" \
+"## Objetivo\nVista pública pre-login para PC, tablet apaisada y Smart TV.\n\n## Estructura obligatoria\n- TopBar pública: logo + menú **Contáctenos**, **Login**, **Registrar**\n- Hero: qué hace el producto, qué problema resuelve, CTA principal\n- Sección Beneficios / Cómo funciona\n- Sección Partners + Casos de éxito\n- Footer con legales, idioma y redes\n\n## Redirecciones\n- **Contáctenos** → /contact\n- **Login** → /login\n- **Registrar** → /register\n\n## Tareas\n- TS-089 Hero (3h)\n- TS-090 Beneficios / Cómo funciona (3h)\n- TS-091 Partners + Casos de éxito (2h)\n- TS-092 TopBar pública con CTA (2h)\n- TS-093 Footer con legales (2h)")
+US_PARENT[US-024]=FT-007
 
-## Tareas
-- TS-026: ChartContainer con Recharts (3h)
-- TS-027: FullscreenChartModal (3h)" | grep -oE '[0-9]+$')
+US[US-025]=$(create_us "US-025 — InitPage vertical (móvil y tablet retrato)" \
+  "user-story,frontend,public-page,responsive" \
+"## Objetivo\nMisma InitPage con composición vertical, 100dvh, safe-area-inset y teclado virtual.\n\n## Tareas\n- TS-094 Maquetar InitPage vertical (4h)\n- TS-095 Ajustes 100dvh y safe-area (2h)")
+US_PARENT[US-025]=FT-007
 
-US012=$(gh issue create --repo "$REPO" \
-  --title "US-012 — Formularios y validación" \
-  --label "user-story,frontend" \
-  --body "Integración de React Hook Form + Zod y componente FormField.
+US[US-026]=$(create_us "US-026 — Contáctenos y páginas legales" \
+  "user-story,frontend,public-page" \
+"## Objetivo\nVista /contact (formulario o datos de contacto) y vistas /terms, /privacy.\n\n## Tareas\n- TS-096 ContactView horizontal + vertical (3h)\n- TS-097 TermsView + PrivacyView (3h)")
+US_PARENT[US-026]=FT-007
 
-## Tareas
-- TS-028: React Hook Form + Zod (3h)
-- TS-029: FormField con errores i18n (2h)" | grep -oE '[0-9]+$')
+# ---- FT-008 -------------------------------------------------------------
+US[US-027]=$(create_us "US-027 — LoginView horizontal + vertical" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nVista de Login en ambas orientaciones. Consume POST /api/auth/login (solo retorna {token, refreshToken}).\n\n## Códigos de error a manejar\n- AUTH-001 credenciales inválidas (401)\n- AUTH-002 cuenta bloqueada (423)\n- AUTH-005 / AUTH-006 token inválido/expirado (401)\n- RATE-001 demasiadas peticiones\n\n## Tareas\n- TS-098 LoginView horizontal (3h)\n- TS-099 LoginView vertical (2h)\n- TS-100 Conectar POST /api/auth/login (3h)\n- TS-101 Mapeo de errores a i18n (3h)\n- TS-102 Enlaces a /register y /recovery (1h)")
+US_PARENT[US-027]=FT-008
 
-US013=$(gh issue create --repo "$REPO" \
-  --title "US-013 — Vista de Login" \
-  --label "user-story,frontend" \
-  --body "Maquetar LoginView responsive y conectar con POST /api/auth/login.
+US[US-028]=$(create_us "US-028 — AuthContext + useRefreshToken + tokenStorage" \
+  "user-story,frontend" \
+"## Tareas\n- TS-103 AuthContext con login/logout/refreshProfile (3h)\n- TS-104 useRefreshToken (sesión deslizante) (3h)\n- TS-105 Persistencia segura de tokens (2h)")
+US_PARENT[US-028]=FT-008
 
-## Tareas
-- TS-030: Maquetar LoginView (3h)
-- TS-031: Conectar con POST /api/auth/login (3h)
-- TS-032: Almacenar token y refreshToken (2h)" | grep -oE '[0-9]+$')
+US[US-029]=$(create_us "US-029 — Logout y cierre de sesión" \
+  "user-story,frontend" \
+"## Objetivo\nLlama a POST /api/auth/logout, limpia tokens, query cache y navega a /login.\n\n## Tareas\n- TS-106 LogoutButton (2h)\n- TS-107 Limpieza y redirección (2h)")
+US_PARENT[US-029]=FT-008
 
-US014=$(gh issue create --repo "$REPO" \
-  --title "US-014 — Gestión de sesión y refresh automático" \
-  --label "user-story,frontend" \
-  --body "AuthContext con estado de sesión y hook para refresh automático.
+US[US-030]=$(create_us "US-030 — Registro paso 1: POST /api/auth/register/request" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nFormulario de solicitud de registro (username, email, nombreCompleto, password, repeatPassword, celular, paisId, plan). Envía token de 6 dígitos por email.\n\n## Códigos de error\n- REG-001 username existe\n- REG-002 email existe\n- REG-003 (paisId, celular) existe\n- REG-007 país no encontrado\n\n## Tareas\n- TS-108 RegisterRequestView horizontal + vertical (4h)\n- TS-109 Conectar POST /api/auth/register/request (3h)\n- TS-110 Mapeo REG-001/002/003/007 (3h)")
+US_PARENT[US-030]=FT-008
 
-## Tareas
-- TS-033: AuthContext (3h)
-- TS-034: useRefreshToken hook (3h)" | grep -oE '[0-9]+$')
+US[US-031]=$(create_us "US-031 — Registro paso 2: POST /api/auth/register/confirm" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nVista de verificación de token de 6 dígitos y auto-login tras confirmación.\n\n## Tareas\n- TS-111 Vista de verificación (4h)\n- TS-112 Conectar POST /api/auth/register/confirm (3h)\n- TS-113 Auto-login tras confirmación (2h)")
+US_PARENT[US-031]=FT-008
 
-US015=$(gh issue create --repo "$REPO" \
-  --title "US-015 — Logout y cierre de sesión" \
-  --label "user-story,frontend" \
-  --body "Botón de logout que llama al endpoint y limpia estado.
+US[US-032]=$(create_us "US-032 — Recuperación paso 1: POST /api/auth/recovery/request" \
+  "user-story,frontend,responsive" \
+"## Tareas\n- TS-114 RecoveryRequestView horizontal + vertical (3h)\n- TS-115 Conectar POST /api/auth/recovery/request (2h)")
+US_PARENT[US-032]=FT-008
 
-## Tareas
-- TS-035: LogoutButton (2h)
-- TS-036: Limpiar estado y redirigir (1h)" | grep -oE '[0-9]+$')
+US[US-033]=$(create_us "US-033 — Recuperación paso 2: POST /api/auth/recovery/verify" \
+  "user-story,frontend,responsive" \
+"## Códigos de error\n- REC-001 intentos excedidos\n- REC-004 usuario no coincide\n- PWD-001/002/003 contraseña\n\n## Tareas\n- TS-116 Vista token + nueva contraseña (3h)\n- TS-117 Conectar POST /api/auth/recovery/verify (3h)\n- TS-118 Mapeo REC-001/004 (2h)")
+US_PARENT[US-033]=FT-008
 
-US016=$(gh issue create --repo "$REPO" \
-  --title "US-016 — Rutas protegidas y control de roles" \
-  --label "user-story,frontend" \
-  --body "ProtectedRoute y RoleGuard (ADMIN, USER, PREMIUM).
+US[US-034]=$(create_us "US-034 — Cambio de contraseña propia: POST /api/auth/change-my-pass" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nFormulario con actualPassword, nuevoPassword, repetirNuevoPassword.\n\n## Códigos de error\n- PWD-001 no coinciden\n- PWD-002 no cumple criterios\n- PWD-003 actual incorrecta\n\n## Tareas\n- TS-119 ChangeMyPassView horizontal + vertical (3h)\n- TS-120 Conectar POST /api/auth/change-my-pass (3h)\n- TS-121 Mapeo PWD-001/002/003 (2h)")
+US_PARENT[US-034]=FT-008
 
-## Tareas
-- TS-037: ProtectedRoute y RoleGuard (3h)" | grep -oE '[0-9]+$')
+# ---- FT-009 -------------------------------------------------------------
+US[US-035]=$(create_us "US-035 — HomeView horizontal + vertical" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nDashboard con widgets de resumen, health check y placeholders de negocio.\n\n## Tareas\n- TS-122 HomeView horizontal (4h)\n- TS-123 HomeView vertical (3h)\n- TS-124 Consumir GET /api/test/health (1h)\n- TS-125 Placeholder dashboard/resumen (2h)")
+US_PARENT[US-035]=FT-009
 
-US017=$(gh issue create --repo "$REPO" \
-  --title "US-017 — Dashboard inicial" \
-  --label "user-story,frontend" \
-  --body "HomeView con widgets resumen, health check y placeholders para negocio.
+US[US-036]=$(create_us "US-036 — Widget de perfil resumido en Home" \
+  "user-story,frontend" \
+"## Tareas\n- TS-126 Widget con GET /api/auth/get-my-profile (3h)")
+US_PARENT[US-036]=FT-009
 
-## Tareas
-- TS-038: Maquetar HomeView (4h)
-- TS-039: Consumir GET /api/test/health (1h)
-- TS-040: Placeholder dashboard/resumen (2h)" | grep -oE '[0-9]+$')
+US[US-037]=$(create_us "US-037 — ProfileView horizontal + vertical" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nConsulta del perfil propio. GET /api/auth/get-my-profile (OWN_DATA_PATHS → datos reales sin ofuscar).\n\n## Tareas\n- TS-127 ProfileView horizontal (3h)\n- TS-128 ProfileView vertical (2h)\n- TS-129 Consumir GET /api/auth/get-my-profile (2h)")
+US_PARENT[US-037]=FT-009
 
-US018=$(gh issue create --repo "$REPO" \
-  --title "US-018 — Perfil rápido en Home" \
-  --label "user-story,frontend" \
-  --body "Widget de perfil resumido en Home usando get-my-profile.
+US[US-038]=$(create_us "US-038 — EditProfileView horizontal + vertical" \
+  "user-story,frontend,responsive" \
+"## Objetivo\nEdición del perfil propio contra POST /api/auth/update-my-profile.\n\n## Request (UpdateMyProfileRequest)\nid, username, email, nombreCompleto, paisId, celular (todos obligatorios).\n\n## Códigos\n- UPT-0001 éxito\n- REG-002 email ya registrado\n- REG-003 (paisId, celular) ya registrado\n- REG-007 país inactivo\n- AUTH-007 username/id ajenos\n- SYS-03 @Valid (500, sin detalle)\n\n## Reglas\n- SYS-* → mensaje genérico de comun:error.sysGenerico\n- Preservar case de email/nombreCompleto (solo trim)\n\n## Tareas\n- TS-130 EditProfileView horizontal + vertical (4h)\n- TS-131 Formulario RHF + Zod (3h)\n- TS-132 Conectar POST /api/auth/update-my-profile (4h)\n- TS-133 Mapeo UPT-0001 + errores (3h)\n- TS-134 Refetch tras éxito (2h)")
+US_PARENT[US-038]=FT-009
 
-## Tareas
-- TS-041: Widget de perfil resumido (3h)" | grep -oE '[0-9]+$')
+US[US-039]=$(create_us "US-039 — Eliminación lógica de cuenta" \
+  "user-story,frontend" \
+"## Objetivo\nModal de confirmación y llamada a POST /api/auth/delete-account.\n\n## Tareas\n- TS-135 Modal de confirmación (3h)\n- TS-136 Conectar + limpiar sesión + redirigir (2h)")
+US_PARENT[US-039]=FT-009
 
-US019=$(gh issue create --repo "$REPO" \
-  --title "US-019 — Consulta de perfil" \
-  --label "user-story,frontend" \
-  --body "ProfileView que consume GET /api/auth/get-my-profile (datos reales sin ofuscar, endpoint en OWN_DATA_PATHS).
+US[US-040]=$(create_us "US-040 — Vistas de error 404/403/500 (horizontal + vertical)" \
+  "user-story,frontend,responsive" \
+"## Tareas\n- TS-137 NotFound horizontal + vertical (2h)\n- TS-138 Forbidden horizontal + vertical (2h)\n- TS-139 ServerError horizontal + vertical (2h)")
+US_PARENT[US-040]=FT-009
 
-## Tareas
-- TS-042: Maquetar ProfileView (3h)
-- TS-043: Mostrar datos reales sin ofuscar (1h)" | grep -oE '[0-9]+$')
+US[US-041]=$(create_us "US-041 — Calidad transversal (a11y, performance, E2E)" \
+  "user-story,frontend,a11y,performance,e2e" \
+"## Objetivo\nCerrar la CAP-01 con auditoría a11y completa, presupuesto de performance y E2E en 5 configs.\n\n## Tareas\n- TS-140 @axe-core/playwright en todas las vistas (3h)\n- TS-141 Lighthouse >= 90 (3h)\n- TS-142 E2E Playwright 5 configs (5h)\n- TS-143 bundle-analyze.mjs (2h)")
+US_PARENT[US-041]=FT-009
 
-US020=$(gh issue create --repo "$REPO" \
-  --title "US-020 — Edición de perfil" \
-  --label "user-story,frontend" \
-  --body "Formulario de edición de perfil contra POST /api/auth/update-my-profile.
-
-## Reglas de manejo de error
-- SYS-* → mensaje genérico: 'Contacte al administrador del sistema.!!!'
-- REG-002, REG-003, REG-007, AUTH-007 → mensajes específicos
-
-## Tareas
-- TS-044: Maquetar EditProfileView (3h)
-- TS-045: Conectar update-my-profile (4h)
-- TS-046: Mapear errores (SYS-* genérico) (3h)
-- TS-047: Tras UPT-0001, actualizar AuthContext y refetch (3h)" | grep -oE '[0-9]+$')
-
-US021=$(gh issue create --repo "$REPO" \
-  --title "US-021 — Eliminación de cuenta (lógica)" \
-  --label "user-story,frontend" \
-  --body "Modal de confirmación y llamada a POST /api/auth/delete-account.
-
-## Tareas
-- TS-048: Modal de confirmación (3h)
-- TS-049: Limpiar sesión y redirigir (2h)" | grep -oE '[0-9]+$')
-
-echo "   US creadas: 001..021"
+echo "   US creadas: 001..041"
 
 # ---------------------------------------------------------
-# 5) TASKS
+# 6) TASKS (tabla compacta)
 # ---------------------------------------------------------
 echo "==> [5/7] Creando Tasks..."
+declare -a ALL_TS_IDS=()
+declare -A TS_BY_US
 
-create_task() {
-  local title="$1"; local us="$2"; local hours="$3"; local desc="$4"
-  gh issue create --repo "$REPO" \
-    --title "$title" \
-    --label "task,frontend" \
-    --body "$(printf '## Descripción\n%s\n\n## Estimación\n%s\n\n## US padre\nUS-%s' "$desc" "$hours" "$us")" \
-    | grep -oE '[0-9]+$'
-}
+while IFS='|' read -r title us hours desc; do
+  [ -z "$title" ] && continue
+  id=$(create_task "$title" "$us" "$hours" "$desc")
+  ALL_TS_IDS+=("$id")
+  TS_BY_US[$us]="$id ${TS_BY_US[$us]:-}"
+done <<'TASKS'
+TS-001 — Inicializar Vite + React 18 + TS|US-001|2h|npm create vite@latest frontend -- --template react-ts
+TS-002 — ESLint + Prettier + tsconfig estricto|US-001|2h|Configurar reglas y modo strict.
+TS-003 — Stylelint para CSS Modules|US-001|1h|Reglas para CSS Modules y tokens.
+TS-004 — Eliminar frontend/ actual|US-001|1h|Verificar Dockerfile.frontend y docker-compose.yml.
+TS-005 — Estructura de carpetas src/|US-002|2h|app/, components/, views/, shared/, i18n/, styles/, types/.
+TS-006 — Alias de imports (@app, @components, @views, @shared, @i18n, @styles)|US-002|1h|tsconfig + vite.config.
+TS-007 — Documentar convenciones en frontend/README.md|US-002|1h|Nombres, exports, orden de imports.
+TS-008 — Instalar y configurar Storybook|US-003|2h|@storybook/react-vite + autodocs.
+TS-009 — Decoradores globales de Storybook|US-003|2h|ThemeProvider + I18nextProvider + Router.
+TS-010 — Story DesignTokens/Overview|US-003|2h|Mostrar tokens y temas.
+TS-011 — Build estático de Storybook|US-003|1h|storybook-static/.
+TS-012 — Vitest + Testing Library + setup.ts|US-004|2h|Configuración y cobertura 80%.
+TS-013 — Playwright 5 proyectos|US-004|3h|mobile-chrome, mobile-safari, tablet, desktop, tv.
+TS-014 — @axe-core/playwright|US-004|2h|Test a11y base reusable.
+TS-015 — Scripts npm de test|US-004|1h|test, test:unit, test:e2e, test:a11y.
+TS-016 — Husky + pre-commit (lint-staged)|US-005|2h|Ejecuta ESLint y Prettier sobre staged.
+TS-017 — commitlint + commit-msg|US-005|1h|Conventional Commits.
+TS-018 — pre-push (unit tests)|US-005|1h|Evita push con tests rotos.
+TS-019 — .env.example + .env.development/staging/production|US-006|1h|VITE_API_URL, VITE_APP_ENV.
+TS-020 — vite.config.ts con proxy /api|US-006|2h|Proxy hacia http://localhost:7700.
+TS-021 — env.d.ts tipado|US-006|1h|import.meta.env con tipos.
+TS-022 — tokens.css|US-007|3h|color, spacing, radius, typography, z-index.
+TS-023 — themes/light.css, dark.css, high-contrast.css|US-007|3h|data-theme en <html>.
+TS-024 — ThemeProvider con persistencia|US-007|2h|localStorage + prefers-color-scheme.
+TS-025 — Estructura i18n/<locale>/<componente>/|US-008|3h|common, initPage, login, register, recovery, home, perfil, servicioA, admin, errors.
+TS-026 — i18next + LanguageDetector|US-008|2h|Fallback es, persistencia en localStorage.
+TS-027 — Namespaces + common/errors/validations|US-008|2h|common/errors.json con claves AUTH-*, REG-*, REC-*, PWD-*, RATE-*, SYS-*.
+TS-028 — check-i18n.mjs y gen-i18n-types.mjs|US-008|3h|Detecta claves faltantes y genera types.
+TS-029 — public/assets/ con placeholders|US-009|2h|logos/, images/, icons/, fonts/.
+TS-030 — manifest.json + gen-assets-manifest.mjs|US-009|2h|Mapa clave lógica → ruta física.
+TS-031 — useAsset hook|US-009|1h|Resuelve clave desde manifest.json.
+TS-032 — fonts.css con @font-face swap|US-009|1h|Inter self-hosted en woff2.
+TS-033 — Button con variantes|US-010|3h|primary, secondary, ghost, danger + loading/disabled.
+TS-034 — Input y Textarea|US-010|2h|Estados default/error/disabled.
+TS-035 — Select, Checkbox, Radio, Switch|US-010|3h|Accesibles con label y error.
+TS-036 — Icon, Badge, Tag, Avatar|US-011|3h|SVG tokenizados.
+TS-037 — Tooltip, Spinner, Divider, Skeleton|US-011|3h|Accesibles y con stories.
+TS-038 — Modal base + focus trap|US-012|4h|Overlay, Escape, focus trap, aria-modal.
+TS-039 — Variantes Info/Warning/Error/Success/Confirm|US-012|3h|Con iconos y colores tokenizados.
+TS-040 — Toast + ToastProvider + aria-live|US-012|3h|Auto-cierre 4s, cola de toasts.
+TS-041 — Popover|US-012|3h|Anclaje y teclado.
+TS-042 — Dropdown|US-013|3h|Con teclado y aria.
+TS-043 — Tabs|US-013|3h|WAI-ARIA tabs.
+TS-044 — Accordion|US-013|2h|Colapsable accesible.
+TS-045 — Breadcrumbs|US-013|2h|Con aria-label.
+TS-046 — Pagination|US-013|2h|Con navegación y rango.
+TS-047 — FormField con error i18n|US-014|2h|Wrapper de label + control + error.
+TS-048 — SearchBar con debounce|US-014|2h|Debounce 300ms.
+TS-049 — LanguageSwitcher|US-014|2h|Persistencia en i18nextLng.
+TS-050 — ThemeSwitcher|US-014|2h|Persistencia en localStorage.
+TS-051 — DataTable|US-015|5h|Paginación, sorting, filtros, virtualización >100 filas.
+TS-052 — Estado vacío + skeleton loader|US-015|2h|Placeholder y skeleton.
+TS-053 — ChartContainer con Recharts|US-015|3h|Container responsive.
+TS-054 — FullscreenChartModal|US-015|3h|Botón ampliar a pantalla completa.
+TS-055 — MediaPlayer con fullscreen y PiP|US-016|4h|Controles accesibles.
+TS-056 — FileUploader drag & drop|US-016|4h|Validación de tipos y tamaños.
+TS-057 — Wizard multi-paso|US-016|4h|Con validación por paso.
+TS-058 — SidebarMenu plegable|US-017|4h|Secciones expandibles y persistencia.
+TS-059 — NotificationCenter|US-017|3h|Lista y badge.
+TS-060 — UserMenu|US-017|2h|Perfil, idioma, logout.
+TS-061 — SafeAreaView|US-018|1h|env(safe-area-inset-*).
+TS-062 — KeyboardAwareView|US-018|2h|visualViewport + padding-bottom dinámico.
+TS-063 — PublicHeader|US-018|2h|Header para InitPage/login.
+TS-064 — Footer|US-018|2h|Legales, idioma, redes.
+TS-065 — OrientationGate|US-018|2h|Decide rama horizontal o vertical.
+TS-066 — AppShell con grid|US-019|4h|TopBar + Sidebar + Workspace.
+TS-067 — TopBar|US-019|3h|Perfil, idioma, notificaciones, logout.
+TS-068 — Sidebar persistente|US-019|3h|Plegado persistido en localStorage.
+TS-069 — Workspace|US-019|2h|Overflow auto y scroll propio.
+TS-070 — createBrowserRouter + lazyViews|US-020|3h|React.lazy + Suspense.
+TS-071 — paths.ts|US-020|1h|Constantes ROUTES.*
+TS-072 — routes.config.ts|US-020|2h|Metadata de orientación y guards.
+TS-073 — PublicRoute|US-021|1h|Solo sin sesión.
+TS-074 — ProtectedRoute|US-021|2h|Requiere sesión.
+TS-075 — RoleRoute|US-021|2h|ADMIN, USER, PREMIUM.
+TS-076 — OnboardingRoute|US-021|2h|Redirige si perfil incompleto.
+TS-077 — useViewport|US-022|3h|width, height, orientation, deviceClass, insets, keyboardInset.
+TS-078 — useOrientation|US-022|1h|portrait | landscape.
+TS-079 — useDeviceClass|US-022|1h|mobile/tablet/desktop/tv.
+TS-080 — useKeyboardInset|US-022|2h|visualViewport.
+TS-081 — useSafeAreaInsets|US-022|1h|Insets del dispositivo.
+TS-082 — http.ts con Axios|US-023|2h|Base URL desde env.
+TS-083 — Interceptor de request|US-023|2h|Adjunta Bearer JWT.
+TS-084 — Interceptor de response con refresh|US-023|4h|401 → refresh-token → reintentar.
+TS-085 — httpStatus.ts con mapeo a i18n|US-023|2h|AUTH-*, REG-*, REC-*, PWD-*, RATE-*, SYS-*.
+TS-086 — tokenStorage|US-023|2h|localStorage versionado.
+TS-087 — Hero InitPage horizontal|US-024|3h|Copy, CTA, ilustración.
+TS-088 — Beneficios / Cómo funciona|US-024|3h|Secciones explicativas.
+TS-089 — Partners + Casos de éxito|US-024|2h|Logos y testimonios.
+TS-090 — TopBar pública con CTA|US-024|2h|Botones Contáctenos, Login, Registrar → /contact, /login, /register.
+TS-091 — Footer con legales|US-024|2h|Términos, privacidad, idioma, redes.
+TS-092 — Maquetar InitPage vertical|US-025|4h|Cards apiladas y 100dvh.
+TS-093 — Ajustes 100dvh y safe-area en vertical|US-025|2h|visualViewport.resize.
+TS-094 — ContactView horizontal + vertical|US-026|3h|Formulario o datos de contacto.
+TS-095 — TermsView + PrivacyView|US-026|3h|Legales en ambas orientaciones.
+TS-096 — LoginView horizontal|US-027|3h|Formulario responsive.
+TS-097 — LoginView vertical|US-027|2h|Sticky CTA.
+TS-098 — Conectar POST /api/auth/login|US-027|3h|Solo espera {token, refreshToken}.
+TS-099 — Mapeo de errores a i18n|US-027|3h|AUTH-001, AUTH-002, AUTH-005, AUTH-006, RATE-001.
+TS-100 — Enlaces a /register y /recovery|US-027|1h|Navegación con replace.
+TS-101 — AuthContext|US-028|3h|Estado, login, logout, refreshProfile.
+TS-102 — useRefreshToken|US-028|3h|Sesión deslizante.
+TS-103 — Persistencia segura de tokens|US-028|2h|Versionado y limpieza.
+TS-104 — LogoutButton|US-029|2h|POST /api/auth/logout.
+TS-105 — Limpieza y redirección|US-029|2h|tokenStorage + query cache + navigate replace.
+TS-106 — RegisterRequestView horizontal + vertical|US-030|4h|8 campos + validación.
+TS-107 — Conectar POST /api/auth/register/request|US-030|3h|Envío de token por email.
+TS-108 — Mapeo REG-001/002/003/007|US-030|3h|Mensajes específicos por campo.
+TS-109 — Vista de verificación de token|US-031|4h|6 dígitos + TTL 5 min.
+TS-110 — Conectar POST /api/auth/register/confirm|US-031|3h|Manejo de token expirado.
+TS-111 — Auto-login tras confirmación|US-031|2h|Redirige a Home con sesión activa.
+TS-112 — RecoveryRequestView horizontal + vertical|US-032|3h|username + email.
+TS-113 — Conectar POST /api/auth/recovery/request|US-032|2h|Envío de token.
+TS-114 — Vista token + nueva contraseña|US-033|3h|6 dígitos + nueva + repetir.
+TS-115 — Conectar POST /api/auth/recovery/verify|US-033|3h|Actualiza contraseña.
+TS-116 — Mapeo REC-001/004|US-033|2h|Intentos excedidos, usuario no coincide.
+TS-117 — ChangeMyPassView horizontal + vertical|US-034|3h|Actual, nueva, repetir.
+TS-118 — Conectar POST /api/auth/change-my-pass|US-034|3h|Con JWT.
+TS-119 — Mapeo PWD-001/002/003|US-034|2h|Mensajes específicos.
+TS-120 — HomeView horizontal|US-035|4h|Widgets de resumen.
+TS-121 — HomeView vertical|US-035|3h|Bottom sheet y cards apiladas.
+TS-122 — Consumir GET /api/test/health|US-035|1h|Estado del sistema.
+TS-123 — Placeholder dashboard/resumen|US-035|2h|Preparar para endpoints futuros.
+TS-124 — Widget de perfil resumido|US-036|3h|GET /api/auth/get-my-profile.
+TS-125 — ProfileView horizontal|US-037|3h|Datos reales sin ofuscar.
+TS-126 — ProfileView vertical|US-037|2h|Composición vertical.
+TS-127 — Consumir GET /api/auth/get-my-profile|US-037|2h|OWN_DATA_PATHS.
+TS-128 — EditProfileView horizontal + vertical|US-038|4h|Formulario precargado.
+TS-129 — Formulario RHF + Zod (UpdateMyProfileRequest)|US-038|3h|id, username, email, nombreCompleto, paisId, celular.
+TS-130 — Conectar POST /api/auth/update-my-profile|US-038|4h|Validar id/username contra JWT.
+TS-131 — Mapeo UPT-0001 + errores|US-038|3h|UPT-0001, REG-002/003/007, AUTH-007, SYS-03 (genérico).
+TS-132 — Refetch tras éxito|US-038|2h|Actualizar AuthContext + get-my-profile.
+TS-133 — Modal de confirmación (delete account)|US-039|3h|POST /api/auth/delete-account.
+TS-134 — Conectar + limpiar sesión + redirigir|US-039|2h|Tras borrado lógico → /login.
+TS-135 — NotFound horizontal + vertical|US-040|2h|404.
+TS-136 — Forbidden horizontal + vertical|US-040|2h|403.
+TS-137 — ServerError horizontal + vertical|US-040|2h|500.
+TS-138 — @axe-core/playwright en todas las vistas|US-041|3h|Sin violaciones críticas.
+TS-139 — Lighthouse >= 90|US-041|3h|Performance, A11y, Best Practices, SEO.
+TS-140 — E2E Playwright 5 configs|US-041|5h|mobile-chrome, mobile-safari, tablet, desktop, tv.
+TS-141 — bundle-analyze.mjs + presupuesto|US-041|2h|Reporte de tamaño.
+TASKS
 
-# --- US-001
-TS050=$(create_task "TS-050 — Eliminar carpeta frontend/ actual" "001 (#$US001)" "1h" "Eliminar /prog/datos/investment-tracker/frontend completo. Verificar Dockerfile.frontend y docker-compose.yml.")
-TS001=$(create_task "TS-001 — Inicializar proyecto Vite + React 18 + TS" "001 (#$US001)" "2h" "npm create vite@latest frontend -- --template react-ts. Verificar npm run dev.")
-TS002=$(create_task "TS-002 — Configurar ESLint, Prettier y tsconfig estricto" "001 (#$US001)" "2h" "ESLint + Prettier + tsconfig en modo estricto.")
-# --- US-002
-TS003=$(create_task "TS-003 — Crear estructura de carpetas" "002 (#$US002)" "2h" "components/, views/, services/, hooks/, contexts/, i18n/, styles/, types/, utils/")
-TS004=$(create_task "TS-004 — Documentar convenciones en frontend/README.md" "002 (#$US002)" "1h" "Convenciones de nombres, imports alias @, i18n por namespace.")
-# --- US-003
-TS005=$(create_task "TS-005 — Instalar y configurar react-i18next con namespaces" "003 (#$US003)" "2h" "react-i18next + i18next + LanguageDetector, defaultNS=comun.")
-TS006=$(create_task "TS-006 — Crear en/ y es/ con archivos por funcionalidad" "003 (#$US003)" "3h" "Subcarpetas en/ y es/ con comun.json, seguridad.json, login.json, usuarioPerfiles.json, negocio.json. comun.json DEBE incluir error.sysGenerico = 'Contacte al administrador del sistema.!!!'")
-TS007=$(create_task "TS-007 — Selector de idioma con persistencia" "003 (#$US003)" "2h" "Selector en TopBar, persistencia en localStorage (clave i18nextLng).")
-# --- US-004
-TS008=$(create_task "TS-008 — Definir breakpoints" "004 (#$US004)" "2h" "mobile<=576, tablet<=992, desktop>=1200. Archivo styles/breakpoints.ts.")
-TS009=$(create_task "TS-009 — ThemeContext con CSS variables" "004 (#$US004)" "3h" "Modo claro/oscuro con CSS variables y persistencia.")
-TS010=$(create_task "TS-010 — Helpers para orientación vertical en móvil" "004 (#$US004)" "2h" "mediaQuery.mobilePortrait y mobileLandscape.")
-# --- US-005
-TS011=$(create_task "TS-011 — apiClient con base URL desde env" "005 (#$US005)" "2h" "services/apiClient.ts con VITE_API_BASE_URL.")
-TS012=$(create_task "TS-012 — Interceptor de request (adjuntar JWT)" "005 (#$US005)" "2h" "Lee token de tokenStorage y adjunta Authorization Bearer.")
-TS013=$(create_task "TS-013 — Interceptor de response con refresh automático" "005 (#$US005)" "4h" "Ante 401, llamar refresh-token y reintentar. Si falla, limpiar sesión y redirigir.")
-# --- US-006
-TS014=$(create_task "TS-014 — React Router v6" "006 (#$US006)" "3h" "Rutas públicas y privadas con Outlet.")
-TS015=$(create_task "TS-015 — AppLayout (top bar + sidebar + work area)" "006 (#$US006)" "4h" "Layout con TopBar, Sidebar plegable y WorkArea.")
-# --- US-007
-TS016=$(create_task "TS-016 — TopBar informativa" "007 (#$US007)" "3h" "Usuario, selector de idioma, logout.")
-TS017=$(create_task "TS-017 — Sidebar plegable" "007 (#$US007)" "4h" "Secciones expandibles, botón de colapso.")
-TS018=$(create_task "TS-018 — WorkArea contenedor responsive" "007 (#$US007)" "2h" "Área de trabajo flexible.")
-# --- US-008
-TS019=$(create_task "TS-019 — Button con variantes" "008 (#$US008)" "2h" "primary, secondary, danger, ghost.")
-TS020=$(create_task "TS-020 — Input, Select, Checkbox" "008 (#$US008)" "3h" "Con estado de error y label.")
-# --- US-009
-TS021=$(create_task "TS-021 — Modal base con overlay y accesibilidad" "009 (#$US009)" "4h" "Overlay, cierre con Escape, focus trap.")
-TS022=$(create_task "TS-022 — InfoModal, WarningModal, ErrorModal" "009 (#$US009)" "3h" "Variantes con íconos y colores.")
-TS023=$(create_task "TS-023 — Toast para notificaciones" "009 (#$US009)" "3h" "ToastProvider + ToastHost, auto-cierre 4s.")
-# --- US-010
-TS024=$(create_task "TS-024 — DataTable" "010 (#$US010)" "4h" "Paginación, orden, filtros, columna render custom.")
-TS025=$(create_task "TS-025 — Estado vacío y skeleton loader" "010 (#$US010)" "2h" "Placeholder y skeleton.")
-# --- US-011
-TS026=$(create_task "TS-026 — ChartContainer con Recharts" "011 (#$US011)" "3h" "Container responsive con Recharts.")
-TS027=$(create_task "TS-027 — FullscreenChartModal" "011 (#$US011)" "3h" "Botón de ampliación y modal fullscreen.")
-# --- US-012
-TS028=$(create_task "TS-028 — React Hook Form + Zod" "012 (#$US012)" "3h" "Integración con @hookform/resolvers/zod.")
-TS029=$(create_task "TS-029 — FormField con errores i18n" "012 (#$US012)" "2h" "Wrapper con label, error y traducción.")
-# --- US-013
-TS030=$(create_task "TS-030 — Maquetar LoginView responsive" "013 (#$US013)" "3h" "Vista de login con breakpoints.")
-TS031=$(create_task "TS-031 — Conectar con POST /api/auth/login" "013 (#$US013)" "3h" "Manejo de errores AUTH-001, AUTH-002, RATE-001.")
-TS032=$(create_task "TS-032 — Almacenar token y refreshToken" "013 (#$US013)" "2h" "tokenStorage con localStorage.")
-# --- US-014
-TS033=$(create_task "TS-033 — AuthContext" "014 (#$US014)" "3h" "Estado de sesión, login, logout, refreshProfile.")
-TS034=$(create_task "TS-034 — useRefreshToken hook" "014 (#$US014)" "3h" "Sesión deslizante.")
-# --- US-015
-TS035=$(create_task "TS-035 — LogoutButton" "015 (#$US015)" "2h" "Llama a POST /api/auth/logout.")
-TS036=$(create_task "TS-036 — Limpiar estado y redirigir" "015 (#$US015)" "1h" "Limpiar tokenStorage y navegar a /login.")
-# --- US-016
-TS037=$(create_task "TS-037 — ProtectedRoute y RoleGuard" "016 (#$US016)" "3h" "Validación de autenticación y roles.")
-# --- US-017
-TS038=$(create_task "TS-038 — Maquetar HomeView" "017 (#$US017)" "4h" "Widgets de resumen.")
-TS039=$(create_task "TS-039 — Consumir GET /api/test/health" "017 (#$US017)" "1h" "Estado del sistema.")
-TS040=$(create_task "TS-040 — Placeholder dashboard/resumen" "017 (#$US017)" "2h" "Preparar espacio para endpoints futuros.")
-# --- US-018
-TS041=$(create_task "TS-041 — Widget de perfil resumido" "018 (#$US018)" "3h" "Usa get-my-profile en HomeView.")
-# --- US-019
-TS042=$(create_task "TS-042 — Maquetar ProfileView" "019 (#$US019)" "3h" "Vista de perfil del usuario autenticado.")
-TS043=$(create_task "TS-043 — Mostrar datos sin ofuscar" "019 (#$US019)" "1h" "get-my-profile está en OWN_DATA_PATHS; NO aplicar máscara en el cliente.")
-# --- US-020
-TS044=$(create_task "TS-044 — Maquetar EditProfileView" "020 (#$US020)" "3h" "Formulario precargado con RHF + Zod.")
-TS045=$(create_task "TS-045 — Conectar update-my-profile" "020 (#$US020)" "4h" "Validar id/username contra el JWT del AuthContext.")
-TS046=$(create_task "TS-046 — Mapear errores" "020 (#$US020)" "3h" "SYS-* → comun:error.sysGenerico. Otros errores mapeo individual (REG-002, REG-003, REG-007, AUTH-007).")
-TS047=$(create_task "TS-047 — Refetch tras UPT-0001" "020 (#$US020)" "3h" "Actualizar AuthContext Y volver a consultar get-my-profile.")
-# --- US-021
-TS048=$(create_task "TS-048 — Modal de confirmación" "021 (#$US021)" "3h" "Confirmación para POST /api/auth/delete-account.")
-TS049=$(create_task "TS-049 — Limpiar sesión y redirigir" "021 (#$US021)" "2h" "Tras borrado lógico, limpiar y redirigir a login.")
-
-echo "   Tasks creadas."
+echo "   Tasks creadas: ${#ALL_TS_IDS[@]}"
 
 # ---------------------------------------------------------
-# 6) AGREGAR AL PROJECT
+# 7) AGREGAR AL PROJECT
 # ---------------------------------------------------------
 echo "==> [6/7] Agregando al Project #$PROJECT_NUMBER..."
 
-ALL_ISSUES="$CAP $FT001 $FT002 $FT003 $FT004 $FT005 \
-$US001 $US002 $US003 $US004 $US005 $US006 $US007 $US008 $US009 $US010 $US011 $US012 \
-$US013 $US014 $US015 $US016 $US017 $US018 $US019 $US020 $US021 \
-$TS050 $TS001 $TS002 $TS003 $TS004 $TS005 $TS006 $TS007 $TS008 $TS009 $TS010 \
-$TS011 $TS012 $TS013 $TS014 $TS015 $TS016 $TS017 $TS018 $TS019 $TS020 \
-$TS021 $TS022 $TS023 $TS024 $TS025 $TS026 $TS027 $TS028 $TS029 $TS030 \
-$TS031 $TS032 $TS033 $TS034 $TS035 $TS036 $TS037 $TS038 $TS039 $TS040 \
-$TS041 $TS042 $TS043 $TS044 $TS045 $TS046 $TS047 $TS048 $TS049"
+ALL_ISSUES="$CAP"
+for k in "${!FT[@]}"; do ALL_ISSUES="$ALL_ISSUES ${FT[$k]}"; done
+for k in "${!US[@]}"; do ALL_ISSUES="$ALL_ISSUES ${US[$k]}"; done
+for id in "${ALL_TS_IDS[@]}"; do ALL_ISSUES="$ALL_ISSUES $id"; done
 
 ADDED=0
 for iss in $ALL_ISSUES; do
@@ -481,7 +552,7 @@ done
 echo "   $ADDED issues agregados al Project #$PROJECT_NUMBER"
 
 # ---------------------------------------------------------
-# 7) VINCULAR JERARQUÍA (SUB-ISSUES) — con retry y sleep
+# 8) VINCULAR JERARQUÍA (sub-issues)
 # ---------------------------------------------------------
 echo "==> [7/7] Vinculando jerarquía (sub-issues)..."
 
@@ -490,17 +561,14 @@ FAILED=0
 
 link_sub() {
   local parent=$1; local child=$2
-  local attempt=1
-  local max_attempts=3
-  local pid cid
+  local attempt=1 max_attempts=3 pid cid
 
   pid=$(gh issue view "$parent" --repo "$REPO" --json id --jq '.id' 2>/dev/null || echo "")
   cid=$(gh issue view "$child"  --repo "$REPO" --json id --jq '.id' 2>/dev/null || echo "")
 
   if [ -z "$pid" ] || [ -z "$cid" ]; then
     echo "   ⚠ No se obtuvieron IDs: #$parent → #$child"
-    FAILED=$((FAILED + 1))
-    return 1
+    FAILED=$((FAILED + 1)); return 1
   fi
 
   while [ "$attempt" -le "$max_attempts" ]; do
@@ -508,152 +576,56 @@ link_sub() {
       mutation($p:ID!, $c:ID!) {
         addSubIssue(input:{issueId:$p, subIssueId:$c}) { issue { id } }
       }' -f p="$pid" -f c="$cid" >/dev/null 2>&1; then
-      echo "   ✓ #$parent ← #$child"
-      LINKED=$((LINKED + 1))
-      sleep 0.3
-      return 0
+      LINKED=$((LINKED + 1)); sleep 0.2; return 0
     fi
-    sleep 1
-    attempt=$((attempt + 1))
+    sleep 1; attempt=$((attempt + 1))
   done
 
-  echo "   ❌ Falló tras $max_attempts intentos: #$parent ← #$child"
-  FAILED=$((FAILED + 1))
-  return 1
+  echo "   ❌ Falló: #$parent ← #$child"
+  FAILED=$((FAILED + 1)); return 1
 }
 
 # CAP -> FT
-for ft in $FT001 $FT002 $FT003 $FT004 $FT005; do link_sub "$CAP" "$ft"; done
+for k in "${!FT[@]}"; do link_sub "$CAP" "${FT[$k]}"; done
 
 # FT -> US
-for us in $US001 $US002 $US003 $US004 $US005 $US006; do link_sub "$FT001" "$us"; done
-for us in $US007 $US008 $US009 $US010 $US011 $US012; do link_sub "$FT002" "$us"; done
-for us in $US013 $US014 $US015 $US016; do link_sub "$FT003" "$us"; done
-for us in $US017 $US018; do link_sub "$FT004" "$us"; done
-for us in $US019 $US020 $US021; do link_sub "$FT005" "$us"; done
+for us_key in "${!US[@]}"; do
+  ft_key="${US_PARENT[$us_key]}"
+  link_sub "${FT[$ft_key]}" "${US[$us_key]}"
+done
 
 # US -> TS
-link_sub "$US001" "$TS050"; link_sub "$US001" "$TS001"; link_sub "$US001" "$TS002"
-link_sub "$US002" "$TS003"; link_sub "$US002" "$TS004"
-link_sub "$US003" "$TS005"; link_sub "$US003" "$TS006"; link_sub "$US003" "$TS007"
-link_sub "$US004" "$TS008"; link_sub "$US004" "$TS009"; link_sub "$US004" "$TS010"
-link_sub "$US005" "$TS011"; link_sub "$US005" "$TS012"; link_sub "$US005" "$TS013"
-link_sub "$US006" "$TS014"; link_sub "$US006" "$TS015"
-link_sub "$US007" "$TS016"; link_sub "$US007" "$TS017"; link_sub "$US007" "$TS018"
-link_sub "$US008" "$TS019"; link_sub "$US008" "$TS020"
-link_sub "$US009" "$TS021"; link_sub "$US009" "$TS022"; link_sub "$US009" "$TS023"
-link_sub "$US010" "$TS024"; link_sub "$US010" "$TS025"
-link_sub "$US011" "$TS026"; link_sub "$US011" "$TS027"
-link_sub "$US012" "$TS028"; link_sub "$US012" "$TS029"
-link_sub "$US013" "$TS030"; link_sub "$US013" "$TS031"; link_sub "$US013" "$TS032"
-link_sub "$US014" "$TS033"; link_sub "$US014" "$TS034"
-link_sub "$US015" "$TS035"; link_sub "$US015" "$TS036"
-link_sub "$US016" "$TS037"
-link_sub "$US017" "$TS038"; link_sub "$US017" "$TS039"; link_sub "$US017" "$TS040"
-link_sub "$US018" "$TS041"
-link_sub "$US019" "$TS042"; link_sub "$US019" "$TS043"
-link_sub "$US020" "$TS044"; link_sub "$US020" "$TS045"; link_sub "$US020" "$TS046"; link_sub "$US020" "$TS047"
-link_sub "$US021" "$TS048"; link_sub "$US021" "$TS049"
+for us_key in "${!TS_BY_US[@]}"; do
+  for ts in ${TS_BY_US[$us_key]}; do
+    link_sub "${US[$us_key]}" "$ts"
+  done
+done
 
 echo "   Links OK: $LINKED | Fallidos: $FAILED"
 
 # ---------------------------------------------------------
-# Guardar IDs
+# 9) Guardar IDs
 # ---------------------------------------------------------
 cat > "$KANBAN_DIR/kanban-ids.env" <<ENV
 CAP=$CAP
-FT001=$FT001
-FT002=$FT002
-FT003=$FT003
-FT004=$FT004
-FT005=$FT005
-US001=$US001
-US002=$US002
-US003=$US003
-US004=$US004
-US005=$US005
-US006=$US006
-US007=$US007
-US008=$US008
-US009=$US009
-US010=$US010
-US011=$US011
-US012=$US012
-US013=$US013
-US014=$US014
-US015=$US015
-US016=$US016
-US017=$US017
-US018=$US018
-US019=$US019
-US020=$US020
-US021=$US021
-TS050=$TS050
-TS001=$TS001
-TS002=$TS002
-TS003=$TS003
-TS004=$TS004
-TS005=$TS005
-TS006=$TS006
-TS007=$TS007
-TS008=$TS008
-TS009=$TS009
-TS010=$TS010
-TS011=$TS011
-TS012=$TS012
-TS013=$TS013
-TS014=$TS014
-TS015=$TS015
-TS016=$TS016
-TS017=$TS017
-TS018=$TS018
-TS019=$TS019
-TS020=$TS020
-TS021=$TS021
-TS022=$TS022
-TS023=$TS023
-TS024=$TS024
-TS025=$TS025
-TS026=$TS026
-TS027=$TS027
-TS028=$TS028
-TS029=$TS029
-TS030=$TS030
-TS031=$TS031
-TS032=$TS032
-TS033=$TS033
-TS034=$TS034
-TS035=$TS035
-TS036=$TS036
-TS037=$TS037
-TS038=$TS038
-TS039=$TS039
-TS040=$TS040
-TS041=$TS041
-TS042=$TS042
-TS043=$TS043
-TS044=$TS044
-TS045=$TS045
-TS046=$TS046
-TS047=$TS047
-TS048=$TS048
-TS049=$TS049
 ENV
+for k in "${!FT[@]}"; do echo "${k//-/_}=${FT[$k]}" >> "$KANBAN_DIR/kanban-ids.env"; done
+for k in "${!US[@]}"; do echo "${k//-/_}=${US[$k]}" >> "$KANBAN_DIR/kanban-ids.env"; done
+for i in "${!ALL_TS_IDS[@]}"; do echo "TS_$(printf '%03d' $((i+1)))=${ALL_TS_IDS[$i]}" >> "$KANBAN_DIR/kanban-ids.env"; done
 
 echo ""
 echo "══════════════════════════════════════════════════════"
 echo "  ✅ CAP-01 creada exitosamente"
 echo "  - 1 Capability"
-echo "  - 5 Features"
-echo "  - 21 User Stories"
-echo "  - 50 Tasks"
+echo "  - 9 Features"
+echo "  - 41 User Stories"
+echo "  - ${#ALL_TS_IDS[@]} Tasks"
 echo "  - Sub-issues vinculados: $LINKED (fallidos: $FAILED)"
 echo "  IDs guardados en: $KANBAN_DIR/kanban-ids.env"
 echo "══════════════════════════════════════════════════════"
 
 if [ "$FAILED" -gt 0 ]; then
   echo ""
-  echo "⚠️  ATENCIÓN: $FAILED vinculaciones fallaron."
-  echo "   Ejecuta el script de reintento o vuelve a correr este script."
+  echo "⚠️  $FAILED vinculaciones fallaron. Ejecuta retry-links.sh o vuelve a correr."
   exit 1
 fi
