@@ -2,9 +2,9 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `002`
+- Hotfix = `003`
 
-## Fecha: 2026-09-19
+## Fecha: 2026-09-24
 
 ## Proyecto: Investment Tracker Pro
 
@@ -58,7 +58,15 @@ Las tareas del proyecto se organizan en el tablero con los siguientes estados su
 | `In review`   | Pull Request abierto, pendiente de revisión    |
 | `Done`        | Mergeado a `developer`                         |
 
-> **Nota**: Los issues y Pull Requests deben vincularse al tablero para mantener trazabilidad entre el código y la planeación.
+> **Rate limit API GitHub** — GraphQL y REST son buckets separados (5.000/hora cada uno). Regla: **leer por REST, mutar por GraphQL**.
+>
+> - `node_id` de un issue → `gh api repos/OWNER/REPO/issues/N --jq .node_id` (REST).
+> - Listar por label → `gh api "repos/OWNER/REPO/issues?labels=X&state=all" --paginate` (REST).
+> - GraphQL solo para: `addProjectV2ItemById`, `updateProjectV2ItemFieldValue`, `addSubIssue`.
+> - **Nunca** `gh issue view --json` ni `gh project item-list --format json` en bucles.
+> - `first: 100` máximo en GraphQL. `-F number=N` (typed) si la variable es `Int!`.
+> - Antes de scripts masivos: `gh api rate_limit --jq '.resources.graphql.remaining'`. Si < 700, esperar.
+> - Si un script muere a mitad: `regen-kanban-ids.sh` + `retry-links.sh`. **Nunca** re-ejecutar `create-cap01.sh` completo.
 
 ---
 
@@ -165,6 +173,17 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 - [105. Gestión del Proyecto](#105-gestión-del-proyecto)
 
 - [106. Gestión Scrum con GitHub Projects](#106-gestión-scrum-con-github-projects)
+  - [Jerarquía de issues](#jerarquía-de-issues)
+  - [Estados del tablero (Projects V2 #2)](#estados-del-tablero-projects-v2-2)
+  - [Flujo de trabajo](#flujo-de-trabajo)
+  - [Comandos de consulta](#comandos-de-consulta)
+  - [Scripts disponibles](#scripts-disponibles)
+  - [Plantillas obligatorias](#plantillas-obligatorias)
+  - [Verificación previa obligatoria (rate limit)](#verificación-previa-obligatoria-rate-limit)
+  - [Recuperación tras corte de un script masivo](#recuperación-tras-corte-de-un-script-masivo)
+  - [Reglas de commits](#reglas-de-commits)
+  - [Estructura de ramas](#estructura-de-ramas)
+  - [Tablero](#tablero)
 
 ---
 
@@ -1432,11 +1451,33 @@ graph TB
         - `global.css` - Estilos globales
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
-    - **`prompts/`**
-      - `prompt_inicial.md` - Prompt original
-      - `agente-frontend.md` - (planificado) Reglas del frontend
+    - **`prompts/`** - Fuentes de verdad y reglas por capa
+      - `prompt_inicial.md` - Idea general del proyecto, reglas para la IA, directrices por capa
+      - `agente-frontend.md` - Reglas del frontend (estructura, vistas, design system, i18n, assets, testing, a11y, DoD)
       - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
       - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
+    - **`scrum/`** - Planificación Scrum versionada
+      - **`kanban/`** - Tablero local sincronizado con GitHub Projects V2 #2
+        - `README.md` - Guía local del kanban
+        - `kanban-ids.env` - IDs vigentes de la CAP activa
+        - `.kanban-config.env` - IDs del Project V2 (auto-generado, ignorado por git)
+        - **`templates/`** - Plantillas obligatorias de issues
+          - `CAP-template.md` - Plantilla de Capability
+          - `FT-template.md` - Plantilla de Feature
+          - `US-template.md` - Plantilla de User Story
+          - `TS-template.md` - Plantilla de Task
+        - **`capabilities/`** - `CAP-XX.md` — plan maestro de la capability
+        - **`features/`** - `FT-XXX.md` — plan por feature
+        - **`user-stories/`** - `US-XXX.md` — plan por user story
+        - **`tasks/`** - `TS-XXX.md` — plan por task
+        - **`scripts/`** - Automatización del tablero
+          - `create-cap01.sh` - Crea CAP + FT + US + TS en GitHub (REST + GraphQL)
+          - `delete-cap01.sh` - Elimina CAP + FT + US + TS (idempotente, REST)
+          - `regen-kanban-ids.sh` - Regenera `kanban-ids.env` por REST
+          - `clear-project.sh` - Vacía el Project sin borrar issues (GraphQL paginado)
+          - `kanban-move.sh` - Mueve un issue entre estados del tablero
+          - `kanban-comment.sh` - Comenta SHA + cambios en el issue
+          - `retry-links.sh` - Re-vincula sub-issues huérfanos
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
     - **`sql/`**
@@ -1477,22 +1518,6 @@ graph TB
 - **Trazabilidad**: cada funcionalidad está vinculada a un issue del repositorio y a una tarjeta en el tablero.
 
 ## 106. Gestión Scrum con GitHub Projects
-
-### Estructura local
-
-Toda la planificación vive en `docs/scrum/kanban/`:
-docs/scrum/kanban/
-├── README.md
-├── kanban-ids.env
-├── capabilities/ # CAP-XX.md
-├── features/ # FT-XXX.md
-├── user-stories/ # US-XXX.md
-├── tasks/ # TS-XXX.md
-└── scripts/
-├── create-cap01.sh
-├── kanban-move.sh
-├── kanban-comment.sh
-└── retry-links.sh
 
 ### Jerarquía de issues
 
@@ -1541,7 +1566,7 @@ gh project item-list 2 --owner 42mrnobody42-alt --format json \
 # Ver todos los items de la CAP activa
 cd /prog/datos/investment-tracker/docs/scrum/kanban
 source kanban-ids.env
-for iss in $CAP $FT001 $US001 $TS001; do
+for iss in $CAP $FT_001 $US_001 $TS_001; do
   gh project item-list 2 --owner 42mrnobody42-alt --format json \
     --jq ".items[] | select(.content.number == $iss) | \"#\(.content.number) \(.status) \(.content.title)\""
 done
@@ -1549,27 +1574,69 @@ done
 
 ### Scripts disponibles
 
-### Scripts disponibles
+| Script                | Función                                 | Uso                                                |
+| --------------------- | --------------------------------------- | -------------------------------------------------- |
+| `create-cap01.sh`     | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
+| `delete-cap01.sh`     | Elimina CAP-01 + FT/US/TS (idempotente) | `./scripts/delete-cap01.sh`                        |
+| `regen-kanban-ids.sh` | Regenera `kanban-ids.env` desde GitHub  | `./scripts/regen-kanban-ids.sh`                    |
+| `clear-project.sh`    | Vacía el Project sin borrar issues      | `./scripts/clear-project.sh`                       |
+| `kanban-move.sh`      | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
+| `kanban-comment.sh`   | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
+| `retry-links.sh`      | Re-vincula sub-issues huérfanos         | `./scripts/retry-links.sh`                         |
 
-| Script              | Función                                 | Uso                                                |
-| ------------------- | --------------------------------------- | -------------------------------------------------- |
-| `create-cap01.sh`   | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
-| `kanban-move.sh`    | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
-| `kanban-comment.sh` | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
-| `retry-links.sh`    | Re-vincula sub-issues si el link falló  | `./scripts/retry-links.sh`                         |
+### Plantillas obligatorias
+
+Todo CAP/FT/US/TS se crea siguiendo la plantilla correspondiente en
+`docs/scrum/kanban/templates/`. Nunca inventar la estructura.
+
+| Nivel | Plantilla         | Estructura mínima                                           |
+| ----- | ----------------- | ----------------------------------------------------------- |
+| CAP   | `CAP-template.md` | Contexto, Alcance, Features, Criterios, Dependencias, Ramas |
+| FT    | `FT-template.md`  | Contexto, Alcance, User Stories, Criterios, Dependencias    |
+| US    | `US-template.md`  | Contexto, Alcance, Tareas, Criterios, Dependencias          |
+| TS    | `TS-template.md`  | Contexto, Entregable, Criterios, Estimación (≤4h), US padre |
+
+Un issue no se cierra (`Done`) hasta que TODOS los checkboxes de
+`## Criterios de aceptación` estén marcados.
+
+### Verificación previa obligatoria (rate limit)
+
+Antes de ejecutar un script masivo (>50 issues), verificar el rate limit:
+
+```bash
+gh api rate_limit --jq '"GraphQL: \(.resources.graphql.remaining)/\(.resources.graphql.limit) | Core: \(.resources.core.remaining)/\(.resources.core.limit)"'
+```
+
+**Reglas**:
+
+- Si `graphql.remaining < 700`, abortar y esperar el reset (indicado por `.resources.graphql.reset`).
+- REST y GraphQL son buckets separados (5.000/hora cada uno); agotar uno no bloquea el otro.
+- **Leer por REST** (`gh api repos/.../issues/N --jq .node_id`, `gh api "repos/.../issues?labels=X&state=all" --paginate`).
+- **Mutar por GraphQL solo cuando es obligatorio** (`addProjectV2ItemById`, `updateProjectV2ItemFieldValue`, `addSubIssue`, `deleteProjectV2Item`).
+- **Nunca** `gh issue view --json` ni `gh project item-list --format json` dentro de bucles.
+- **Nunca** `first: >100` en GraphQL (`EXCESSIVE_PAGINATION`). Paginar con `pageInfo { hasNextPage endCursor }`.
+- **Nunca** `-f number=2` cuando la variable GraphQL es `Int!`. Usar `-F number=2` (F mayúscula = typed).
+
+### Recuperación tras corte de un script masivo
+
+1. **Regenerar IDs**: `./scripts/regen-kanban-ids.sh`.
+2. **Verificar qué quedó**: `gh api "repos/OWNER/REPO/issues?labels=capability&state=all"`.
+3. **Revincular sub-issues huérfanos**: `./scripts/retry-links.sh`.
+4. **Completar items faltantes en el Project**: re-ejecutar solo la fase de vinculación.
+5. **Nunca** re-ejecutar `create-cap01.sh` completo si ya hay issues creados: duplicaría.
 
 ### Reglas de commits
 
-- Formato: tipo(#N): descripción — feat, fix, docs, refactor, test, chore.
-- Siempre referenciar el issue padre con Closes #N o Refs #N.
-- Nunca commitear directo a lastest (protegida).
-- Los cambios se integran a developer vía PR.
+- Formato: `tipo(#N): descripción` — feat, fix, docs, refactor, test, chore.
+- Siempre referenciar el issue padre con `Closes #N` o `Refs #N`.
+- Nunca commitear directo a `lastest` (protegida).
+- Los cambios se integran a `developer` vía PR.
 
 ### Estructura de ramas
 
-- lastest — rama principal protegida (solo PRs desde developer).
-- developer — rama de desarrollo activo (push directo permitido).
-- feature/\* — ramas por CAP / FT / US / TS (creadas desde developer).
+- `lastest` — rama principal protegida (solo PRs desde `developer`).
+- `developer` — rama de desarrollo activo (push directo permitido).
+- `feature/*` — ramas por CAP / FT / US / TS (creadas desde `developer`).
 
 ### Tablero
 
