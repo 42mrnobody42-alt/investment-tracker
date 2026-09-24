@@ -3,22 +3,74 @@
 # create-cap01.sh — Crea CAP-01 + 9 FT + 41 US + 141 TS
 # Cada issue incluye: Contexto, Alcance/Entregable,
 # Criterios de aceptación (checkboxes) y Dependencias.
+#
+# Optimizado para rate limit:
+#   - REST para obtener node_ids de issues (bucket core)
+#   - GraphQL solo para: addProjectV2ItemById,
+#     updateProjectV2ItemFieldValue, addSubIssue
 # =========================================================
 set -euo pipefail
 
-REPO="42mrnobody42-alt/investment-tracker"
+REPO_OWNER="42mrnobody42-alt"
+REPO_NAME="investment-tracker"
+REPO="${REPO_OWNER}/${REPO_NAME}"
 PROJECT_OWNER="42mrnobody42-alt"
 PROJECT_NUMBER=2
 KANBAN_DIR="/prog/datos/investment-tracker/docs/scrum/kanban"
 
+log()  { printf "\033[1;34m[%s]\033[0m %s\n" "$(date +%H:%M:%S)" "$*"; }
+ok()   { printf "\033[1;32m  ✓\033[0m %s\n" "$*"; }
+warn() { printf "\033[1;33m  ⚠\033[0m %s\n" "$*"; }
+die()  { printf "\033[1;31m  ✗ %s\033[0m\n" "$*" >&2; exit 1; }
+
 echo "══════════════════════════════════════════════════════"
-echo "  Creando CAP-01 (con contexto + criterios)"
+echo "  Creando CAP-01 (contexto + criterios + Project)"
 echo "══════════════════════════════════════════════════════"
+
+# ---------------------------------------------------------
+# 0) PROJECT: IDs por GraphQL (3 llamadas)
+# ---------------------------------------------------------
+log "[0/7] Obteniendo IDs del Project #$PROJECT_NUMBER..."
+PROJECT_ID=$(gh api graphql -f query='
+  query($owner: String!, $number: Int!) {
+    user(login: $owner) { projectV2(number: $number) { id } }
+  }' -f owner="$PROJECT_OWNER" -F number="$PROJECT_NUMBER" \
+  --jq '.data.user.projectV2.id' 2>/dev/null || echo "")
+[ -n "$PROJECT_ID" ] && [ "$PROJECT_ID" != "null" ] \
+  || die "No se pudo obtener el ID del Project #$PROJECT_NUMBER"
+
+STATUS_FIELD_ID=$(gh api graphql -f query='
+  query($projectId: ID!) {
+    node(id: $projectId) {
+      ... on ProjectV2 {
+        field(name: "Status") { ... on ProjectV2SingleSelectField { id } }
+      }
+    }
+  }' -f projectId="$PROJECT_ID" --jq '.data.node.field.id')
+
+BACKLOG_OPTION_ID=$(gh api graphql -f query='
+  query($projectId: ID!) {
+    node(id: $projectId) {
+      ... on ProjectV2 {
+        field(name: "Status") {
+          ... on ProjectV2SingleSelectField { options { id name } }
+        }
+      }
+    }
+  }' -f projectId="$PROJECT_ID" \
+  --jq '.data.node.field.options[] | select(.name == "Backlog") | .id')
+
+[ -n "$STATUS_FIELD_ID" ] && [ -n "$BACKLOG_OPTION_ID" ] \
+  || die "No se obtuvieron los IDs del campo Status / Backlog"
+
+ok "Project ID: $PROJECT_ID"
+ok "Status Field: $STATUS_FIELD_ID"
+ok "Backlog Option: $BACKLOG_OPTION_ID"
 
 # ---------------------------------------------------------
 # 1) LABELS
 # ---------------------------------------------------------
-echo "==> [1/6] Creando labels..."
+log "[1/7] Creando labels..."
 for lbl in \
   "capability:6f42c1:Capability del proyecto" \
   "feature:0e8a16:Feature dentro de una capability" \
@@ -37,32 +89,26 @@ for lbl in \
   "e2e:5319e7:End-to-end Playwright" \
   "public-page:c5def5:Vista pública pre-login"; do
   IFS=':' read -r name color desc <<< "$lbl"
-  gh label create "$name" --repo "$REPO" --color "$color" --description "$desc" --force
+  gh label create "$name" --repo "$REPO" --color "$color" --description "$desc" --force >/dev/null
 done
+ok "Labels listos"
 
 # ---------------------------------------------------------
 # 2) HELPERS
 # ---------------------------------------------------------
 create_ft() {
-  local title="$1" body="$2"
-  gh issue create --repo "$REPO" --title "$title" --label "feature,frontend" \
-    --body "$body" | grep -oE '[0-9]+$'
+  gh issue create --repo "$REPO" --title "$1" --label "feature,frontend" \
+    --body "$2" | grep -oE '[0-9]+$'
 }
-
 create_us() {
-  local title="$1" labels="$2" body="$3"
-  gh issue create --repo "$REPO" --title "$title" --label "$labels" \
-    --body "$body" | grep -oE '[0-9]+$'
+  gh issue create --repo "$REPO" --title "$1" --label "$2" \
+    --body "$3" | grep -oE '[0-9]+$'
 }
-
 create_ts() {
-  # args: title, us_ref, hours, contexto, entregable, criterios (| separated)
   local title="$1" us="$2" hours="$3" ctx="$4" ent="$5" crit="$6"
   local crit_md=""
   IFS='|' read -ra ITEMS <<< "$crit"
-  for c in "${ITEMS[@]}"; do
-    crit_md+="- [ ] $c"$'\n'
-  done
+  for c in "${ITEMS[@]}"; do crit_md+="- [ ] $c"$'\n'; done
   local body
   body=$(cat <<EOF
 ## Contexto
@@ -84,10 +130,42 @@ EOF
     --body "$body" | grep -oE '[0-9]+$'
 }
 
+# Añade al Project + Status Backlog (REST para node_id, GraphQL para mutaciones)
+add_to_project() {
+  local issue_num="$1" node_id item_id
+
+  # REST: node_id (bucket core)
+  node_id=$(gh api "repos/$REPO/issues/$issue_num" --jq '.node_id' 2>/dev/null || echo "")
+  [ -n "$node_id" ] && [ "$node_id" != "null" ] || return 1
+
+  # GraphQL: addProjectV2ItemById
+  item_id=$(gh api graphql -f query='
+    mutation($projectId: ID!, $contentId: ID!) {
+      addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+        item { id }
+      }
+    }' -f projectId="$PROJECT_ID" -f contentId="$node_id" \
+    --jq '.data.addProjectV2ItemById.item.id' 2>/dev/null || echo "")
+  [ -n "$item_id" ] && [ "$item_id" != "null" ] || return 1
+
+  # GraphQL: updateProjectV2ItemFieldValue → Status Backlog
+  gh api graphql -f query='
+    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+      updateProjectV2ItemFieldValue(input: {
+        projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+        value: { singleSelectOptionId: $optionId }
+      }) { projectV2Item { id } }
+    }' -f projectId="$PROJECT_ID" -f itemId="$item_id" \
+       -f fieldId="$STATUS_FIELD_ID" -f optionId="$BACKLOG_OPTION_ID" \
+    >/dev/null 2>&1 || true
+
+  return 0
+}
+
 # ---------------------------------------------------------
 # 3) CAPABILITY
 # ---------------------------------------------------------
-echo "==> [2/6] Creando Capability CAP-01..."
+log "[2/7] Creando Capability CAP-01..."
 CAP=$(gh issue create --repo "$REPO" \
   --title "CAP-01 — Frontend React: infraestructura, design system, InitPage, autenticación y perfil" \
   --label "capability,frontend" \
@@ -146,12 +224,12 @@ Backend v0.1.3 desplegado con endpoints `/api/auth/*` y `/api/test/health` funci
 **Rama de trabajo:** feature/CAP-01-frontend-base
 BODY
 )" | grep -oE '[0-9]+$')
-echo "   CAP-01 = #$CAP"
+ok "CAP-01 = #$CAP"
 
 # ---------------------------------------------------------
 # 4) FEATURES
 # ---------------------------------------------------------
-echo "==> [3/6] Creando Features..."
+log "[3/7] Creando Features..."
 declare -A FT
 
 FT[FT-001]=$(create_ft "FT-001 — Setup e infraestructura base" \
@@ -397,16 +475,15 @@ aseguramiento de calidad (a11y, performance, E2E).
 ## Dependencias
 FT-006, FT-008.")
 
-echo "   FT creadas: 001..009"
+ok "FT creadas: 001..009"
 
 # ---------------------------------------------------------
 # 5) USER STORIES
 # ---------------------------------------------------------
-echo "==> [4/6] Creando User Stories..."
+log "[4/7] Creando User Stories..."
 declare -A US
 declare -A US_PARENT
 
-# ---- FT-001 ----
 US[US-001]=$(create_us "US-001 — Inicializar proyecto Vite + React 18 + TypeScript estricto" \
   "user-story,frontend" \
 "## Contexto
@@ -562,7 +639,6 @@ evita CORS.
 US-001.")
 US_PARENT[US-006]=FT-001
 
-# ---- FT-002 ----
 US[US-007]=$(create_us "US-007 — Design tokens y theming (light/dark/high-contrast)" \
   "user-story,frontend,tokens" \
 "## Contexto
@@ -641,7 +717,6 @@ bundle. Esto exige servir assets desde public/ y resolverlos por manifest.
 FT-001.")
 US_PARENT[US-009]=FT-002
 
-# ---- FT-003 ----
 US[US-010]=$(create_us "US-010 — Átomos: botones y controles de formulario" \
   "user-story,frontend,design-system,storybook" \
 "## Contexto
@@ -688,7 +763,6 @@ y placeholders.
 FT-002.")
 US_PARENT[US-011]=FT-003
 
-# ---- FT-004 ----
 US[US-012]=$(create_us "US-012 — Moléculas: feedback (Modal, Toast, Popover)" \
   "user-story,frontend,design-system,storybook,a11y" \
 "## Contexto
@@ -765,7 +839,6 @@ Componentes específicos para formularios y preferencias del usuario.
 FT-003.")
 US_PARENT[US-014]=FT-004
 
-# ---- FT-005 ----
 US[US-015]=$(create_us "US-015 — Organismos: datos (DataTable, ChartPanel)" \
   "user-story,frontend,design-system,storybook" \
 "## Contexto
@@ -867,7 +940,6 @@ estructura pública (header/footer) y detección de orientación.
 FT-004.")
 US_PARENT[US-018]=FT-005
 
-# ---- FT-006 ----
 US[US-019]=$(create_us "US-019 — AppShell (TopBar + Sidebar + Workspace)" \
   "user-story,frontend,responsive" \
 "## Contexto
@@ -997,7 +1069,6 @@ lleven JWT y refresquen token automáticamente.
 US-021.")
 US_PARENT[US-023]=FT-006
 
-# ---- FT-007 ----
 US[US-024]=$(create_us "US-024 — InitPage horizontal (presentación del proyecto)" \
   "user-story,frontend,public-page,responsive" \
 "## Contexto
@@ -1072,7 +1143,6 @@ Los CTA de InitPage apuntan a páginas que deben existir. Esta US las crea.
 US-024.")
 US_PARENT[US-026]=FT-007
 
-# ---- FT-008 ----
 US[US-027]=$(create_us "US-027 — LoginView horizontal + vertical" \
   "user-story,frontend,responsive" \
 "## Contexto
@@ -1271,7 +1341,6 @@ El usuario autenticado puede cambiar su contraseña validando la actual.
 US-028.")
 US_PARENT[US-034]=FT-008
 
-# ---- FT-009 ----
 US[US-035]=$(create_us "US-035 — HomeView horizontal + vertical" \
   "user-story,frontend,responsive" \
 "## Contexto
@@ -1442,16 +1511,15 @@ Cierra la CAP-01 con aseguramiento de calidad medible.
 Todas las US anteriores.")
 US_PARENT[US-041]=FT-009
 
-echo "   US creadas: 001..041"
+ok "US creadas: 001..041"
 
 # ---------------------------------------------------------
 # 6) TASKS
 # ---------------------------------------------------------
-echo "==> [5/6] Creando Tasks..."
+log "[5/7] Creando Tasks..."
 declare -a ALL_TS_IDS=()
 declare -A TS_BY_US
 
-# Formato: "title|us|hours|contexto|entregable|criterio1|criterio2|criterio3"
 while IFS='|' read -r title us hours ctx ent c1 c2 c3; do
   [ -z "$title" ] && continue
   crit="$c1|$c2|$c3"
@@ -1602,37 +1670,49 @@ TS-140 — E2E Playwright 5 configs|US-041|5h|Cobertura E2E.|tests/e2e/*.spec.ts
 TS-141 — bundle-analyze.mjs + presupuesto|US-041|2h|Control de tamaño.|scripts/bundle-analyze.mjs + budget.|Reporte HTML|Presupuesto por ruta|Falla si excede
 TASKS
 
-echo "   Tasks creadas: ${#ALL_TS_IDS[@]}"
+ok "Tasks creadas: ${#ALL_TS_IDS[@]}"
 
 # ---------------------------------------------------------
-# 7) AGREGAR AL PROJECT
+# 7) AÑADIR AL PROJECT + ASIGNAR STATUS
 # ---------------------------------------------------------
-echo "==> [6/6] Agregando al Project y vinculando jerarquía..."
+log "[6/7] Añadiendo issues al Project + Status Backlog..."
 
 ALL_ISSUES="$CAP"
 for k in "${!FT[@]}"; do ALL_ISSUES="$ALL_ISSUES ${FT[$k]}"; done
 for k in "${!US[@]}"; do ALL_ISSUES="$ALL_ISSUES ${US[$k]}"; done
 for id in "${ALL_TS_IDS[@]}"; do ALL_ISSUES="$ALL_ISSUES $id"; done
 
-ADDED=0
+TOTAL=$(echo "$ALL_ISSUES" | wc -w)
+log "  Total de issues: $TOTAL"
+echo ""
+
+ADDED=0; FAILED=0
 for iss in $ALL_ISSUES; do
-  if gh project item-add "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" \
-    --url "https://github.com/$REPO/issues/$iss" >/dev/null 2>&1; then
+  if add_to_project "$iss"; then
     ADDED=$((ADDED + 1))
+    printf "."
+  else
+    FAILED=$((FAILED + 1))
+    printf "x"
   fi
 done
-echo "   $ADDED issues agregados al Project #$PROJECT_NUMBER"
+echo ""
+ok "Añadidos al Project: $ADDED | Fallidos: $FAILED"
 
-# Vinculación jerárquica
-LINKED=0; FAILED=0
+# ---------------------------------------------------------
+# 8) VINCULAR JERARQUÍA (REST + GraphQL)
+# ---------------------------------------------------------
+log "[7/7] Vinculando jerarquía (sub-issues)..."
+
+LINKED=0; LINK_FAILED=0
 
 link_sub() {
   local parent=$1 child=$2 attempt=1 max_attempts=3 pid cid
-  pid=$(gh issue view "$parent" --repo "$REPO" --json id --jq '.id' 2>/dev/null || echo "")
-  cid=$(gh issue view "$child"  --repo "$REPO" --json id --jq '.id' 2>/dev/null || echo "")
+  # REST para node_id (bucket core)
+  pid=$(gh api "repos/$REPO/issues/$parent" --jq '.node_id' 2>/dev/null || echo "")
+  cid=$(gh api "repos/$REPO/issues/$child"  --jq '.node_id' 2>/dev/null || echo "")
   if [ -z "$pid" ] || [ -z "$cid" ]; then
-    echo "   ⚠ No se obtuvieron IDs: #$parent → #$child"
-    FAILED=$((FAILED + 1)); return 1
+    LINK_FAILED=$((LINK_FAILED + 1)); return 1
   fi
   while [ "$attempt" -le "$max_attempts" ]; do
     if gh api graphql -f query='
@@ -1643,22 +1723,25 @@ link_sub() {
     fi
     sleep 1; attempt=$((attempt + 1))
   done
-  echo "   ❌ Falló: #$parent ← #$child"
-  FAILED=$((FAILED + 1)); return 1
+  LINK_FAILED=$((LINK_FAILED + 1)); return 1
 }
 
 # CAP -> FT
 for k in "${!FT[@]}"; do link_sub "$CAP" "${FT[$k]}"; done
 # FT -> US
-for us_key in "${!US[@]}"; do link_sub "${FT[${US_PARENT[$us_key]}]}" "${US[$us_key]}"; done
+for us_key in "${!US[@]}"; do
+  link_sub "${FT[${US_PARENT[$us_key]}]}" "${US[$us_key]}"
+done
 # US -> TS
 for us_key in "${!TS_BY_US[@]}"; do
   for ts in ${TS_BY_US[$us_key]}; do link_sub "${US[$us_key]}" "$ts"; done
 done
 
-echo "   Links OK: $LINKED | Fallidos: $FAILED"
+ok "Links OK: $LINKED | Fallidos: $LINK_FAILED"
 
+# ---------------------------------------------------------
 # Guardar IDs
+# ---------------------------------------------------------
 {
   echo "CAP=$CAP"
   for k in "${!FT[@]}"; do echo "${k//-/_}=${FT[$k]}"; done
@@ -1670,8 +1753,9 @@ echo ""
 echo "══════════════════════════════════════════════════════"
 echo "  ✅ CAP-01 creada"
 echo "  - 1 Capability  ·  9 Features  ·  41 User Stories  ·  ${#ALL_TS_IDS[@]} Tasks"
-echo "  - Sub-issues vinculados: $LINKED (fallidos: $FAILED)"
+echo "  - Añadidos al Project: $ADDED (fallidos: $FAILED)"
+echo "  - Sub-issues vinculados: $LINKED (fallidos: $LINK_FAILED)"
 echo "  - IDs en: $KANBAN_DIR/kanban-ids.env"
 echo "══════════════════════════════════════════════════════"
 
-[ "$FAILED" -eq 0 ] || exit 1
+[ "$FAILED" -eq 0 ] && [ "$LINK_FAILED" -eq 0 ] || exit 1
