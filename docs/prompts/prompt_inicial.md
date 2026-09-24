@@ -345,7 +345,15 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 - Owner: 42mrnobody42-alt · Project number: 2
 - Project ID (GraphQL): PVT_kwHOER7McM4BjVIW
 
-> **Regla**: ninguna funcionalidad se considera "terminada" hasta que el issue asociado esté en `Done` en el tablero y la rama esté mergeada a `developer`.
+> **Rate limit API GitHub** — GraphQL y REST son buckets separados (5.000/hora cada uno). Regla: **leer por REST, mutar por GraphQL**.
+>
+> - `node_id` de un issue → `gh api repos/OWNER/REPO/issues/N --jq .node_id` (REST).
+> - Listar por label → `gh api "repos/OWNER/REPO/issues?labels=X&state=all" --paginate` (REST).
+> - GraphQL solo para: `addProjectV2ItemById`, `updateProjectV2ItemFieldValue`, `addSubIssue`.
+> - **Nunca** `gh issue view --json` ni `gh project item-list --format json` en bucles.
+> - `first: 100` máximo en GraphQL. `-F number=N` (typed) si la variable es `Int!`.
+> - Antes de scripts masivos: `gh api rate_limit --jq '.resources.graphql.remaining'`. Si < 700, esperar.
+> - Si un script muere a mitad: `regen-kanban-ids.sh` + `retry-links.sh`. **Nunca** re-ejecutar `create-cap01.sh` completo.
 
 ### Estructura local
 
