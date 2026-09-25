@@ -90,8 +90,17 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
    - Reglas de la base de datos: estructura de `database/sql/`, nomenclatura `Version_Release_Hotfix_Orden_Prefijo_Nombre.sql`, idempotencia, permisos `investor`/`investment_app`, auditoría con `SECURITY DEFINER`, funciones PL/pgSQL y migraciones.
    - Ruta: `docs/prompts/agente-database.md`.
 
-5. **`docs/frontend/*.md`** y **`docs/sql/*.sql`**
-   - Profundizan en arquitectura, design system, i18n, assets, storybook, testing y consultas de referencia.
+5. **`docs/tecnica/**/_.md`** y **`docs/tecnica/\*\*/_.sql`\*\*
+   - Documentación técnica por capa, organizada con el patrón:
+     `docs/tecnica/<NN-nombre-del-capítulo-en-kebab-case>/<subcategoría>/<archivo>.md|.sql`
+   - El primer nivel es el número + título del capítulo del índice de este README (kebab-case).
+   - El segundo nivel es una subcategoría derivada de los subtítulos de ese capítulo.
+   - El tercer nivel es un archivo por elemento (función, DTO, endpoint, tabla, diagrama, componente).
+   - Capítulos activos:
+     - `docs/tecnica/02-base-de-datos/…`
+     - `docs/tecnica/03-backend-java-spring-boot-3x/…`
+     - `docs/tecnica/04-frontend-react-css-moderno/…` (se puebla con CAP-01)
+   - La migración física de los archivos existentes se hará cuando la documentación actual deje de dar abasto.
 
 **Regla de solicitud de archivos**: cuando un agente (humano o IA) necesite contexto que no está en los documentos anteriores, DEBE solicitar los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras. El procedimiento detallado vive en `docs/prompts/agente-frontend.md` sección 21 y en `docs/prompts/prompt_inicial.md` (Reglas generales para la IA, reglas 24-28).
 
@@ -1480,8 +1489,35 @@ graph TB
           - `retry-links.sh` - Re-vincula sub-issues huérfanos
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
-    - **`sql/`**
-      - `consultasBasicas.sql` - Consultas de referencia
+    - **`tecnica/`** - Documentación técnica por capítulo del README
+      - **`02-base-de-datos/`** - Cap. 2: Base de Datos
+        - `estructura-de-scripts-sql/`
+        - `diagrama-mer-modelo-entidad-relacion/`
+        - `relaciones-clave/`
+        - `funciones-plpgsql-disponibles/`
+        - `auditoria-de-usuarios/`
+        - `datos-de-prueba/`
+        - `sql/`
+          - `consultas/`
+            - `consultasBasicas.sql` - Consultas de referencia
+      - **`03-backend-java-spring-boot-3x/`** - Cap. 3: Backend Java Spring Boot 3.x
+        - `servicios-publicados/`
+        - `diagrama-de-secuencia-de-los-servicios-publicados/`
+        - `seguridad/`
+        - `perfil-de-usuario/`
+        - `ofuscacion-de-datos-sensibles/`
+        - `codigos-de-error/`
+        - `pruebas/`
+      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS (se puebla con CAP-01)
+        - `arquitectura/`
+        - `design-system/`
+        - `componentes/`
+        - `internacionalizacion/`
+        - `assets/`
+        - `storybook/`
+        - `testing/`
+        - `deploy/`
+        - `diagramas-de-secuencias/`
   - **`backups/`** - Copias de seguridad de la base de datos
     - `investment_tracker_20260710_121428.sql` - Backup de BD
 

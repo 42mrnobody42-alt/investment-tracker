@@ -25,8 +25,10 @@ Antes de proponer, generar, modificar o revisar cualquier artefacto del frontend
    - Especifica cómo se construye el frontend: estructura de directorios, vistas por orientación, componentes, i18n, assets, testing, a11y, performance, seguridad y reglas para agentes IA.
    - Todo lo que aquí se define es de cumplimiento obligatorio para cualquier contribución al frontend.
 
-4. Documentos enlazados en `README.md` y `docs/frontend/*.md`
+4. Documentos enlazados en `README.md` y `docs/tecnica/**/*.md`
    - Complementan, no reemplazan. Si hay conflicto, prevalece `README.md` → `prompt_inicial.md` → este archivo.
+   - Convención: `docs/tecnica/<NN-nombre-del-capítulo-en-kebab-case>/<subcategoría>/<archivo>.md|.sql`.
+   - Para este agente, el capítulo de interés es `docs/tecnica/04-frontend-react-css-moderno/`.
 
 Reglas derivadas:
 
@@ -347,20 +349,35 @@ Solo se listan las ramas relevantes al frontend y a los contenedores. Las ramas 
     - **`node_modules/`** - Dependencias instaladas (generado)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
-    - `agente-frontend.md` - Este documento
-    - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
-    - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
     - **`prompts/`**
       - `prompt_inicial.md` - Idea general del proyecto (fuente de verdad, ver sección 0)
-      - `prompt_frontend.md` - Prompt específico del frontend
-    - **`frontend/`**
-      - `arquitectura.md` - Diagrama y decisiones de arquitectura
-      - `design-system.md` - Catálogo de componentes y tokens
-      - `i18n.md` - Convenciones de internacionalización
-      - `assets.md` - Cómo reemplazar logos e imágenes en runtime
-      - `storybook.md` - Cómo levantar y publicar Storybook
-      - `testing.md` - Estrategia de pruebas unitarias, integración y E2E
-      - `deploy.md` - Build, variables de entorno y despliegue
+      - `agente-frontend.md` - Este documento
+      - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
+      - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
+    - **`tecnica/`** - Documentación técnica por capítulo del README
+      - **`02-base-de-datos/`** - Cap. 2: Base de Datos
+      - **`03-backend-java-spring-boot-3x/`** - Cap. 3: Backend Java Spring Boot 3.x
+      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS (se puebla con CAP-01)
+        - **`arquitectura/`**
+          - `arquitectura.md` - Diagrama y decisiones de arquitectura
+        - **`design-system/`**
+          - `design-system.md` - Catálogo de componentes y tokens
+        - **`componentes/`**
+          - `botones.md` - Componentes de botón (se crea con el componente)
+          - `modales.md` - Modales y diálogos (se crea con el componente)
+          - … (un archivo por familia, se crean al construir el componente)
+        - **`internacionalizacion/`**
+          - `i18n.md` - Convenciones de internacionalización
+        - **`assets/`**
+          - `assets.md` - Cómo reemplazar logos e imágenes en runtime
+        - **`storybook/`**
+          - `storybook.md` - Cómo levantar y publicar Storybook
+        - **`testing/`**
+          - `testing.md` - Estrategia de pruebas unitarias, integración y E2E
+        - **`deploy/`**
+          - `deploy.md` - Build, variables de entorno y despliegue
+        - **`diagramas-de-secuencias/`**
+          - `login.md` - Flujo frontend ↔ backend del login (se crea con la vista)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
 
@@ -771,7 +788,11 @@ Ejemplos:
 - docs/prompts/prompt_inicial.md: idea general del proyecto, requisitos funcionales, reglas para la IA, directrices por capa y flujo obligatorio por issue.
 - docs/agente-frontend.md: este documento. Reglas de construcción del frontend.
 - docs/prompts/agente-backend.md y docs/prompts/agente-database.md: documentos hermanos. Respetan las mismas reglas de fuentes de verdad y solicitud de archivos.
-- docs/frontend/\*.md: profundizan en arquitectura, design system, i18n, assets, storybook, testing y deploy.
+- docs/tecnica/\*\*/\*.md y docs/tecnica/\*\*/\*.sql: documentación técnica por capítulo del README.
+  - Convención: `docs/tecnica/<NN-nombre-del-capítulo-en-kebab-case>/<subcategoría>/<archivo>.md|.sql`.
+  - Capítulo de frontend: `docs/tecnica/04-frontend-react-css-moderno/` (se puebla con CAP-01).
+  - Capítulo de backend: `docs/tecnica/03-backend-java-spring-boot-3x/`.
+  - Capítulo de base de datos: `docs/tecnica/02-base-de-datos/`.
 
 Regla de consistencia:
 
