@@ -1,8 +1,8 @@
 # agente-frontend.md
 
 > Guía oficial de arquitectura y desarrollo frontend.
-> Versión: 1.3.0
-> Stack base: React 18+, TypeScript, Vite, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
+> Versión: 1.3.1
+> Stack base: React 19 + TypeScript 6 + Vite 8, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
 > Público objetivo: Desarrolladores frontend senior, tech leads y agentes automatizados de generación de código.
 > Documento hermano del backend, la base de datos y el README del proyecto. Ver sección 0 y 22.
 
@@ -74,9 +74,9 @@ Solo se listan las ramas relevantes al frontend y a los contenedores. Las ramas 
     - **`shellTest/`** - Scripts de mantenimiento
       - `check-all.sh` - Verificación completa
       - `reset-all.sh` - Reset de servicios
-  - **`frontend/`** - SPA React 18 + TypeScript + Vite
+  - **`frontend/`** - SPA React 19 + TypeScript 6 + Vite 8
     - `.gitignore` - Archivos ignorados por Git en frontend
-    - `.nvmrc` - Versión de Node fijada (por ejemplo, 20.11.1)
+      - `.nvmrc` - Versión de Node fijada (por ejemplo, 24.21.0)
     - `.env.example` - Plantilla de variables de entorno
     - `.env.development` - Variables para desarrollo (VITE_API_URL, VITE_APP_ENV)
     - `.env.staging` - Variables para staging
@@ -646,7 +646,13 @@ t('servicioA:index.errors.network')
 ## 15. Convenciones de código
 
 - TypeScript estricto. Sin any (usar unknown y narrowing).
-- ESLint + Prettier + eslint-plugin-import + eslint-plugin-react-hooks + eslint-plugin-jsx-a11y + Stylelint para CSS Modules.
+- ESLint 9.39.5 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + Prettier 3.9.9 + `eslint-config-prettier` + `eslint-plugin-import` + `eslint-plugin-jsx-a11y` + `eslint-plugin-simple-import-sort` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`. Stylelint en TS-003.
+- Reglas obligatorias **en nivel `error`** (no `warn`):
+  - `eslint-plugin-jsx-a11y` (WCAG 2.2 AA)
+  - `eslint-plugin-import` (`no-unresolved`, `no-cycle`, `no-duplicates`, `first`, `newline-after-import`)
+  - `simple-import-sort` (orden de imports)
+- `strict: true` obligatorio en `tsconfig.app.json` y `tsconfig.node.json`.
+- Sin `^` ni `~` en `frontend/package.json`. Todo pineado con `save-exact=true` en `frontend/.npmrc`.
 - Commits con Conventional Commits + Husky + lint-staged + commitlint.
 - Formato de commit: tipo(#N): descripción — feat, fix, docs, refactor, test, chore. Siempre referenciar el issue con Closes #N o Refs #N (ver README.md sección 106).
 - Nombres:
