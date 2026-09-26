@@ -646,7 +646,13 @@ t('servicioA:index.errors.network')
 ## 15. Convenciones de código
 
 - TypeScript estricto. Sin any (usar unknown y narrowing).
-- ESLint 9.39.5 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + Prettier 3.9.9 + `eslint-config-prettier` + `eslint-plugin-import` + `eslint-plugin-jsx-a11y` + `eslint-plugin-simple-import-sort` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`. Stylelint en TS-003.
+- ESLint 9.39.5 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + Prettier 3.9.9 + `eslint-config-prettier` + `eslint-plugin-import` + `eslint-plugin-jsx-a11y` + `eslint-plugin-simple-import-sort` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`.
+- Stylelint 17.15.0 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`) + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1.
+- Reglas de CSS obligatorias **en nivel `error`**:
+  - `declaration-no-important: true` — prohíbe `!important` (agente-frontend §19).
+  - `selector-class-pattern: "^[a-z][a-zA-Z0-9]*$"` — clases en **camelCase**.
+  - `recess-order` — orden de propiedades (evita deuda de desorden).
+  - Scripts separados: `lint:css` y `lint:css:fix` (ver ADR-0002).
 - Reglas obligatorias **en nivel `error`** (no `warn`):
   - `eslint-plugin-jsx-a11y` (WCAG 2.2 AA)
   - `eslint-plugin-import` (`no-unresolved`, `no-cycle`, `no-duplicates`, `first`, `newline-after-import`)
