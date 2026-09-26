@@ -1,0 +1,26 @@
+# Dependencias
+
+node_modules/
+
+# Build de producción
+
+dist/
+dist-ssr/
+
+# Reportes de tests y cobertura
+
+coverage/
+playwright-report/
+test-results/
+
+# Storybook compilado
+
+storybook-static/
+
+# Assets estáticos (no se lintean)
+
+public/
+
+# Archivos minificados
+
+*.min.css

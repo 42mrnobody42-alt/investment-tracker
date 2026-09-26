@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `004`
+- Hotfix = `005`
 
 ## Fecha: 2026-09-26
 
@@ -162,6 +162,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
   - [Decisiones Técnicas (ADR)](#decisiones-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
+    - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
 
@@ -1251,16 +1252,18 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 
 ### Stack Tecnológico del Frontend
 
-| Componente      | Versión                     | Notas                                                                      |
-| --------------- | --------------------------- | -------------------------------------------------------------------------- |
-| React           | 19.2.8                      | Versión estable activa                                                     |
-| React DOM       | 19.2.8                      | Sincronizado con React                                                     |
-| TypeScript      | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`               |
-| Vite            | 8.3.1                       | Bundler y dev server (puerto 3000, `strictPort: true`)                     |
-| Node.js (build) | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                |
-| ESLint          | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                    |
-| Prettier        | 3.9.9                       | Formateo (`.prettierrc.json`)                                              |
-| ESLint plugins  | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh` |
+| Componente        | Versión                     | Notas                                                                      |
+| ----------------- | --------------------------- | -------------------------------------------------------------------------- |
+| React             | 19.2.8                      | Versión estable activa                                                     |
+| React DOM         | 19.2.8                      | Sincronizado con React                                                     |
+| TypeScript        | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`               |
+| Vite              | 8.3.1                       | Bundler y dev server (puerto 3000, `strictPort: true`)                     |
+| Node.js (build)   | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                |
+| ESLint            | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                    |
+| Prettier          | 3.9.9                       | Formateo (`.prettierrc.json`)                                              |
+| Stylelint         | 17.15.0                     | Lint CSS / CSS Modules (`.stylelintrc.json`)                               |
+| ESLint plugins    | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh` |
+| Stylelint configs | ver `frontend/package.json` | `stylelint-config-standard`, `css-modules`, `recess-order`                 |
 
 **Pineo de versiones**: `frontend/.npmrc` con `save-exact=true`. Ninguna
 dependencia usa `^` ni `~` en `package.json`.
@@ -1270,9 +1273,10 @@ dependencia usa `^` ni `~` en `package.json`.
 Los Architecture Decision Records del frontend viven en
 [`docs/tecnica/04-frontend-react-css-moderno/arquitectura/`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/).
 
-| ADR                                                                                 | Título                                                            | Estado      | Fecha      |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------- | ---------- |
-| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md) | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | ✅ Aceptada | 2026-09-26 |
+| ADR                                                                                              | Título                                                            | Estado      | Fecha      |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------- | ---------- |
+| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)              | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | ✅ Aceptada | 2026-09-26 |
+| [ADR-0002](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md) | Alcance de Stylelint: colores y separación de scripts             | ✅ Aceptada | 2026-09-26 |
 
 <a id="adr-0001--eslint-9395-eol"></a>
 
@@ -1285,6 +1289,20 @@ que instaló Vite 8 por defecto.
 
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)
+
+<a id="adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts"></a>
+
+#### ADR-0002 — Alcance de Stylelint: colores y separación de scripts
+
+> ⚠️ **Decisiones de alcance con gatillos de revisión**
+
+Dos decisiones documentadas en ADR-0002:
+
+1. **No forzar `var(--...)` en valores de color** hasta que existan los tokens reales (TS-017).
+2. **Scripts `lint:css` separados de `lint`** hasta que Husky + lint-staged (TS-016) unifiquen por archivo.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md)
 
 ---
 
@@ -1604,6 +1622,7 @@ que instaló Vite 8 por defecto.
 - **Node.js (build frontend)**: 24.21.0 (LTS activa) — fijado en `frontend/.nvmrc`
 - **Lint frontend**: ESLint 9.39.5 (EOL) + `eslint-plugin-jsx-a11y` 6.10.2 + `eslint-plugin-import` 2.32.0 + `eslint-plugin-simple-import-sort` 14.0.0
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
+- **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1 (ver [ADR-0002](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts))
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
