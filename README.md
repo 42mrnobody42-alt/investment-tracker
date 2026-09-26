@@ -2,9 +2,9 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `003`
+- Hotfix = `004`
 
-## Fecha: 2026-09-24
+## Fecha: 2026-09-26
 
 ## Proyecto: Investment Tracker Pro
 
@@ -158,6 +158,10 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
   - [Pruebas](#pruebas)
 
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
+  - [Arquitectura del Frontend](#arquitectura-del-frontend)
+  - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
+  - [Decisiones Técnicas (ADR)](#decisiones-técnicas-adr)
+    - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
 
@@ -218,7 +222,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
             ▼                             ▼
 ┌───────────────────────┐    ┌────────────────────────────────┐
 │   🎨 FRONTEND (3000)   │    │   ⚙️  BACKEND (7700)            │
-│   React 18 + CSS       │    │   Spring Boot 3.x + Java 21   │
+│   React 19 + CSS       │    │   Spring Boot 3.x + Java 21   │
 │   Nginx/Alpine         │    │   Tomcat 10 Embedido           │
 │   SPA + React Router   │    │   JWT Authentication           │
 └───────────────────────┘    └──────────────┬─────────────────┘
@@ -231,6 +235,9 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 │   Esquema: investment_tracker│    │   Admin DB Web UI            │
 │   PL/pgSQL + UUID + 54 monedas│   │   http://localhost:5050       │
 └──────────────────────────────┘    └──────────────────────────────┘
+
+> **Stack del frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 + Node.js 24.21.0 (build).
+> Detalle completo en la [sección 4](#4-frontend---react-y-css-moderno).
 ```
 
 ## 2. BASE DE DATOS
@@ -1219,6 +1226,68 @@ graph TB
  */
 ```
 
+## 4. Frontend - React y CSS moderno
+
+### Arquitectura del Frontend
+
+SPA (Single Page Application) construida con **React 19 + TypeScript 6 + Vite 8**,
+servida por Nginx en el contenedor `frontend` y publicada al exterior a través del
+reverse proxy HTTPS (ver [sección 1](#1-arquitectura-del-sistema)).
+
+El frontend es **greenfield**: toda la estructura se construye desde cero en el
+contexto de [CAP-01](#105-gestión-del-proyecto) y su documentación técnica vive
+en `docs/tecnica/04-frontend-react-css-moderno/`.
+
+**Principios rectores** (detalle completo en `docs/prompts/agente-frontend.md`):
+
+- Separación por orientación: `views/horizontal/` (PC, tablet apaisada, Smart TV)
+  y `views/vertical/` (móvil, tablet retrato). Sin mezclas.
+- Design System propio en `src/components/{atoms,molecules,organisms,layout}/`.
+- Vistas autenticadas siempre dentro de `AppShell` (TopBar + Sidebar plegable + Workspace).
+- i18n obligatorio (es/en) sin textos hardcodeados.
+- Assets corporativos mutables en runtime (`public/assets/` + `manifest.json` + `useAsset()`).
+- Accesibilidad WCAG 2.2 AA verificada con `axe-core` en CI.
+- Sin `any`, sin colores hardcodeados, sin secretos en el bundle.
+
+### Stack Tecnológico del Frontend
+
+| Componente      | Versión                     | Notas                                                                      |
+| --------------- | --------------------------- | -------------------------------------------------------------------------- |
+| React           | 19.2.8                      | Versión estable activa                                                     |
+| React DOM       | 19.2.8                      | Sincronizado con React                                                     |
+| TypeScript      | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`               |
+| Vite            | 8.3.1                       | Bundler y dev server (puerto 3000, `strictPort: true`)                     |
+| Node.js (build) | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                |
+| ESLint          | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                    |
+| Prettier        | 3.9.9                       | Formateo (`.prettierrc.json`)                                              |
+| ESLint plugins  | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh` |
+
+**Pineo de versiones**: `frontend/.npmrc` con `save-exact=true`. Ninguna
+dependencia usa `^` ni `~` en `package.json`.
+
+### Decisiones Técnicas (ADR)
+
+Los Architecture Decision Records del frontend viven en
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/).
+
+| ADR                                                                                 | Título                                                            | Estado      | Fecha      |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------- | ---------- |
+| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md) | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | ✅ Aceptada | 2026-09-26 |
+
+<a id="adr-0001--eslint-9395-eol"></a>
+
+#### ADR-0001 — ESLint 9.39.5 (EOL)
+
+> ⚠️ **Decisión técnica con deuda registrada**
+
+**Decisión**: Fijar `eslint` y `@eslint/js` en `9.39.5` en lugar de la `10.10.0`
+que instaló Vite 8 por defecto.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)
+
+---
+
 ## 100. Servicios Docker
 
 ### Servicios
@@ -1447,17 +1516,19 @@ graph TB
       - **`maven-status/`** - Estado de Maven
       - **`surefire-reports/`** - Reportes de pruebas
       - **`test-classes/`** - Clases de pruebas compiladas
-  - **`frontend/`** - SPA React 18 (estructura inicial)
-    - `package.json` - Dependencias npm
-    - `README.md` - Documentación frontend
-    - **`src/`**
-      - `App.js` - Componente principal
-      - **`component/`**
-        - `Dashboard.js` - Panel de control
-      - **`services/`**
-        - `api.js` - Configuración Axios
-      - **`styles/`**
-        - `global.css` - Estilos globales
+  - **`frontend/`** - SPA React 19 + TypeScript 6 + Vite 8 (base de CAP-01)
+    - `.npmrc` - `save-exact=true` (pineo de versiones)
+    - `.nvmrc` - Node.js 24.21.0
+    - `.prettierrc.json` - Formato Prettier
+    - `.prettierignore` - Exclusiones de Prettier
+    - `eslint.config.js` - ESLint 9 flat config (a11y + import + simple-import-sort)
+    - `package.json` - Dependencias pineadas
+    - `tsconfig.json` - Referencias a app y node
+    - `tsconfig.app.json` - Config TS estricta de la app
+    - `tsconfig.node.json` - Config TS del tooling
+    - `vite.config.ts` - Vite (puerto 3000, strictPort)
+    - `public/` - Assets públicos (favicon, icons)
+    - **`src/`** - Código fuente (se puebla con CAP-01)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
     - **`prompts/`** - Fuentes de verdad y reglas por capa
@@ -1529,7 +1600,12 @@ graph TB
 
 - **Backend**: Java LTS 21 (Spring Boot 3.x)
 - **Base de datos**: PostgreSQL 16
-- **Frontend**: React 18+ con CSS moderno
+- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 (ver ADR `eslint-9-eol.md`)
+- **Node.js (build frontend)**: 24.21.0 (LTS activa) — fijado en `frontend/.nvmrc`
+- **Lint frontend**: ESLint 9.39.5 (EOL) + `eslint-plugin-jsx-a11y` 6.10.2 + `eslint-plugin-import` 2.32.0 + `eslint-plugin-simple-import-sort` 14.0.0
+- **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
+- **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
+- **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT + Refresh Token
 - **Contenedores**: Docker + Docker Compose
@@ -1541,10 +1617,11 @@ graph TB
 - **Usuario de BD de la app**: `investment_app` (con permisos restringidos, sin acceso a `auditoria_usuarios`)
 - **Validación**: Jakarta Bean Validation (`@Valid`) + validaciones de servicio. Los errores de `@Valid` se reportan como `SYS-03` (500) sin detalle al cliente.
 - **Perfil de usuario**: `/api/auth/get-my-profile` (GET) y `/api/auth/update-my-profile` (POST). El `username` e `id` deben coincidir con el JWT.
-- **Reglas del frontend**: ver `docs/agente-frontend.md` (estructura, vistas por orientación, design system, i18n, assets, Storybook, testing, a11y, DoD).
+- **Reglas del frontend**: ver `docs/prompts/agente-frontend.md` (estructura, vistas por orientación, design system, i18n, assets, Storybook, testing, a11y, DoD).
 - **Reglas del backend**: ver `docs/prompts/agente-backend.md`.
 - **Reglas de base de datos**: ver `docs/prompts/agente-database.md`.
 - **Idea general y reglas para la IA**: ver `docs/prompts/prompt_inicial.md`.
+- **Documentación técnica por capa**: ver `docs/tecnica/<NN-capítulo>/<subcategoría>/<archivo>.md|.sql`.
 
 ## 105. Gestión del Proyecto
 
