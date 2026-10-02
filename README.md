@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `005`
+- Hotfix = `006`
 
 ## Fecha: 2026-09-26
 
@@ -163,6 +163,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
   - [Decisiones Técnicas (ADR)](#decisiones-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
     - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
+    - [ADR-0003 — Modelo híbrido de assets: public/ + src/assets/](#adr-0003--modelo-híbrido-de-assets-public--srcassets)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
 
@@ -1277,6 +1278,7 @@ Los Architecture Decision Records del frontend viven en
 | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------- | ---------- |
 | [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)              | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | ✅ Aceptada | 2026-09-26 |
 | [ADR-0002](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md) | Alcance de Stylelint: colores y separación de scripts             | ✅ Aceptada | 2026-09-26 |
+| [ADR-0003](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md) | Modelo híbrido de assets: public/ + src/assets/                   | ✅ Aceptada | 2026-10-02 |
 
 <a id="adr-0001--eslint-9395-eol"></a>
 
@@ -1303,6 +1305,15 @@ Dos decisiones documentadas en ADR-0002:
 
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md)
+
+#### ADR-0003 — Modelo híbrido de assets: `public/` + `src/assets/`
+
+> 📦 **Decisión de arquitectura — assets en dos ubicaciones según propósito**
+
+**Decisión**: Branding/contenido configurable va a `public/assets/` (URL estable, editable post-deploy); iconos técnicos y assets acoplados al código van a `src/assets/` (import de bundler, hash + tree-shaking). Ver ADR-0003 para el criterio completo.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md)
 
 ---
 
@@ -1539,14 +1550,26 @@ Dos decisiones documentadas en ADR-0002:
     - `.nvmrc` - Node.js 24.21.0
     - `.prettierrc.json` - Formato Prettier
     - `.prettierignore` - Exclusiones de Prettier
+    - `.stylelintrc.json` - Reglas Stylelint (camelCase, no !important)
+    - `.stylelintignore` - Exclusiones de Stylelint
     - `eslint.config.js` - ESLint 9 flat config (a11y + import + simple-import-sort)
     - `package.json` - Dependencias pineadas
     - `tsconfig.json` - Referencias a app y node
     - `tsconfig.app.json` - Config TS estricta de la app
     - `tsconfig.node.json` - Config TS del tooling
     - `vite.config.ts` - Vite (puerto 3000, strictPort)
-    - `public/` - Assets públicos (favicon, icons)
-    - **`src/`** - Código fuente (se puebla con CAP-01)
+    - **`public/`** - Assets de branding (URL estable, editable post-deploy)
+      - `assets/images/starter/` - Imágenes del starter (hero)
+      - `favicon.svg`, `icons.svg` - Iconos de app
+    - **`src/`** - Código fuente
+      - `main.tsx` - Entry point
+      - **`app/`** - Núcleo (App.tsx, router/, providers/, store/)
+      - **`components/`** - Design System (atoms, molecules, organisms, layout)
+      - **`views/`** - Vistas por orientación (horizontal, vertical)
+      - **`shared/`** - Transversales (hooks, utils, constants, types, services)
+      - **`i18n/`** - Internacionalización (es, en)
+      - **`styles/`** - Estilos globales (index.css, app/app.css)
+      - **`assets/`** - Iconos técnicos e imágenes acopladas (import de bundler)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
     - **`prompts/`** - Fuentes de verdad y reglas por capa
