@@ -1,7 +1,7 @@
 # agente-frontend.md
 
 > Guía oficial de arquitectura y desarrollo frontend.
-> Versión: 1.3.1
+> Versión: 1.3.2
 > Stack base: React 19 + TypeScript 6 + Vite 8, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
 > Público objetivo: Desarrolladores frontend senior, tech leads y agentes automatizados de generación de código.
 > Documento hermano del backend, la base de datos y el README del proyecto. Ver sección 0 y 22.
@@ -561,15 +561,50 @@ t('servicioA:index.errors.network')
 
 ---
 
-## 8. Assets corporativos editables en runtime
+## 8. Assets — modelo híbrido
 
-- Todo logo, imagen o icono corporativo vive en frontend/public/assets/....
-- Nunca se importan desde src/ mediante bundler para assets que puedan cambiar post-deploy.
-- Nombres en kebab-case, con sufijos @1x, @2x, @3x o SVG preferentemente.
-- Existe un manifest.json en frontend/public/assets/ que mapea claves lógicas a rutas físicas:
-  { "logo.primary": "/assets/logos/logo-primary.svg", ... }
-- El frontend consume el manifest a través de useAsset('logo.primary') para poder cambiar assets sin recompilar.
-- Se regenera con frontend/scripts/gen-assets-manifest.mjs.
+Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
+(`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`).
+
+### Criterio de clasificación
+
+| Tipo                                  | Ubicación              | Modelo                                  |
+| ------------------------------------- | ---------------------- | --------------------------------------- |
+| Branding / contenido configurable     | `public/assets/...`    | URL estable + `useAsset()` (TS-009)     |
+| Iconos técnicos / acoplados al código | `src/assets/...`       | Import de bundler (hash + tree-shaking) |
+| Fuentes self-hosted                   | `public/assets/fonts/` | URL estable                             |
+| Iconos de app (favicon, PWA)          | `public/` (raíz)       | URL estable                             |
+
+### Árbol
+
+- `¿El asset necesita reemplazarse sin recompilar el bundle?`
+  - **Sí** → `public/assets/{categoría}/`
+    - `logos/` — logos de marca
+    - `images/{dominio}/` — imágenes de marketing (`initPage/`, `login/`, `home/`…)
+    - `icons/` — iconos consumidos por config/JSON (no por componentes)
+    - `fonts/` — fuentes self-hosted (regla fija)
+  - **No** → `src/assets/`
+    - `icons/` — SVG consumidos por componentes React
+    - `images/` — ilustraciones acopladas a componentes
+
+### Reglas por modelo
+
+**`public/assets/` (branding)**
+
+- Nombres en kebab-case, SVG preferido, opcional `@1x @2x @3x`.
+- Existe `public/assets/manifest.json` que mapea claves lógicas a rutas físicas:
+  `{ "logo.primary": "/assets/logos/logo-primary.svg", ... }`.
+- El frontend consume el manifest vía `useAsset('logo.primary')` para cambiar sin recompilar.
+- Se regenera con `frontend/scripts/gen-assets-manifest.mjs`.
+- **Sin type-safety** en la URL. Mitigación: constantes tipadas en `src/shared/constants/assets.ts`.
+
+**`src/assets/` (técnicos)**
+
+- Nombres en kebab-case.
+- Importados directamente: `import icon from '../assets/icons/foo.svg'`.
+- Vite los hashea (`foo-CHdo91hT.svg`) y los "aplana" en `dist/assets/`.
+- **Con type-safety**: el build falla si el archivo no existe.
+- **Con tree-shaking**: assets no importados no llegan al bundle.
 
 ---
 
