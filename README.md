@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `007`
+- Hotfix = `008`
 
 ## Fecha: 2026-09-26
 
@@ -164,6 +164,10 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
     - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
     - [ADR-0003 — Modelo híbrido de assets: public/ + src/assets/](#adr-0003--modelo-híbrido-de-assets-public--srcassets)
+  - [Convenciones del Frontend](#convenciones-del-frontend)
+  - [Componentes del Frontend](#componentes-del-frontend)
+    - [Atoms](#atoms-del-frontend)
+      - [Button](#button-atoms)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
 
@@ -1315,6 +1319,40 @@ Dos decisiones documentadas en ADR-0002:
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md)
 
+### Convenciones del Frontend
+
+Las convenciones generales de código (nombres, exports, orden interno, ejemplos por tipo) están en:
+
+📄 [`docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md)
+
+Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
+
+<a id="componentes-del-frontend"></a>
+
+### Componentes del Frontend
+
+Documentación por componente, organizada por nivel del Design System.
+
+<a id="atoms-del-frontend"></a>
+
+#### Atoms
+
+- [Button](#button-atoms) — ver el resumen inline más abajo.
+
+<a id="button-atoms"></a>
+
+#### Button
+
+> **Ejemplo provisional** creado en TS-007. Se reemplazará por la versión definitiva en **FT-003 (Design System: átomos)**.
+
+- **Ubicación**: `frontend/src/components/atoms/Button/`
+- **Props**: `variant` (`'primary' | 'secondary' | 'ghost' | 'danger'`), `size` (`'sm' | 'md' | 'lg'`), `loading`, `children`, más todas las de `<button>`.
+- **Uso**: `import { Button } from '@components/atoms/Button';` → `<Button>Enviar</Button>`
+- **Convenciones aplicadas**: named export, CSS Module con clases camelCase, props tipadas en archivo separado, barrel export.
+
+📄 **Documentación completa**:
+[`docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md`](docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md)
+
 ---
 
 ## 100. Servicios Docker
@@ -1610,9 +1648,7 @@ Dos decisiones documentadas en ADR-0002:
         - `funciones-plpgsql-disponibles/`
         - `auditoria-de-usuarios/`
         - `datos-de-prueba/`
-        - `sql/`
-          - `consultas/`
-            - `consultasBasicas.sql` - Consultas de referencia
+        - `sql/consultas/`
       - **`03-backend-java-spring-boot-3x/`** - Cap. 3: Backend Java Spring Boot 3.x
         - `servicios-publicados/`
         - `diagrama-de-secuencia-de-los-servicios-publicados/`
@@ -1621,16 +1657,23 @@ Dos decisiones documentadas en ADR-0002:
         - `ofuscacion-de-datos-sensibles/`
         - `codigos-de-error/`
         - `pruebas/`
-      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS (se puebla con CAP-01)
-        - `arquitectura/`
-        - `design-system/`
-        - `componentes/`
-        - `internacionalizacion/`
-        - `assets/`
-        - `storybook/`
-        - `testing/`
-        - `deploy/`
-        - `diagramas-de-secuencias/`
+      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS
+        - **`arquitectura/`** - ADRs
+          - `eslint-9-eol.md` (ADR-0001)
+          - `stylelint-scope-y-colores.md` (ADR-0002)
+          - `assets-hibrido-public-src.md` (ADR-0003)
+        - **`convenciones/`**
+          - `convenciones.md` - Convenciones de código del frontend
+        - **`componentes/`**
+          - **`atoms/`**
+            - `button.md` - Documentación del componente Button (ejemplo TS-007)
+        - `design-system/` (pendiente)
+        - `internacionalizacion/` (pendiente)
+        - `assets/` (pendiente)
+        - `storybook/` (pendiente)
+        - `testing/` (pendiente)
+        - `deploy/` (pendiente)
+        - `diagramas-de-secuencias/` (pendiente)
   - **`backups/`** - Copias de seguridad de la base de datos
     - `investment_tracker_20260710_121428.sql` - Backup de BD
 
