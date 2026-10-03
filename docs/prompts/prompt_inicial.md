@@ -359,6 +359,15 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
     Las plantillas viven en `docs/scrum/kanban/templates/`. Un issue no se
     cierra (`Done`) hasta que TODOS los checkboxes estén marcados.
 
+30. **🚫 NUNCA ejecutar `npm audit fix --force` ni `npm audit fix --legacy-peer-deps`**.
+    El fix sugerido por npm suele ser un downgrade mayor que rompe el stack de
+    tooling (por ejemplo `stylelint@17.15.0` → `stylelint@7.7.0`). Cualquier
+    intento de resolver una vulnerabilidad DEBE pasar por evaluación manual:
+    `npm audit` → `npm ls <paquete>` → `npm view <paquete> version` → decidir.
+    Las vulnerabilidades aceptadas se registran en
+    `docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`
+    (política en ADR-0004). Aplica a las 3 capas (frontend, backend, database).
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero

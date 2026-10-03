@@ -13,6 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "type-check": "tsc -b",
+    "storybook": "storybook dev -p 3010",
+    "build-storybook": "storybook build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -21,6 +23,10 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
+    "@storybook/addon-a11y": "10.6.1",
+    "@storybook/addon-docs": "10.6.1",
+    "@storybook/addon-themes": "10.6.1",
+    "@storybook/react-vite": "10.6.1",
     "@types/node": "24.13.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
@@ -35,6 +41,7 @@
     "eslint-plugin-simple-import-sort": "14.0.0",
     "globals": "17.12.0",
     "prettier": "3.9.9",
+    "storybook": "10.6.1",
     "stylelint": "17.15.0",
     "stylelint-config-css-modules": "4.6.0",
     "stylelint-config-recess-order": "7.8.0",

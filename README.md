@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `008`
+- Hotfix = `009`
 
 ## Fecha: 2026-09-26
 
@@ -168,6 +168,8 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
   - [Componentes del Frontend](#componentes-del-frontend)
     - [Atoms](#atoms-del-frontend)
       - [Button](#button-atoms)
+  - [Seguridad del Frontend](#seguridad-del-frontend)
+  - [Deuda de seguridad (CVSS)](#deuda-de-seguridad-cvss)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
 
@@ -1353,6 +1355,29 @@ Documentación por componente, organizada por nivel del Design System.
 📄 **Documentación completa**:
 [`docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md`](docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md)
 
+<a id="seguridad-del-frontend"></a>
+
+### Seguridad del Frontend
+
+Reglas y seguimiento de seguridad del frontend.
+
+<a id="deuda-de-seguridad-cvss"></a>
+
+#### Deuda de seguridad (CVSS)
+
+Las vulnerabilidades aceptadas conscientemente (con su clasificación CVSS,
+impacto real y gatillos de revisión) se documentan en:
+
+📄 [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md)
+
+**Política completa**: [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
+
+> 🚫 **NO ejecutar** `npm audit fix --force` ni `npm audit fix --legacy-peer-deps`.
+> El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
+> Cualquier fix debe evaluarse manualmente y registrarse en el archivo de deuda.
+
+**Deuda activa**: VULN-001 (`braces` CWE-674, 11 vulnerabilidades high asociadas).
+
 ---
 
 ## 100. Servicios Docker
@@ -1662,15 +1687,18 @@ Documentación por componente, organizada por nivel del Design System.
           - `eslint-9-eol.md` (ADR-0001)
           - `stylelint-scope-y-colores.md` (ADR-0002)
           - `assets-hibrido-public-src.md` (ADR-0003)
+          - `vulnerabilidades-policy.md` (ADR-0004)
         - **`convenciones/`**
           - `convenciones.md` - Convenciones de código del frontend
+          - `storybook.md` - Guía de Storybook (creado en TS-008)
         - **`componentes/`**
           - **`atoms/`**
             - `button.md` - Documentación del componente Button (ejemplo TS-007)
+        - **`seguridad/`**
+          - `cvss-deuda-seguridad.md` - Vulnerabilidades aceptadas
         - `design-system/` (pendiente)
         - `internacionalizacion/` (pendiente)
         - `assets/` (pendiente)
-        - `storybook/` (pendiente)
         - `testing/` (pendiente)
         - `deploy/` (pendiente)
         - `diagramas-de-secuencias/` (pendiente)
@@ -1693,6 +1721,8 @@ Documentación por componente, organizada por nivel del Design System.
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
+- **Storybook frontend**: 10.6.1 (puerto dev `3010`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
+- **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT + Refresh Token
 - **Contenedores**: Docker + Docker Compose

@@ -1,7 +1,7 @@
 # agente-frontend.md
 
 > Guía oficial de arquitectura y desarrollo frontend.
-> Versión: 1.3.4
+> Versión: 1.3.5
 > Stack base: React 19 + TypeScript 6 + Vite 8, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
 > Público objetivo: Desarrolladores frontend senior, tech leads y agentes automatizados de generación de código.
 > Documento hermano del backend, la base de datos y el README del proyecto. Ver sección 0 y 22.
@@ -485,8 +485,14 @@ components/<nivel>/<ComponentName>/
 
 ## 5. Storybook (History Book de componentes)
 
-- Configurado en frontend/.storybook/.
+## 5. Storybook (History Book de componentes)
+
+- Configurado en `frontend/.storybook/` (puerto dev `3010`).
+- En **TS-008** se dejó la infraestructura base y una story mínima de ejemplo
+  (Button — `Default`). Las stories completas (Variants, States, Responsive,
+  DarkMode) y los decoradores globales se configuran en **TS-009** y siguientes.
 - Cada componente atómico/molecular/organismo tiene su .stories.tsx obligatoriamente.
+- Guía operativa: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](../../tecnica/04-frontend-react-css-moderno/convenciones/storybook.md).
 - Stories mínimas por componente:
   - Default
   - Variants
@@ -762,6 +768,10 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 
 ## 19. Anti-patrones prohibidos
 
+- Ejecutar `npm audit fix --force` o `npm audit fix --legacy-peer-deps`. Ver
+  política en [ADR-0004](../../tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md)
+  y log en [`cvss-deuda-seguridad.md`](../../tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md).
+  El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
 - Textos hardcodeados en JSX.
 - Colores/espaciados hardcodeados fuera de tokens.
 - Importar vistas de una orientación desde la otra.
