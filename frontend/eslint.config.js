@@ -38,14 +38,32 @@ export default defineConfig([
     },
     rules: {
       // ===== Orden de imports =====
-      'simple-import-sort/imports': 'error',
+      'simple-import-sort/imports': [
+        'error',
+        {
+          groups: [
+            // 1. Estilos (CSS Modules, hojas globales)
+            ['\\.css$'],
+            // 2. React core
+            ['^react$', '^react-dom'],
+            // 3. Paquetes externos
+            ['^@?\\w'],
+            // 4. Alias internos del proyecto
+            ['^@app', '^@components', '^@views', '^@shared', '^@i18n', '^@styles'],
+            // 5. Imports relativos
+            ['^\\.'],
+          ],
+        },
+      ],
       'simple-import-sort/exports': 'error',
 
       // ===== Salud de imports =====
       'import/first': 'error',
       'import/newline-after-import': 'error',
       'import/no-duplicates': 'error',
-      'import/no-unresolved': 'error',
+      // Deshabilitado: TypeScript ya verifica la existencia de módulos.
+      // El resolver de ESLint no soporta paths sin baseUrl (TS 6+).
+      'import/no-unresolved': 'off',
       'import/no-cycle': 'error',
 
       // ===== Prettier SIEMPRE al final =====

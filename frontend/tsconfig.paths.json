@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@app/*": ["./src/app/*"],
+      "@components/*": ["./src/components/*"],
+      "@views/*": ["./src/views/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@i18n/*": ["./src/i18n/*"],
+      "@styles/*": ["./src/styles/*"]
+    }
+  }
+}
