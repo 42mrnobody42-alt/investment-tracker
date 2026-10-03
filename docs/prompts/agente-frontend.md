@@ -1,8 +1,8 @@
 # agente-frontend.md
 
 > Guía oficial de arquitectura y desarrollo frontend.
-> Versión: 1.3.0
-> Stack base: React 18+, TypeScript, Vite, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
+> Versión: 1.3.5
+> Stack base: React 19 + TypeScript 6 + Vite 8, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
 > Público objetivo: Desarrolladores frontend senior, tech leads y agentes automatizados de generación de código.
 > Documento hermano del backend, la base de datos y el README del proyecto. Ver sección 0 y 22.
 
@@ -25,8 +25,10 @@ Antes de proponer, generar, modificar o revisar cualquier artefacto del frontend
    - Especifica cómo se construye el frontend: estructura de directorios, vistas por orientación, componentes, i18n, assets, testing, a11y, performance, seguridad y reglas para agentes IA.
    - Todo lo que aquí se define es de cumplimiento obligatorio para cualquier contribución al frontend.
 
-4. Documentos enlazados en `README.md` y `docs/frontend/*.md`
+4. Documentos enlazados en `README.md` y `docs/tecnica/**/*.md`
    - Complementan, no reemplazan. Si hay conflicto, prevalece `README.md` → `prompt_inicial.md` → este archivo.
+   - Convención: `docs/tecnica/<NN-nombre-del-capítulo-en-kebab-case>/<subcategoría>/<archivo>.md|.sql`.
+   - Para este agente, el capítulo de interés es `docs/tecnica/04-frontend-react-css-moderno/`.
 
 Reglas derivadas:
 
@@ -72,9 +74,9 @@ Solo se listan las ramas relevantes al frontend y a los contenedores. Las ramas 
     - **`shellTest/`** - Scripts de mantenimiento
       - `check-all.sh` - Verificación completa
       - `reset-all.sh` - Reset de servicios
-  - **`frontend/`** - SPA React 18 + TypeScript + Vite
+  - **`frontend/`** - SPA React 19 + TypeScript 6 + Vite 8
     - `.gitignore` - Archivos ignorados por Git en frontend
-    - `.nvmrc` - Versión de Node fijada (por ejemplo, 20.11.1)
+      - `.nvmrc` - Versión de Node fijada (por ejemplo, 24.21.0)
     - `.env.example` - Plantilla de variables de entorno
     - `.env.development` - Variables para desarrollo (VITE_API_URL, VITE_APP_ENV)
     - `.env.staging` - Variables para staging
@@ -347,20 +349,35 @@ Solo se listan las ramas relevantes al frontend y a los contenedores. Las ramas 
     - **`node_modules/`** - Dependencias instaladas (generado)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
-    - `agente-frontend.md` - Este documento
-    - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
-    - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
     - **`prompts/`**
       - `prompt_inicial.md` - Idea general del proyecto (fuente de verdad, ver sección 0)
-      - `prompt_frontend.md` - Prompt específico del frontend
-    - **`frontend/`**
-      - `arquitectura.md` - Diagrama y decisiones de arquitectura
-      - `design-system.md` - Catálogo de componentes y tokens
-      - `i18n.md` - Convenciones de internacionalización
-      - `assets.md` - Cómo reemplazar logos e imágenes en runtime
-      - `storybook.md` - Cómo levantar y publicar Storybook
-      - `testing.md` - Estrategia de pruebas unitarias, integración y E2E
-      - `deploy.md` - Build, variables de entorno y despliegue
+      - `agente-frontend.md` - Este documento
+      - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
+      - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
+    - **`tecnica/`** - Documentación técnica por capítulo del README
+      - **`02-base-de-datos/`** - Cap. 2: Base de Datos
+      - **`03-backend-java-spring-boot-3x/`** - Cap. 3: Backend Java Spring Boot 3.x
+      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS (se puebla con CAP-01)
+        - **`arquitectura/`**
+          - `arquitectura.md` - Diagrama y decisiones de arquitectura
+        - **`design-system/`**
+          - `design-system.md` - Catálogo de componentes y tokens
+        - **`componentes/`**
+          - `botones.md` - Componentes de botón (se crea con el componente)
+          - `modales.md` - Modales y diálogos (se crea con el componente)
+          - … (un archivo por familia, se crean al construir el componente)
+        - **`internacionalizacion/`**
+          - `i18n.md` - Convenciones de internacionalización
+        - **`assets/`**
+          - `assets.md` - Cómo reemplazar logos e imágenes en runtime
+        - **`storybook/`**
+          - `storybook.md` - Cómo levantar y publicar Storybook
+        - **`testing/`**
+          - `testing.md` - Estrategia de pruebas unitarias, integración y E2E
+        - **`deploy/`**
+          - `deploy.md` - Build, variables de entorno y despliegue
+        - **`diagramas-de-secuencias/`**
+          - `login.md` - Flujo frontend ↔ backend del login (se crea con la vista)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
 
@@ -468,8 +485,14 @@ components/<nivel>/<ComponentName>/
 
 ## 5. Storybook (History Book de componentes)
 
-- Configurado en frontend/.storybook/.
+## 5. Storybook (History Book de componentes)
+
+- Configurado en `frontend/.storybook/` (puerto dev `3010`).
+- En **TS-008** se dejó la infraestructura base y una story mínima de ejemplo
+  (Button — `Default`). Las stories completas (Variants, States, Responsive,
+  DarkMode) y los decoradores globales se configuran en **TS-009** y siguientes.
 - Cada componente atómico/molecular/organismo tiene su .stories.tsx obligatoriamente.
+- Guía operativa: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](../../tecnica/04-frontend-react-css-moderno/convenciones/storybook.md).
 - Stories mínimas por componente:
   - Default
   - Variants
@@ -544,15 +567,50 @@ t('servicioA:index.errors.network')
 
 ---
 
-## 8. Assets corporativos editables en runtime
+## 8. Assets — modelo híbrido
 
-- Todo logo, imagen o icono corporativo vive en frontend/public/assets/....
-- Nunca se importan desde src/ mediante bundler para assets que puedan cambiar post-deploy.
-- Nombres en kebab-case, con sufijos @1x, @2x, @3x o SVG preferentemente.
-- Existe un manifest.json en frontend/public/assets/ que mapea claves lógicas a rutas físicas:
-  { "logo.primary": "/assets/logos/logo-primary.svg", ... }
-- El frontend consume el manifest a través de useAsset('logo.primary') para poder cambiar assets sin recompilar.
-- Se regenera con frontend/scripts/gen-assets-manifest.mjs.
+Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
+(`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`).
+
+### Criterio de clasificación
+
+| Tipo                                  | Ubicación              | Modelo                                  |
+| ------------------------------------- | ---------------------- | --------------------------------------- |
+| Branding / contenido configurable     | `public/assets/...`    | URL estable + `useAsset()` (TS-009)     |
+| Iconos técnicos / acoplados al código | `src/assets/...`       | Import de bundler (hash + tree-shaking) |
+| Fuentes self-hosted                   | `public/assets/fonts/` | URL estable                             |
+| Iconos de app (favicon, PWA)          | `public/` (raíz)       | URL estable                             |
+
+### Árbol
+
+- `¿El asset necesita reemplazarse sin recompilar el bundle?`
+  - **Sí** → `public/assets/{categoría}/`
+    - `logos/` — logos de marca
+    - `images/{dominio}/` — imágenes de marketing (`initPage/`, `login/`, `home/`…)
+    - `icons/` — iconos consumidos por config/JSON (no por componentes)
+    - `fonts/` — fuentes self-hosted (regla fija)
+  - **No** → `src/assets/`
+    - `icons/` — SVG consumidos por componentes React
+    - `images/` — ilustraciones acopladas a componentes
+
+### Reglas por modelo
+
+**`public/assets/` (branding)**
+
+- Nombres en kebab-case, SVG preferido, opcional `@1x @2x @3x`.
+- Existe `public/assets/manifest.json` que mapea claves lógicas a rutas físicas:
+  `{ "logo.primary": "/assets/logos/logo-primary.svg", ... }`.
+- El frontend consume el manifest vía `useAsset('logo.primary')` para cambiar sin recompilar.
+- Se regenera con `frontend/scripts/gen-assets-manifest.mjs`.
+- **Sin type-safety** en la URL. Mitigación: constantes tipadas en `src/shared/constants/assets.ts`.
+
+**`src/assets/` (técnicos)**
+
+- Nombres en kebab-case.
+- Importados directamente: `import icon from '../assets/icons/foo.svg'`.
+- Vite los hashea (`foo-CHdo91hT.svg`) y los "aplana" en `dist/assets/`.
+- **Con type-safety**: el build falla si el archivo no existe.
+- **Con tree-shaking**: assets no importados no llegan al bundle.
 
 ---
 
@@ -629,7 +687,19 @@ t('servicioA:index.errors.network')
 ## 15. Convenciones de código
 
 - TypeScript estricto. Sin any (usar unknown y narrowing).
-- ESLint + Prettier + eslint-plugin-import + eslint-plugin-react-hooks + eslint-plugin-jsx-a11y + Stylelint para CSS Modules.
+- ESLint 9.39.5 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + Prettier 3.9.9 + `eslint-config-prettier` + `eslint-plugin-import` + `eslint-plugin-jsx-a11y` + `eslint-plugin-simple-import-sort` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`.
+- Stylelint 17.15.0 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`) + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1.
+- Reglas de CSS obligatorias **en nivel `error`**:
+  - `declaration-no-important: true` — prohíbe `!important` (agente-frontend §19).
+  - `selector-class-pattern: "^[a-z][a-zA-Z0-9]*$"` — clases en **camelCase**.
+  - `recess-order` — orden de propiedades (evita deuda de desorden).
+  - Scripts separados: `lint:css` y `lint:css:fix` (ver ADR-0002).
+- Reglas obligatorias **en nivel `error`** (no `warn`):
+  - `eslint-plugin-jsx-a11y` (WCAG 2.2 AA)
+  - `eslint-plugin-import` (`no-unresolved`, `no-cycle`, `no-duplicates`, `first`, `newline-after-import`)
+  - `simple-import-sort` (orden de imports)
+- `strict: true` obligatorio en `tsconfig.app.json` y `tsconfig.node.json`.
+- Sin `^` ni `~` en `frontend/package.json`. Todo pineado con `save-exact=true` en `frontend/.npmrc`.
 - Commits con Conventional Commits + Husky + lint-staged + commitlint.
 - Formato de commit: tipo(#N): descripción — feat, fix, docs, refactor, test, chore. Siempre referenciar el issue con Closes #N o Refs #N (ver README.md sección 106).
 - Nombres:
@@ -640,6 +710,10 @@ t('servicioA:index.errors.network')
 - Exports nombrados; default solo para vistas de ruta.
 - Máximo ~200 líneas por componente; si excede, dividir.
 - Alias de import obligatorios: @app, @components, @views, @shared, @i18n, @styles.
+- Resolución de alias: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `tsconfig.paths.json` (fuente única).
+- Limitaciones conocidas (no son deuda técnica, son límites del ecosistema):
+  - **`import/no-unresolved` desactivado**: el resolver de ESLint (`eslint-import-resolver-typescript`) no soporta `paths` sin `baseUrl`. TypeScript 6+ deprecó `baseUrl`, así que se desactivó esa regla. La validación real la hace el propio `tsc`.
+  - Los alias funcionan también para CSS (`.css`, `.module.css`) gracias al soporte nativo de Vite 8 (`resolve.tsconfigPaths: true`).
 
 ---
 
@@ -694,6 +768,10 @@ t('servicioA:index.errors.network')
 
 ## 19. Anti-patrones prohibidos
 
+- Ejecutar `npm audit fix --force` o `npm audit fix --legacy-peer-deps`. Ver
+  política en [ADR-0004](../../tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md)
+  y log en [`cvss-deuda-seguridad.md`](../../tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md).
+  El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
 - Textos hardcodeados en JSX.
 - Colores/espaciados hardcodeados fuera de tokens.
 - Importar vistas de una orientación desde la otra.
@@ -771,7 +849,11 @@ Ejemplos:
 - docs/prompts/prompt_inicial.md: idea general del proyecto, requisitos funcionales, reglas para la IA, directrices por capa y flujo obligatorio por issue.
 - docs/agente-frontend.md: este documento. Reglas de construcción del frontend.
 - docs/prompts/agente-backend.md y docs/prompts/agente-database.md: documentos hermanos. Respetan las mismas reglas de fuentes de verdad y solicitud de archivos.
-- docs/frontend/\*.md: profundizan en arquitectura, design system, i18n, assets, storybook, testing y deploy.
+- docs/tecnica/\*\*/\*.md y docs/tecnica/\*\*/\*.sql: documentación técnica por capítulo del README.
+  - Convención: `docs/tecnica/<NN-nombre-del-capítulo-en-kebab-case>/<subcategoría>/<archivo>.md|.sql`.
+  - Capítulo de frontend: `docs/tecnica/04-frontend-react-css-moderno/` (se puebla con CAP-01).
+  - Capítulo de backend: `docs/tecnica/03-backend-java-spring-boot-3x/`.
+  - Capítulo de base de datos: `docs/tecnica/02-base-de-datos/`.
 
 Regla de consistencia:
 

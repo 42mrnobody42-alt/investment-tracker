@@ -2,9 +2,9 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `003`
+- Hotfix = `009`
 
-## Fecha: 2026-09-24
+## Fecha: 2026-09-26
 
 ## Proyecto: Investment Tracker Pro
 
@@ -90,8 +90,17 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
    - Reglas de la base de datos: estructura de `database/sql/`, nomenclatura `Version_Release_Hotfix_Orden_Prefijo_Nombre.sql`, idempotencia, permisos `investor`/`investment_app`, auditoría con `SECURITY DEFINER`, funciones PL/pgSQL y migraciones.
    - Ruta: `docs/prompts/agente-database.md`.
 
-5. **`docs/frontend/*.md`** y **`docs/sql/*.sql`**
-   - Profundizan en arquitectura, design system, i18n, assets, storybook, testing y consultas de referencia.
+5. **`docs/tecnica/**/_.md`** y **`docs/tecnica/\*\*/_.sql`\*\*
+   - Documentación técnica por capa, organizada con el patrón:
+     `docs/tecnica/<NN-nombre-del-capítulo-en-kebab-case>/<subcategoría>/<archivo>.md|.sql`
+   - El primer nivel es el número + título del capítulo del índice de este README (kebab-case).
+   - El segundo nivel es una subcategoría derivada de los subtítulos de ese capítulo.
+   - El tercer nivel es un archivo por elemento (función, DTO, endpoint, tabla, diagrama, componente).
+   - Capítulos activos:
+     - `docs/tecnica/02-base-de-datos/…`
+     - `docs/tecnica/03-backend-java-spring-boot-3x/…`
+     - `docs/tecnica/04-frontend-react-css-moderno/…` (se puebla con CAP-01)
+   - La migración física de los archivos existentes se hará cuando la documentación actual deje de dar abasto.
 
 **Regla de solicitud de archivos**: cuando un agente (humano o IA) necesite contexto que no está en los documentos anteriores, DEBE solicitar los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras. El procedimiento detallado vive en `docs/prompts/agente-frontend.md` sección 21 y en `docs/prompts/prompt_inicial.md` (Reglas generales para la IA, reglas 24-28).
 
@@ -149,6 +158,18 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
   - [Pruebas](#pruebas)
 
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
+  - [Arquitectura del Frontend](#arquitectura-del-frontend)
+  - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
+  - [Decisiones Técnicas (ADR)](#decisiones-técnicas-adr)
+    - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
+    - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
+    - [ADR-0003 — Modelo híbrido de assets: public/ + src/assets/](#adr-0003--modelo-híbrido-de-assets-public--srcassets)
+  - [Convenciones del Frontend](#convenciones-del-frontend)
+  - [Componentes del Frontend](#componentes-del-frontend)
+    - [Atoms](#atoms-del-frontend)
+      - [Button](#button-atoms)
+  - [Seguridad del Frontend](#seguridad-del-frontend)
+  - [Deuda de seguridad (CVSS)](#deuda-de-seguridad-cvss)
 
 - [5. Nginx - publicación](#5-nginx---publicación)
 
@@ -209,7 +230,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
             ▼                             ▼
 ┌───────────────────────┐    ┌────────────────────────────────┐
 │   🎨 FRONTEND (3000)   │    │   ⚙️  BACKEND (7700)            │
-│   React 18 + CSS       │    │   Spring Boot 3.x + Java 21   │
+│   React 19 + CSS       │    │   Spring Boot 3.x + Java 21   │
 │   Nginx/Alpine         │    │   Tomcat 10 Embedido           │
 │   SPA + React Router   │    │   JWT Authentication           │
 └───────────────────────┘    └──────────────┬─────────────────┘
@@ -222,6 +243,9 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 │   Esquema: investment_tracker│    │   Admin DB Web UI            │
 │   PL/pgSQL + UUID + 54 monedas│   │   http://localhost:5050       │
 └──────────────────────────────┘    └──────────────────────────────┘
+
+> **Stack del frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 + Node.js 24.21.0 (build).
+> Detalle completo en la [sección 4](#4-frontend---react-y-css-moderno).
 ```
 
 ## 2. BASE DE DATOS
@@ -1210,6 +1234,152 @@ graph TB
  */
 ```
 
+## 4. Frontend - React y CSS moderno
+
+### Arquitectura del Frontend
+
+SPA (Single Page Application) construida con **React 19 + TypeScript 6 + Vite 8**,
+servida por Nginx en el contenedor `frontend` y publicada al exterior a través del
+reverse proxy HTTPS (ver [sección 1](#1-arquitectura-del-sistema)).
+
+El frontend es **greenfield**: toda la estructura se construye desde cero en el
+contexto de [CAP-01](#105-gestión-del-proyecto) y su documentación técnica vive
+en `docs/tecnica/04-frontend-react-css-moderno/`.
+
+**Principios rectores** (detalle completo en `docs/prompts/agente-frontend.md`):
+
+- Separación por orientación: `views/horizontal/` (PC, tablet apaisada, Smart TV)
+  y `views/vertical/` (móvil, tablet retrato). Sin mezclas.
+- Design System propio en `src/components/{atoms,molecules,organisms,layout}/`.
+- Vistas autenticadas siempre dentro de `AppShell` (TopBar + Sidebar plegable + Workspace).
+- i18n obligatorio (es/en) sin textos hardcodeados.
+- Assets corporativos mutables en runtime (`public/assets/` + `manifest.json` + `useAsset()`).
+- Accesibilidad WCAG 2.2 AA verificada con `axe-core` en CI.
+- Sin `any`, sin colores hardcodeados, sin secretos en el bundle.
+
+### Stack Tecnológico del Frontend
+
+| Componente        | Versión                     | Notas                                                                      |
+| ----------------- | --------------------------- | -------------------------------------------------------------------------- |
+| React             | 19.2.8                      | Versión estable activa                                                     |
+| React DOM         | 19.2.8                      | Sincronizado con React                                                     |
+| TypeScript        | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`               |
+| Vite              | 8.3.1                       | Bundler y dev server (puerto 3000, `strictPort: true`)                     |
+| Node.js (build)   | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                |
+| ESLint            | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                    |
+| Prettier          | 3.9.9                       | Formateo (`.prettierrc.json`)                                              |
+| Stylelint         | 17.15.0                     | Lint CSS / CSS Modules (`.stylelintrc.json`)                               |
+| ESLint plugins    | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh` |
+| Stylelint configs | ver `frontend/package.json` | `stylelint-config-standard`, `css-modules`, `recess-order`                 |
+
+**Pineo de versiones**: `frontend/.npmrc` con `save-exact=true`. Ninguna
+dependencia usa `^` ni `~` en `package.json`.
+
+### Decisiones Técnicas (ADR)
+
+Los Architecture Decision Records del frontend viven en
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/).
+
+| ADR                                                                                              | Título                                                            | Estado      | Fecha      |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------- | ---------- |
+| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)              | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | ✅ Aceptada | 2026-09-26 |
+| [ADR-0002](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md) | Alcance de Stylelint: colores y separación de scripts             | ✅ Aceptada | 2026-09-26 |
+| [ADR-0003](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md) | Modelo híbrido de assets: public/ + src/assets/                   | ✅ Aceptada | 2026-10-02 |
+
+<a id="adr-0001--eslint-9395-eol"></a>
+
+#### ADR-0001 — ESLint 9.39.5 (EOL)
+
+> ⚠️ **Decisión técnica con deuda registrada**
+
+**Decisión**: Fijar `eslint` y `@eslint/js` en `9.39.5` en lugar de la `10.10.0`
+que instaló Vite 8 por defecto.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)
+
+<a id="adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts"></a>
+
+#### ADR-0002 — Alcance de Stylelint: colores y separación de scripts
+
+> ⚠️ **Decisiones de alcance con gatillos de revisión**
+
+Dos decisiones documentadas en ADR-0002:
+
+1. **No forzar `var(--...)` en valores de color** hasta que existan los tokens reales (TS-017).
+2. **Scripts `lint:css` separados de `lint`** hasta que Husky + lint-staged (TS-016) unifiquen por archivo.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md)
+
+#### ADR-0003 — Modelo híbrido de assets: `public/` + `src/assets/`
+
+> 📦 **Decisión de arquitectura — assets en dos ubicaciones según propósito**
+
+**Decisión**: Branding/contenido configurable va a `public/assets/` (URL estable, editable post-deploy); iconos técnicos y assets acoplados al código van a `src/assets/` (import de bundler, hash + tree-shaking). Ver ADR-0003 para el criterio completo.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md)
+
+### Convenciones del Frontend
+
+Las convenciones generales de código (nombres, exports, orden interno, ejemplos por tipo) están en:
+
+📄 [`docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md)
+
+Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
+
+<a id="componentes-del-frontend"></a>
+
+### Componentes del Frontend
+
+Documentación por componente, organizada por nivel del Design System.
+
+<a id="atoms-del-frontend"></a>
+
+#### Atoms
+
+- [Button](#button-atoms) — ver el resumen inline más abajo.
+
+<a id="button-atoms"></a>
+
+#### Button
+
+> **Ejemplo provisional** creado en TS-007. Se reemplazará por la versión definitiva en **FT-003 (Design System: átomos)**.
+
+- **Ubicación**: `frontend/src/components/atoms/Button/`
+- **Props**: `variant` (`'primary' | 'secondary' | 'ghost' | 'danger'`), `size` (`'sm' | 'md' | 'lg'`), `loading`, `children`, más todas las de `<button>`.
+- **Uso**: `import { Button } from '@components/atoms/Button';` → `<Button>Enviar</Button>`
+- **Convenciones aplicadas**: named export, CSS Module con clases camelCase, props tipadas en archivo separado, barrel export.
+
+📄 **Documentación completa**:
+[`docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md`](docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md)
+
+<a id="seguridad-del-frontend"></a>
+
+### Seguridad del Frontend
+
+Reglas y seguimiento de seguridad del frontend.
+
+<a id="deuda-de-seguridad-cvss"></a>
+
+#### Deuda de seguridad (CVSS)
+
+Las vulnerabilidades aceptadas conscientemente (con su clasificación CVSS,
+impacto real y gatillos de revisión) se documentan en:
+
+📄 [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md)
+
+**Política completa**: [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
+
+> 🚫 **NO ejecutar** `npm audit fix --force` ni `npm audit fix --legacy-peer-deps`.
+> El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
+> Cualquier fix debe evaluarse manualmente y registrarse en el archivo de deuda.
+
+**Deuda activa**: VULN-001 (`braces` CWE-674, 11 vulnerabilidades high asociadas).
+
+---
+
 ## 100. Servicios Docker
 
 ### Servicios
@@ -1438,17 +1608,32 @@ graph TB
       - **`maven-status/`** - Estado de Maven
       - **`surefire-reports/`** - Reportes de pruebas
       - **`test-classes/`** - Clases de pruebas compiladas
-  - **`frontend/`** - SPA React 18 (estructura inicial)
-    - `package.json` - Dependencias npm
-    - `README.md` - Documentación frontend
-    - **`src/`**
-      - `App.js` - Componente principal
-      - **`component/`**
-        - `Dashboard.js` - Panel de control
-      - **`services/`**
-        - `api.js` - Configuración Axios
-      - **`styles/`**
-        - `global.css` - Estilos globales
+  - **`frontend/`** - SPA React 19 + TypeScript 6 + Vite 8 (base de CAP-01)
+    - `.npmrc` - `save-exact=true` (pineo de versiones)
+    - `.nvmrc` - Node.js 24.21.0
+    - `.prettierrc.json` - Formato Prettier
+    - `.prettierignore` - Exclusiones de Prettier
+    - `.stylelintrc.json` - Reglas Stylelint (camelCase, no !important)
+    - `.stylelintignore` - Exclusiones de Stylelint
+    - `eslint.config.js` - ESLint 9 flat config (a11y + import + simple-import-sort)
+    - `package.json` - Dependencias pineadas
+    - `tsconfig.json` - Referencias a app y node
+    - `tsconfig.app.json` - Config TS estricta de la app
+    - `tsconfig.node.json` - Config TS del tooling
+    - `tsconfig.paths.json` - Alias de imports (@app, @components, @views, @shared, @i18n, @styles)
+    - `vite.config.ts` - Vite (puerto 3000, strictPort, resolve.tsconfigPaths nativo)
+    - **`public/`** - Assets de branding (URL estable, editable post-deploy)
+      - `assets/images/starter/` - Imágenes del starter (hero)
+      - `favicon.svg`, `icons.svg` - Iconos de app
+    - **`src/`** - Código fuente
+      - `main.tsx` - Entry point
+      - **`app/`** - Núcleo (App.tsx, router/, providers/, store/)
+      - **`components/`** - Design System (atoms, molecules, organisms, layout)
+      - **`views/`** - Vistas por orientación (horizontal, vertical)
+      - **`shared/`** - Transversales (hooks, utils, constants, types, services)
+      - **`i18n/`** - Internacionalización (es, en)
+      - **`styles/`** - Estilos globales (index.css, app/app.css)
+      - **`assets/`** - Iconos técnicos e imágenes acopladas (import de bundler)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
     - **`prompts/`** - Fuentes de verdad y reglas por capa
@@ -1480,8 +1665,43 @@ graph TB
           - `retry-links.sh` - Re-vincula sub-issues huérfanos
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
-    - **`sql/`**
-      - `consultasBasicas.sql` - Consultas de referencia
+    - **`tecnica/`** - Documentación técnica por capítulo del README
+      - **`02-base-de-datos/`** - Cap. 2: Base de Datos
+        - `estructura-de-scripts-sql/`
+        - `diagrama-mer-modelo-entidad-relacion/`
+        - `relaciones-clave/`
+        - `funciones-plpgsql-disponibles/`
+        - `auditoria-de-usuarios/`
+        - `datos-de-prueba/`
+        - `sql/consultas/`
+      - **`03-backend-java-spring-boot-3x/`** - Cap. 3: Backend Java Spring Boot 3.x
+        - `servicios-publicados/`
+        - `diagrama-de-secuencia-de-los-servicios-publicados/`
+        - `seguridad/`
+        - `perfil-de-usuario/`
+        - `ofuscacion-de-datos-sensibles/`
+        - `codigos-de-error/`
+        - `pruebas/`
+      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS
+        - **`arquitectura/`** - ADRs
+          - `eslint-9-eol.md` (ADR-0001)
+          - `stylelint-scope-y-colores.md` (ADR-0002)
+          - `assets-hibrido-public-src.md` (ADR-0003)
+          - `vulnerabilidades-policy.md` (ADR-0004)
+        - **`convenciones/`**
+          - `convenciones.md` - Convenciones de código del frontend
+          - `storybook.md` - Guía de Storybook (creado en TS-008)
+        - **`componentes/`**
+          - **`atoms/`**
+            - `button.md` - Documentación del componente Button (ejemplo TS-007)
+        - **`seguridad/`**
+          - `cvss-deuda-seguridad.md` - Vulnerabilidades aceptadas
+        - `design-system/` (pendiente)
+        - `internacionalizacion/` (pendiente)
+        - `assets/` (pendiente)
+        - `testing/` (pendiente)
+        - `deploy/` (pendiente)
+        - `diagramas-de-secuencias/` (pendiente)
   - **`backups/`** - Copias de seguridad de la base de datos
     - `investment_tracker_20260710_121428.sql` - Backup de BD
 
@@ -1493,7 +1713,16 @@ graph TB
 
 - **Backend**: Java LTS 21 (Spring Boot 3.x)
 - **Base de datos**: PostgreSQL 16
-- **Frontend**: React 18+ con CSS moderno
+- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 (ver ADR `eslint-9-eol.md`)
+- **Node.js (build frontend)**: 24.21.0 (LTS activa) — fijado en `frontend/.nvmrc`
+- **Lint frontend**: ESLint 9.39.5 (EOL) + `eslint-plugin-jsx-a11y` 6.10.2 + `eslint-plugin-import` 2.32.0 + `eslint-plugin-simple-import-sort` 14.0.0
+- **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
+- **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1 (ver [ADR-0002](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts))
+- **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
+- **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
+- **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
+- **Storybook frontend**: 10.6.1 (puerto dev `3010`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
+- **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT + Refresh Token
 - **Contenedores**: Docker + Docker Compose
@@ -1505,10 +1734,11 @@ graph TB
 - **Usuario de BD de la app**: `investment_app` (con permisos restringidos, sin acceso a `auditoria_usuarios`)
 - **Validación**: Jakarta Bean Validation (`@Valid`) + validaciones de servicio. Los errores de `@Valid` se reportan como `SYS-03` (500) sin detalle al cliente.
 - **Perfil de usuario**: `/api/auth/get-my-profile` (GET) y `/api/auth/update-my-profile` (POST). El `username` e `id` deben coincidir con el JWT.
-- **Reglas del frontend**: ver `docs/agente-frontend.md` (estructura, vistas por orientación, design system, i18n, assets, Storybook, testing, a11y, DoD).
+- **Reglas del frontend**: ver `docs/prompts/agente-frontend.md` (estructura, vistas por orientación, design system, i18n, assets, Storybook, testing, a11y, DoD).
 - **Reglas del backend**: ver `docs/prompts/agente-backend.md`.
 - **Reglas de base de datos**: ver `docs/prompts/agente-database.md`.
 - **Idea general y reglas para la IA**: ver `docs/prompts/prompt_inicial.md`.
+- **Documentación técnica por capa**: ver `docs/tecnica/<NN-capítulo>/<subcategoría>/<archivo>.md|.sql`.
 
 ## 105. Gestión del Proyecto
 

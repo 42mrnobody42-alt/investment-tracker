@@ -1,0 +1,20 @@
+# Dependencias
+node_modules/
+
+# Build de producción
+dist/
+
+# Reportes de tests y cobertura
+coverage/
+playwright-report/
+test-results/
+
+# Storybook compilado
+storybook-static/
+
+# Lockfile (no se formatea)
+package-lock.json
+
+# Assets binarios
+public/**/*.{png,jpg,jpeg,gif,webp,avif,ico,svg}
+src/assets/**/*.{png,jpg,jpeg,gif,webp,avif,ico,svg}

@@ -172,11 +172,11 @@ CAP=$(gh issue create --repo "$REPO" \
   --body "$(cat <<'BODY'
 ## Contexto
 El proyecto Investment Tracker necesita su interfaz de usuario completa. Hoy no
-existe frontend: esta capability construye desde cero la SPA React 18 + TypeScript
+existe frontend: esta capability construye desde cero la SPA React 19 + TypeScript 6 + Vite 8
 que consumirá los endpoints del backend (`README.md`, sección Servicios Publicados).
 
 ## Alcance
-- Setup Vite + React 18 + TS estricto + ESLint/Prettier/Stylelint/Husky/commitlint.
+- Setup React 19 + TypeScript 6 + Vite 8 + ESLint/Prettier/Stylelint/Husky/commitlint.
 - Storybook (History Book) con stories obligatorias por componente.
 - Design System completo (átomos, moléculas, organismos, layout).
 - Design tokens + theming (light/dark/high-contrast).
@@ -239,7 +239,7 @@ el frontend listo para trabajar: Vite, TS estricto, linting, Storybook, tests
 y variables de entorno.
 
 ## Alcance
-- Proyecto Vite + React 18 + TS estricto.
+- Proyecto React 19 + TypeScript 6 + Vite 8.
 - ESLint + Prettier + Stylelint + Husky + commitlint.
 - Storybook con decoradores globales.
 - Vitest + Playwright (5 configs) + axe-core.
@@ -247,7 +247,7 @@ y variables de entorno.
 - Variables de entorno tipadas y proxy /api.
 
 ## User Stories
-- US-001 — Inicializar proyecto Vite + React 18 + TS
+- US-001 — Inicializar proyecto React 19 + TypeScript 6 + Vite 8
 - US-002 — Estructura de carpetas, alias y convenciones
 - US-003 — Configurar Storybook
 - US-004 — Testing setup (Vitest + Playwright + axe)
@@ -484,11 +484,11 @@ log "[4/7] Creando User Stories..."
 declare -A US
 declare -A US_PARENT
 
-US[US-001]=$(create_us "US-001 — Inicializar proyecto Vite + React 18 + TypeScript estricto" \
+US[US-001]=$(create_us "US-001 — Inicializar proyecto React 19 + TypeScript 6 + Vite 8" \
   "user-story,frontend" \
 "## Contexto
-El frontend actual se descarta. Se parte de cero con Vite + React 18 + TS
-estricto para asegurar tipado fuerte desde el día uno.
+El frontend actual se descarta. Se parte de cero con React 19 + TypeScript 6 + Vite 8
+para asegurar tipado fuerte desde el día uno.
 
 ## Alcance
 - Inicialización con Vite.
@@ -496,7 +496,7 @@ estricto para asegurar tipado fuerte desde el día uno.
 - ESLint + Prettier + Stylelint.
 
 ## Tareas
-- TS-001 — Inicializar Vite + React 18 + TS (2h)
+- TS-001 — Inicializar Vite + React 19 + TypeScript 6 (2h)
 - TS-002 — ESLint + Prettier + tsconfig estricto (2h)
 - TS-003 — Stylelint para CSS Modules (1h)
 - TS-004 — Eliminar frontend/ actual (1h)
@@ -1527,7 +1527,7 @@ while IFS='|' read -r title us hours ctx ent c1 c2 c3; do
   ALL_TS_IDS+=("$id")
   TS_BY_US[$us]="$id ${TS_BY_US[$us]:-}"
 done <<'TASKS'
-TS-001 — Inicializar Vite + React 18 + TS|US-001|2h|Arranque del frontend desde cero.|frontend/ con Vite + React 18 + TS funcional.|npm create vite ejecutado|npm install sin errores|npm run dev levanta
+TS-001 — Inicializar React 19 + TypeScript 6 + Vite 8|US-001|2h|Arranque del frontend desde cero.|frontend/ con Vite + React 19 + TypeScript 6 funcional.|npm create vite ejecutado|npm install sin errores|npm run dev levanta
 TS-002 — ESLint + Prettier + tsconfig estricto|US-001|2h|Calidad de código desde el primer commit.|.eslintrc.cjs, .prettierrc, tsconfig.json.|ESLint limpio|Prettier configurado|TS strict true
 TS-003 — Stylelint para CSS Modules|US-001|1h|Reglas CSS consistentes.|.stylelintrc.json + reglas para CSS Modules.|Stylelint corre sin errores|Reglas para CSS Modules|Integrado con npm script
 TS-004 — Eliminar frontend/ actual|US-001|1h|Descartar código legacy sin afectar Docker.|frontend/ viejo eliminado y referencias verificadas.|rm -rf frontend ejecutado|Dockerfile.frontend verificado|docker-compose.yml verificado

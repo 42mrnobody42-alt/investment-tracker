@@ -54,7 +54,13 @@ Si la IA detecta una contradicción, debe señalarla, proponer la corrección y 
 
 - **Backend**: Java LTS 21 (Spring Boot 3.3.0)
 - **Base de datos**: PostgreSQL 16
-- **Frontend**: React 18+ con CSS moderno
+- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1
+- **Node.js (build frontend)**: 24.21.0 (LTS activa)
+- **Lint frontend**: ESLint 9.39.5 (EOL, ver ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + `eslint-plugin-jsx-a11y` + `eslint-plugin-import` + `eslint-plugin-simple-import-sort`
+- **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier`
+- **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 (ver ADR-0002)
+- **Strict mode TS**: `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`
+- **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT + Refresh Token (sesión deslizante de 1 hora)
 - **Contenedores**: Docker + Docker Compose
@@ -269,6 +275,23 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
 ## 🧹 Reglas generales para la IA
 
+> ### 🚨 REGLA 0 — INVIOLABLE
+>
+> **SIEMPRE ANALIZAR Y SOLICITAR AL USUARIO RESOLVER DUDAS ENCONTRADAS EN EL ANÁLISIS ANTES DE ESCRIBIR CÓDIGO.**
+>
+> Aplica a **cualquier petición**, en **cualquier capa** (frontend, backend, base de datos, documentación, scripts, configuración, refactors, tests). Ninguna excepción.
+>
+> **Procedimiento obligatorio:**
+>
+> 1. Analizar la petición completa y el contexto disponible (`README.md`, `prompt_inicial.md`, `agente-*.md`, código real).
+> 2. Enumerar explícitamente **todas** las dudas, ambigüedades o faltantes detectados.
+> 3. **Solicitar al usuario que las resuelva ANTES de escribir cualquier línea de código o comando.**
+> 4. Esperar la respuesta del usuario. No avanzar con supuestos silenciosos.
+>
+> **Penalización por incumplimiento:** si el agente escribe código sin haber resuelto previamente **todas** las dudas del análisis, el usuario **DEBE** iniciar un **nuevo chat**. La conversación se considera inválida desde ese punto.
+>
+> Esta regla **prevalece sobre cualquier otra** de este documento, incluidas las directrices por capa y las convenciones de entrega. Ante conflicto, Regla 0 gana.
+
 1. **Cada comando ejecutado debe tener path absoluto** y no usar variables de entorno (`/prog/datos/investment-tracker`).
 
 2. **El archivo `README.md` contiene la información CRÍTICA y el estado general del proyecto**. Siempre consultarlo antes de responder.
@@ -313,7 +336,7 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
 22. **Mantener sincronizado docs/scrum/kanban/ con los issues de GitHub.** Cuando se cree una capability nueva, actualizar kanban-ids.env y agregar el .md correspondiente en capabilities/.
 
-23. **Consultar `docs/agente-frontend.md` antes de cualquier tarea de frontend**. Ese documento define estructura de directorios, componentes obligatorios, i18n, assets, testing, a11y, performance, seguridad y DoD por PR. Ante conflicto, prevalece `README.md` → este archivo → `agente-frontend.md`.
+23. **Consultar `docs/prompts/agente-frontend.md` antes de cualquier tarea de frontend**. Ese documento define estructura de directorios, componentes obligatorios, i18n, assets, testing, a11y, performance, seguridad y DoD por PR. Ante conflicto, prevalece `README.md` → este archivo → `agente-frontend.md`.
 
 24. **Nunca inventar contexto**. Si falta un endpoint, un DTO, un campo, un código de error, un rol, un diseño o una regla de negocio, **solicitar el archivo concreto** (ruta + motivo) antes de continuar. Formato sugerido:
 
@@ -326,7 +349,7 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
 26. **No avanzar con supuestos silenciosos**. Si se hace un supuesto por continuidad, declararlo explícitamente y marcarlo como pendiente de validación antes de generar código.
 
-27. **Mantener sincronizados los documentos**. Si cambia una convención de frontend en `docs/agente-frontend.md`, actualizar el `README.md` (sección de estructura) y, si aplica, este archivo, en el mismo PR. Si cambia un endpoint en `README.md`, actualizar los servicios y tipos del frontend que lo consumen.
+27. **Mantener sincronizados los documentos**. Si cambia una convención de frontend en `docs/prompts/agente-frontend.md`, actualizar el `README.md` (sección de estructura) y, si aplica, este archivo, en el mismo PR. Si cambia un endpoint en `README.md`, actualizar los servicios y tipos del frontend que lo consumen.
 
 28. **Cuando el usuario pida "crear la vista X" sin contrato**, el agente debe solicitar antes: (a) endpoints exactos (ver `README.md` o código real), (b) DTO de request, (c) DTO de response, (d) roles con acceso, (e) reglas de negocio y validaciones.
 
@@ -335,6 +358,15 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
     y `## Dependencias`. En TS además `## Estimación` (≤4h) y `## US padre`.
     Las plantillas viven en `docs/scrum/kanban/templates/`. Un issue no se
     cierra (`Done`) hasta que TODOS los checkboxes estén marcados.
+
+30. **🚫 NUNCA ejecutar `npm audit fix --force` ni `npm audit fix --legacy-peer-deps`**.
+    El fix sugerido por npm suele ser un downgrade mayor que rompe el stack de
+    tooling (por ejemplo `stylelint@17.15.0` → `stylelint@7.7.0`). Cualquier
+    intento de resolver una vulnerabilidad DEBE pasar por evaluación manual:
+    `npm audit` → `npm ls <paquete>` → `npm view <paquete> version` → decidir.
+    Las vulnerabilidades aceptadas se registran en
+    `docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`
+    (política en ADR-0004). Aplica a las 3 capas (frontend, backend, database).
 
 ## 📊 Gestión del Proyecto
 
