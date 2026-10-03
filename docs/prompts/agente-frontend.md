@@ -1,7 +1,7 @@
 # agente-frontend.md
 
 > Guía oficial de arquitectura y desarrollo frontend.
-> Versión: 1.3.2
+> Versión: 1.3.4
 > Stack base: React 19 + TypeScript 6 + Vite 8, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
 > Público objetivo: Desarrolladores frontend senior, tech leads y agentes automatizados de generación de código.
 > Documento hermano del backend, la base de datos y el README del proyecto. Ver sección 0 y 22.
@@ -704,6 +704,10 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 - Exports nombrados; default solo para vistas de ruta.
 - Máximo ~200 líneas por componente; si excede, dividir.
 - Alias de import obligatorios: @app, @components, @views, @shared, @i18n, @styles.
+- Resolución de alias: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `tsconfig.paths.json` (fuente única).
+- Limitaciones conocidas (no son deuda técnica, son límites del ecosistema):
+  - **`import/no-unresolved` desactivado**: el resolver de ESLint (`eslint-import-resolver-typescript`) no soporta `paths` sin `baseUrl`. TypeScript 6+ deprecó `baseUrl`, así que se desactivó esa regla. La validación real la hace el propio `tsc`.
+  - Los alias funcionan también para CSS (`.css`, `.module.css`) gracias al soporte nativo de Vite 8 (`resolve.tsconfigPaths: true`).
 
 ---
 

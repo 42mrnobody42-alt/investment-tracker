@@ -1,10 +1,11 @@
-import '../styles/app/app.css';
+import '@styles/app/app.css';
 
 import { useState } from 'react';
 
+import { ASSETS } from '@shared/constants/assets';
+
 import reactLogo from '../assets/icons/react.svg';
 import viteLogo from '../assets/icons/vite.svg';
-import { ASSETS } from '../shared/constants/assets';
 
 function App() {
   const [count, setCount] = useState(0);

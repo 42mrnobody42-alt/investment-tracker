@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `006`
+- Hotfix = `007`
 
 ## Fecha: 2026-09-26
 
@@ -1557,7 +1557,8 @@ Dos decisiones documentadas en ADR-0002:
     - `tsconfig.json` - Referencias a app y node
     - `tsconfig.app.json` - Config TS estricta de la app
     - `tsconfig.node.json` - Config TS del tooling
-    - `vite.config.ts` - Vite (puerto 3000, strictPort)
+    - `tsconfig.paths.json` - Alias de imports (@app, @components, @views, @shared, @i18n, @styles)
+    - `vite.config.ts` - Vite (puerto 3000, strictPort, resolve.tsconfigPaths nativo)
     - **`public/`** - Assets de branding (URL estable, editable post-deploy)
       - `assets/images/starter/` - Imágenes del starter (hero)
       - `favicon.svg`, `icons.svg` - Iconos de app
@@ -1647,6 +1648,7 @@ Dos decisiones documentadas en ADR-0002:
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
 - **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1 (ver [ADR-0002](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts))
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
+- **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT + Refresh Token
