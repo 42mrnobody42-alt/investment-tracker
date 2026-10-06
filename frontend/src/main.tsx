@@ -1,3 +1,4 @@
+import '@styles/branding/paleta-colores-corporativa.css';
 import '@styles/index.css';
 
 import { StrictMode } from 'react';

@@ -1,7 +1,7 @@
 # agente-frontend.md
 
 > Guía oficial de arquitectura y desarrollo frontend.
-> Versión: 1.3.5
+> Versión: 1.3.7
 > Stack base: React 19 + TypeScript 6 + Vite 8, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
 > Público objetivo: Desarrolladores frontend senior, tech leads y agentes automatizados de generación de código.
 > Documento hermano del backend, la base de datos y el README del proyecto. Ver sección 0 y 22.
@@ -357,27 +357,32 @@ Solo se listan las ramas relevantes al frontend y a los contenedores. Las ramas 
     - **`tecnica/`** - Documentación técnica por capítulo del README
       - **`02-base-de-datos/`** - Cap. 2: Base de Datos
       - **`03-backend-java-spring-boot-3x/`** - Cap. 3: Backend Java Spring Boot 3.x
-      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS (se puebla con CAP-01)
-        - **`arquitectura/`**
-          - `arquitectura.md` - Diagrama y decisiones de arquitectura
-        - **`design-system/`**
-          - `design-system.md` - Catálogo de componentes y tokens
+      - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS
+        - **`deuda-tecnica/`** - ADRs de deudas técnicas pendientes
+          - `eslint-9-eol.md` (ADR-0001)
+          - `stylelint-scope-y-colores.md` (ADR-0002)
+          - `assets-hibrido-public-src.md` (ADR-0003)
+          - `vulnerabilidades-policy.md` (ADR-0004)
+          - `decorador-with-theme-pendiente.md` (ADR-0005)
+          - `decorador-with-i18n-pendiente.md` (ADR-0006)
+          - `decorador-with-router-pendiente.md` (ADR-0007)
+        - **`convenciones/`**
+          - `convenciones.md` - Convenciones de código del frontend
+          - `storybook.md` - Guía operativa de Storybook (autodocs, decoradores)
         - **`componentes/`**
-          - `botones.md` - Componentes de botón (se crea con el componente)
-          - `modales.md` - Modales y diálogos (se crea con el componente)
-          - … (un archivo por familia, se crean al construir el componente)
-        - **`internacionalizacion/`**
-          - `i18n.md` - Convenciones de internacionalización
-        - **`assets/`**
-          - `assets.md` - Cómo reemplazar logos e imágenes en runtime
-        - **`storybook/`**
-          - `storybook.md` - Cómo levantar y publicar Storybook
-        - **`testing/`**
-          - `testing.md` - Estrategia de pruebas unitarias, integración y E2E
-        - **`deploy/`**
-          - `deploy.md` - Build, variables de entorno y despliegue
-        - **`diagramas-de-secuencias/`**
-          - `login.md` - Flujo frontend ↔ backend del login (se crea con la vista)
+          - **`atoms/`**
+            - `button.md` - Documentación del componente Button (ejemplo TS-007)
+          - **`branding/`**
+            - `paleta-colores-corporativa.html` - Preview visual de la paleta corporativa
+        - **`seguridad/`**
+          - `cvss-deuda-seguridad.md` - Vulnerabilidades aceptadas
+        - **Carpetas pendientes** (se pueblan cuando avancen sus tasks):
+          - `design-system/` → `design-system.md` - Catálogo de componentes y tokens
+          - `internacionalizacion/` → `i18n.md` - Convenciones de internacionalización
+          - `assets/` → `assets.md` - Cómo reemplazar logos e imágenes en runtime
+          - `testing/` → `testing.md` - Estrategia de pruebas unitarias, integración y E2E
+          - `deploy/` → `deploy.md` - Build, variables de entorno y despliegue
+          - `diagramas-de-secuencias/` → `login.md` - Flujo frontend ↔ backend (se crea con la vista)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
 
@@ -488,11 +493,18 @@ components/<nivel>/<ComponentName>/
 ## 5. Storybook (History Book de componentes)
 
 - Configurado en `frontend/.storybook/` (puerto dev `3010`).
-- En **TS-008** se dejó la infraestructura base y una story mínima de ejemplo
-  (Button — `Default`). Las stories completas (Variants, States, Responsive,
-  DarkMode) y los decoradores globales se configuran en **TS-009** y siguientes.
+- **TS-008** dejó la infraestructura base (main.ts, preview.tsx, addons) y una
+  story mínima del Button (`Default`).
+- **TS-009** completó las 5 stories del Button (`Default`, `Variants`, `Sizes`,
+  `States`, `DarkMode`) y activó 3 decoradores globales (`withPadding`,
+  `withBackground`, `withViewport`).
+- Decoradores pendientes (diferidos a tasks posteriores, registrados como ADRs):
+  - `withTheme` → TS-024 (#629), ADR-0005
+  - `withI18n` → TS-026 (#631), ADR-0006
+  - `withRouter` → TS-070 (#675), ADR-0007
 - Cada componente atómico/molecular/organismo tiene su .stories.tsx obligatoriamente.
 - Guía operativa: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](../../tecnica/04-frontend-react-css-moderno/convenciones/storybook.md).
+- Warnings conocidos: [`warnings-storybook.md`](../../tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
 - Stories mínimas por componente:
   - Default
   - Variants
@@ -570,7 +582,7 @@ t('servicioA:index.errors.network')
 ## 8. Assets — modelo híbrido
 
 Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
-(`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`).
+(`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`).
 
 ### Criterio de clasificación
 
@@ -617,7 +629,8 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 ## 9. Estilos y theming
 
 - CSS moderno: custom properties, clamp(), min(), max(), container queries, :has(), color-mix(), nesting nativo.
-- Tokens en frontend/src/styles/tokens.css (color, tipografía, spacing, radius, sombras, z-index).
+- Paleta de colores corporativa en `frontend/src/styles/branding/paleta-colores-corporativa.css` (tokens `--color-*`). Aprobada en TS-009. Preview: [`paleta-colores-corporativa.html`](../../tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html).
+- Resto de tokens (spacing, typography, radius, z-index) en `frontend/src/styles/tokens.css` (llega en TS-022 #627).
 - Tema claro/oscuro con data-theme en <html>. Existe tema de alto contraste.
 - Breakpoints definidos una sola vez en frontend/src/shared/constants/breakpoints.ts y expuestos como custom properties.
 - Prohibido !important salvo justificación en PR.
@@ -687,8 +700,8 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 ## 15. Convenciones de código
 
 - TypeScript estricto. Sin any (usar unknown y narrowing).
-- ESLint 9.39.5 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + Prettier 3.9.9 + `eslint-config-prettier` + `eslint-plugin-import` + `eslint-plugin-jsx-a11y` + `eslint-plugin-simple-import-sort` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`.
-- Stylelint 17.15.0 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`) + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1.
+- ESLint 9.39.5 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md`) + Prettier 3.9.9 + `eslint-config-prettier` + `eslint-plugin-import` + `eslint-plugin-jsx-a11y` + `eslint-plugin-simple-import-sort` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`.
+- Stylelint 17.15.0 (fijado por ADR `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/stylelint-scope-y-colores.md`) + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1.
 - Reglas de CSS obligatorias **en nivel `error`**:
   - `declaration-no-important: true` — prohíbe `!important` (agente-frontend §19).
   - `selector-class-pattern: "^[a-z][a-zA-Z0-9]*$"` — clases en **camelCase**.
@@ -769,7 +782,7 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 ## 19. Anti-patrones prohibidos
 
 - Ejecutar `npm audit fix --force` o `npm audit fix --legacy-peer-deps`. Ver
-  política en [ADR-0004](../../tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md)
+  política en [ADR-0004](../../tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md)
   y log en [`cvss-deuda-seguridad.md`](../../tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md).
   El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
 - Textos hardcodeados en JSX.
@@ -843,7 +856,53 @@ Ejemplos:
 
 ---
 
-## 22. Referencias cruzadas entre documentos
+## 22. Ciclo de vida de los ADRs
+
+En este proyecto los ADRs **registran deudas técnicas pendientes**, no decisiones
+arquitectónicas permanentes.
+
+### Reglas
+
+1. **Al crear un ADR**: su estado siempre es `🟡 Pendiente`.
+2. **Nunca** un ADR queda en estado "Aceptada". Los ADRs son un registro temporal
+   de deuda, no un archivo histórico.
+3. **Cada ADR DEBE tener una tarea que lo resuelva**, identificada en el campo
+   `**Se resuelve en**:`. Al crear el ADR:
+   - Si la tarea que resuelve la deuda **ya existe** → modificar el body de esa
+     tarea agregando el bloque "**Trabajo derivado de TS-XXX**" con los checkboxes
+     de resolución y la referencia al ADR.
+   - Si la tarea **no existe** → **crear una nueva tarea** en el CAP/FT/US
+     correspondiente, con el mismo bloque de resolución y la referencia al ADR.
+4. **Al resolver la deuda** (desde la tarea referenciada):
+   - **Eliminar** el archivo del ADR de `docs/tecnica/.../arquitectura/`.
+   - **Mover** la documentación de la solución al archivo correspondiente
+     (`storybook.md`, `cvss-deuda-seguridad.md`, etc.).
+   - **Tachar la fila** en la tabla de ADRs de `README.md`.
+   - **Marcar el check** `- [x] Resuelve ADR-XXXX` en el body de la tarea.
+
+### Estructura obligatoria de un ADR
+
+- `**Estado**: 🟡 Pendiente`
+- `**Se resuelve en**: <task / issue>` (obligatorio; nunca "sin fecha").
+- `**Documentación final**: <ruta del doc donde migrará la solución>`.
+
+Y al final, sección **"Gatillo de resolución"** con el procedimiento.
+
+### Ejemplos activos
+
+| ADR      | Se resuelve en    | Documentación final                 |
+| -------- | ----------------- | ----------------------------------- |
+| ADR-0001 | TS-097 (a crear)  | `convenciones/convenciones.md`      |
+| ADR-0002 | TS-022 (#629)     | `convenciones/convenciones.md`      |
+| ADR-0003 | TS-031 (useAsset) | `convenciones/convenciones.md`      |
+| ADR-0004 | TS-098 (a crear)  | `seguridad/cvss-deuda-seguridad.md` |
+| ADR-0005 | TS-024 (#629)     | `convenciones/storybook.md`         |
+| ADR-0006 | TS-026 (#631)     | `convenciones/storybook.md`         |
+| ADR-0007 | TS-070 (#675)     | `convenciones/storybook.md`         |
+
+---
+
+## 23. Referencias cruzadas entre documentos
 
 - README.md (raíz del proyecto): estado general, versión vigente, endpoints publicados, stack, arquitectura, modelo de datos, seguridad, ofuscación, auditoría, Scrum. Es la fuente principal.
 - docs/prompts/prompt_inicial.md: idea general del proyecto, requisitos funcionales, reglas para la IA, directrices por capa y flujo obligatorio por issue.

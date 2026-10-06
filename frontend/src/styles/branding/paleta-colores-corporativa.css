@@ -1,0 +1,73 @@
+/**
+ * Paleta de colores corporativa — Investment Tracker Pro
+ *
+ * Finanzas · Seguridad · Tecnología · IA
+ *
+ * Aprobada en TS-009 (#614). Los tokens de spacing/radius/typography/z-index
+ * se agregan en TS-022 (#627) dentro de styles/tokens.css.
+ *
+ * Preview visual: docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html
+ *
+ * Reglas:
+ * - Prohibido hardcodear hex fuera de este archivo (ver ADR-0002).
+ * - Todos los consumidores usan var(--color-*) o var(--btn-*).
+ * - Accesibilidad: cada token fue validado contra WCAG 2.2 AA con texto blanco.
+ */
+
+/* ===== Light theme (default) ===== */
+:root {
+  /* --- Paleta de marca (no cambia entre temas) --- */
+  --color-primary: #150e8f;
+  --color-primary-hover: #0f0a6b;
+  --color-primary-light: #4a42c9;
+  --color-accent: #06b6d4;
+  --color-accent-hover: #0891b2;
+  --color-success: #0a8057;
+  --color-success-hover: #086645;
+  --color-danger: #991b1b;
+  --color-danger-hover: #7f1d1d;
+  --color-warning: #b45309;
+  --color-warning-hover: #92400e;
+  --color-info: #0e7ab0;
+  --color-info-hover: #0a5f8c;
+
+  /* --- Neutros --- */
+  --color-bg: #f8fafc;
+  --color-surface: #fff;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #fff;
+
+  /* --- Botones (light theme) --- */
+  --btn-primary-bg: var(--color-primary);
+  --btn-primary-bg-hover: var(--color-primary-hover);
+  --btn-primary-fg: var(--color-text-inverse);
+  --btn-secondary-fg: var(--color-primary);
+  --btn-secondary-border: var(--color-primary);
+  --btn-ghost-fg: var(--color-text-muted);
+  --btn-danger-bg: var(--color-danger);
+  --btn-danger-bg-hover: var(--color-danger-hover);
+  --btn-danger-fg: var(--color-text-inverse);
+}
+
+/* ===== Dark theme ===== */
+[data-theme='dark'] {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-border: #334155;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #0f172a;
+
+  /* Botones en dark theme: variantes claras para visibilidad */
+  --btn-primary-bg: #4a42c9;
+  --btn-primary-bg-hover: #6366f1;
+  --btn-primary-fg: #f1f5f9;
+  --btn-secondary-fg: #a5b4fc;
+  --btn-secondary-border: #a5b4fc;
+  --btn-ghost-fg: #cbd5e1;
+  --btn-danger-bg: #dc2626;
+  --btn-danger-bg-hover: #ef4444;
+  --btn-danger-fg: #f1f5f9;
+}

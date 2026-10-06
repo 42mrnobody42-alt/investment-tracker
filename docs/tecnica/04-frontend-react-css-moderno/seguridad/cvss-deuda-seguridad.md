@@ -2,8 +2,8 @@
 
 > **Log continuo** de vulnerabilidades de seguridad aceptadas en el frontend.
 > Política de aceptación y proceso completo en el ADR-0004:
-> [`docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md`](../arquitectura/vulnerabilidades-policy.md).
-> Detalle técnico de la deuda: [ADR-0004](../arquitectura/vulnerabilidades-policy.md).
+> [`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md`](../deuda-tecnica/vulnerabilidades-policy.md).
+> Detalle técnico de la deuda: [ADR-0004](../deuda-tecnica/vulnerabilidades-policy.md).
 
 ## Propósito
 
@@ -56,7 +56,7 @@ y por una nueva entrada en este archivo.
 | **Tipo**        | Dev dependency — nunca llega a producción                                |
 | **Estado**      | 🟡 Aceptada                                                              |
 | **Aceptada el** | 2026-10-03                                                               |
-| **Decisión**    | [ADR-0004](../arquitectura/vulnerabilidades-policy.md)                   |
+| **Decisión**    | [ADR-0004](../deuda-tecnica/vulnerabilidades-policy.md)                   |
 
 #### Clasificación real
 
