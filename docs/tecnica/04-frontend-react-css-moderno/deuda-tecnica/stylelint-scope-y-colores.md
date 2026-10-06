@@ -1,6 +1,6 @@
 # ADR-0002 — Alcance de Stylelint: colores y separación de scripts
 
-- **Estado**: Aceptada
+- **Estado**: 🟡 Pendiente
 - **Fecha**: 2026-09-26
 - **Capa**: Frontend (React + TypeScript + Vite + Stylelint)
 - **Decisores**: Equipo Investment Tracker
@@ -120,6 +120,6 @@ los tokens reales.
 - `docs/prompts/agente-frontend.md` §9 (Estilos y theming) — CSS Custom Properties como fuente única de valores.
 - `docs/prompts/agente-frontend.md` §15 (Convenciones de código) — pipeline de linting.
 - `docs/prompts/agente-frontend.md` §19 (Anti-patrones) — colores hardcodeados prohibidos.
-- ADR-0001: `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md` — patrón de documentación de deuda.
+- ADR-0001: `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md` — patrón de documentación de deuda.
 - TS-016 (#621) — Husky + lint-staged + commitlint.
 - TS-017 (#622) — Design tokens y theming.

@@ -120,7 +120,7 @@ export const ASSETS = {
 ## 5. Reglas adicionales
 
 - **Sin `any`**. Usar `unknown` + narrowing.
-- **Sin colores hardcodeados** fuera de `styles/tokens.css` (ver [ADR-0002](../arquitectura/stylelint-scope-y-colores.md)).
+- **Sin colores hardcodeados** fuera de `styles/tokens.css` (ver [ADR-0002](../deuda-tecnica/stylelint-scope-y-colores.md)).
 - **Sin `!important`** (Stylelint lo bloquea).
 - **Sin textos hardcodeados**: usar i18n (`t('namespace.key')`).
 - **CSS Modules** para todo estilo de componente. Sin estilos inline salvo valores dinámicos calculados en runtime.
@@ -133,4 +133,4 @@ export const ASSETS = {
 - Estructura de directorios: `agente-frontend.md` §2.
 - Convenciones de código: `agente-frontend.md` §15.
 - Alias: [`frontend/tsconfig.paths.json`](../../../../frontend/tsconfig.paths.json).
-- ADRs: `docs/tecnica/04-frontend-react-css-moderno/arquitectura/`.
+- ADRs: `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/`.

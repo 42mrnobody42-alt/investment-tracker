@@ -1,6 +1,6 @@
 # ADR-0001 — Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10
 
-- **Estado**: Aceptada
+- **Estado**: 🟡 Pendiente
 - **Fecha**: 2026-09-26
 - **Capa**: Frontend (React + TypeScript + Vite)
 - **Decisores**: Equipo Investment Tracker

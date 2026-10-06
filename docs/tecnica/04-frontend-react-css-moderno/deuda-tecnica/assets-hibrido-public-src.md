@@ -1,6 +1,6 @@
 # ADR-0003 — Modelo híbrido de assets: `public/` (branding) + `src/assets/` (técnicos)
 
-- **Estado**: Aceptada
+- **Estado**: 🟡 Pendiente
 - **Fecha**: 2026-10-02
 - **Capa**: Frontend (React + TypeScript + Vite)
 - **Decisores**: Equipo Investment Tracker

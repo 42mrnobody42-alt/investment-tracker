@@ -56,7 +56,7 @@ Si la IA detecta una contradicción, debe señalarla, proponer la corrección y 
 - **Base de datos**: PostgreSQL 16
 - **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1
 - **Node.js (build frontend)**: 24.21.0 (LTS activa)
-- **Lint frontend**: ESLint 9.39.5 (EOL, ver ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + `eslint-plugin-jsx-a11y` + `eslint-plugin-import` + `eslint-plugin-simple-import-sort`
+- **Lint frontend**: ESLint 9.39.5 (EOL, ver ADR `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md`) + `eslint-plugin-jsx-a11y` + `eslint-plugin-import` + `eslint-plugin-simple-import-sort`
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier`
 - **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 (ver ADR-0002)
 - **Strict mode TS**: `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`

@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `009`
+- Hotfix = `012`
 
 ## Fecha: 2026-09-26
 
@@ -160,10 +160,14 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
   - [Arquitectura del Frontend](#arquitectura-del-frontend)
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
-  - [Decisiones Técnicas (ADR)](#decisiones-técnicas-adr)
+  - [Deudas Técnicas (ADR)](#deudas-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
     - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
     - [ADR-0003 — Modelo híbrido de assets: public/ + src/assets/](#adr-0003--modelo-híbrido-de-assets-public--srcassets)
+    - [ADR-0004 — Política de vulnerabilidades aceptadas](#adr-0004--política-de-vulnerabilidades-aceptadas)
+    - [ADR-0005 — Decorador withTheme pendiente](#adr-0005--decorador-withtheme-pendiente)
+    - [ADR-0006 — Decorador withI18n pendiente](#adr-0006--decorador-withi18n-pendiente)
+    - [ADR-0007 — Decorador withRouter pendiente](#adr-0007--decorador-withrouter-pendiente)
   - [Convenciones del Frontend](#convenciones-del-frontend)
   - [Componentes del Frontend](#componentes-del-frontend)
     - [Atoms](#atoms-del-frontend)
@@ -1248,6 +1252,7 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 
 **Principios rectores** (detalle completo en `docs/prompts/agente-frontend.md`):
 
+- **Paleta de colores corporativa** en `frontend/src/styles/branding/paleta-colores-corporativa.css` (tokens `--color-*` y `--btn-*`). Colores de marca (primary azul profundo, accent cyan), semánticos (success, danger, warning, info) y neutros. Soporta temas light y dark. Aprobada en TS-009 con accesibilidad WCAG 2.2 AA validada. **Preview visual**: [paleta-colores-corporativa.html](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html).
 - Separación por orientación: `views/horizontal/` (PC, tablet apaisada, Smart TV)
   y `views/vertical/` (móvil, tablet retrato). Sin mezclas.
 - Design System propio en `src/components/{atoms,molecules,organisms,layout}/`.
@@ -1275,16 +1280,24 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 **Pineo de versiones**: `frontend/.npmrc` con `save-exact=true`. Ninguna
 dependencia usa `^` ni `~` en `package.json`.
 
-### Decisiones Técnicas (ADR)
+### Deudas Técnicas (ADR)
 
 Los Architecture Decision Records del frontend viven en
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/).
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/).
 
-| ADR                                                                                              | Título                                                            | Estado      | Fecha      |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------- | ---------- |
-| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)              | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | ✅ Aceptada | 2026-09-26 |
-| [ADR-0002](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md) | Alcance de Stylelint: colores y separación de scripts             | ✅ Aceptada | 2026-09-26 |
-| [ADR-0003](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md) | Modelo híbrido de assets: public/ + src/assets/                   | ✅ Aceptada | 2026-10-02 |
+> **Nota sobre ADRs**: en este proyecto los ADRs registran **deudas técnicas pendientes**.
+> Al resolverse, el ADR se **elimina** y la documentación migra al archivo correspondiente.
+> No hay ADRs "aceptados" permanentes.
+
+| ADR                                                                                                     | Título                                                            | Estado       | Fecha      | Se resuelve en |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------ | ---------- | -------------- |
+| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md)                    | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | 🟡 Pendiente | 2026-09-26 | TS-142 (#760)  |
+| [ADR-0002](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/stylelint-scope-y-colores.md)       | Alcance de Stylelint: colores y separación de scripts             | 🟡 Pendiente | 2026-09-26 | TS-022 (#627)  |
+| [ADR-0003](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)       | Modelo híbrido de assets: public/ + src/assets/                   | 🟡 Pendiente | 2026-10-02 | TS-031 (#636)  |
+| [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md)         | Política de vulnerabilidades aceptadas                            | 🟡 Pendiente | 2026-10-03 | TS-143 (#761)  |
+| [ADR-0005](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-theme-pendiente.md)  | Decorador `withTheme` pendiente de ThemeProvider                  | 🟡 Pendiente | 2026-10-03 | TS-024 (#629)  |
+| [ADR-0006](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md)   | Decorador `withI18n` pendiente de i18next                         | 🟡 Pendiente | 2026-10-03 | TS-026 (#631)  |
+| [ADR-0007](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md) | Decorador `withRouter` pendiente de React Router                  | 🟡 Pendiente | 2026-10-03 | TS-070 (#675)  |
 
 <a id="adr-0001--eslint-9395-eol"></a>
 
@@ -1296,7 +1309,7 @@ Los Architecture Decision Records del frontend viven en
 que instaló Vite 8 por defecto.
 
 📄 **ADR completo**:
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md)
 
 <a id="adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts"></a>
 
@@ -1310,7 +1323,7 @@ Dos decisiones documentadas en ADR-0002:
 2. **Scripts `lint:css` separados de `lint`** hasta que Husky + lint-staged (TS-016) unifiquen por archivo.
 
 📄 **ADR completo**:
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md)
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/stylelint-scope-y-colores.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/stylelint-scope-y-colores.md)
 
 #### ADR-0003 — Modelo híbrido de assets: `public/` + `src/assets/`
 
@@ -1319,7 +1332,7 @@ Dos decisiones documentadas en ADR-0002:
 **Decisión**: Branding/contenido configurable va a `public/assets/` (URL estable, editable post-deploy); iconos técnicos y assets acoplados al código van a `src/assets/` (import de bundler, hash + tree-shaking). Ver ADR-0003 para el criterio completo.
 
 📄 **ADR completo**:
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md)
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)
 
 ### Convenciones del Frontend
 
@@ -1352,8 +1365,52 @@ Documentación por componente, organizada por nivel del Design System.
 - **Uso**: `import { Button } from '@components/atoms/Button';` → `<Button>Enviar</Button>`
 - **Convenciones aplicadas**: named export, CSS Module con clases camelCase, props tipadas en archivo separado, barrel export.
 
-📄 **Documentación completa**:
-[`docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md`](docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md)
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)
+
+<a id="adr-0004--política-de-vulnerabilidades-aceptadas"></a>
+
+#### ADR-0004 — Política de vulnerabilidades aceptadas
+
+> 🔒 **Política de seguridad para dependencias del frontend**
+
+**Decisión**: Registrar cada vulnerabilidad aceptada conscientemente y prohibir `npm audit fix --force` y `npm audit fix --legacy-peer-deps` como mecanismos automáticos. Deuda activa: VULN-001.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md)
+
+<a id="adr-0005--decorador-withtheme-pendiente"></a>
+
+#### ADR-0005 — Decorador `withTheme` pendiente
+
+> 🟡 **Deuda diferida — se resuelve en TS-024 (#629)**
+
+**Decisión**: Diferir el decorador `withTheme` de Storybook hasta que el `ThemeProvider` exista. Se conectará en TS-024.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-theme-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-theme-pendiente.md)
+
+<a id="adr-0006--decorador-withi18n-pendiente"></a>
+
+#### ADR-0006 — Decorador `withI18n` pendiente
+
+> 🟡 **Deuda diferida — se resuelve en TS-026 (#631)**
+
+**Decisión**: Diferir el decorador `withI18n` de Storybook hasta que `i18next` esté configurado. Se conectará en TS-026.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md)
+
+<a id="adr-0007--decorador-withrouter-pendiente"></a>
+
+#### ADR-0007 — Decorador `withRouter` pendiente
+
+> 🟡 **Deuda diferida — se resuelve en TS-070 (#675)**
+
+**Decisión**: Diferir el decorador `withRouter` de Storybook hasta que React Router esté configurado. Se conectará en TS-070.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md)
 
 <a id="seguridad-del-frontend"></a>
 
@@ -1370,7 +1427,7 @@ impacto real y gatillos de revisión) se documentan en:
 
 📄 [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md)
 
-**Política completa**: [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
+**Política completa**: [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md).
 
 > 🚫 **NO ejecutar** `npm audit fix --force` ni `npm audit fix --legacy-peer-deps`.
 > El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
@@ -1683,17 +1740,22 @@ impacto real y gatillos de revisión) se documentan en:
         - `codigos-de-error/`
         - `pruebas/`
       - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS
-        - **`arquitectura/`** - ADRs
+        - **`deuda-tecnica/`** - ADRs
           - `eslint-9-eol.md` (ADR-0001)
           - `stylelint-scope-y-colores.md` (ADR-0002)
           - `assets-hibrido-public-src.md` (ADR-0003)
           - `vulnerabilidades-policy.md` (ADR-0004)
+          - `decorador-with-theme-pendiente.md` (ADR-0005)
+          - `decorador-with-i18n-pendiente.md` (ADR-0006)
+          - `decorador-with-router-pendiente.md` (ADR-0007)
         - **`convenciones/`**
           - `convenciones.md` - Convenciones de código del frontend
           - `storybook.md` - Guía de Storybook (creado en TS-008)
         - **`componentes/`**
           - **`atoms/`**
             - `button.md` - Documentación del componente Button (ejemplo TS-007)
+          - **`branding/`**
+            - `paleta-colores-corporativa.html` - Preview visual de la paleta corporativa
         - **`seguridad/`**
           - `cvss-deuda-seguridad.md` - Vulnerabilidades aceptadas
         - `design-system/` (pendiente)
@@ -1721,8 +1783,9 @@ impacto real y gatillos de revisión) se documentan en:
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
-- **Storybook frontend**: 10.6.1 (puerto dev `3010`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
-- **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
+- **Paleta corporativa frontend**: `frontend/src/styles/branding/paleta-colores-corporativa.css` — tokens `--color-*` aprobados en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada.
+- **Storybook frontend**: 10.6.1 (puerto dev `3010`), autodocs global, 3 decoradores activos (`withPadding`, `withBackground`, `withViewport`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
+- **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md).
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT + Refresh Token
 - **Contenedores**: Docker + Docker Compose
