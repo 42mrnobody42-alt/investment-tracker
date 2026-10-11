@@ -1,0 +1,79 @@
+/**
+ * Tipografia corporativa — Investment Tracker Pro
+ *
+ * Fuentes: Inter (UI) + JetBrains Mono (metricas/KPIs).
+ * Escalas y pesos basados en DESIGN.md de WattVision.
+ *
+ * Preview: docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html
+ */
+
+:root {
+  /* --- Familias --- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, consolas, monospace;
+
+  /* --- Escala de tamanos --- */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px — cuerpo segun DESIGN.md */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px — titulos segun DESIGN.md */
+  --font-size-3xl: 2rem; /* 32px — KPIs segun DESIGN.md */
+  --font-size-4xl: 2.5rem; /* 40px */
+
+  /* --- Pesos --- */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* --- Line heights --- */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* --- Letter spacing --- */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+}
+
+/* --- Defaults de elementos --- */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  text-rendering: optimizelegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}

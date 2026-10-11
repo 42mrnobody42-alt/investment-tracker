@@ -1,4 +1,8 @@
+import '../src/styles/branding/estilos-componentes.css';
+import '../src/styles/branding/layout.css';
+import '../src/styles/branding/motion.css';
 import '../src/styles/branding/paleta-colores-corporativa.css';
+import '../src/styles/branding/tipografia.css';
 
 import type { Decorator, Preview } from '@storybook/react-vite';
 

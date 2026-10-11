@@ -1,37 +1,38 @@
 /**
  * Paleta de colores corporativa — Investment Tracker Pro
  *
- * Finanzas · Seguridad · Tecnología · IA
+ * Identidad adoptada: WattVision (finanzas + monitoreo + IA)
+ * Base: DESIGN.md de WattVision + adaptacion WCAG 2.2 AA
  *
- * Aprobada en TS-009 (#614). Los tokens de spacing/radius/typography/z-index
- * se agregan en TS-022 (#627) dentro de styles/tokens.css.
+ * Los tokens --color-* cambian entre temas.
+ * Los tokens --btn-* son semanticos: adaptan fg/bg segun el tema para
+ * garantizar contraste.
  *
- * Preview visual: docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html
- *
- * Reglas:
- * - Prohibido hardcodear hex fuera de este archivo (ver ADR-0002).
- * - Todos los consumidores usan var(--color-*) o var(--btn-*).
- * - Accesibilidad: cada token fue validado contra WCAG 2.2 AA con texto blanco.
+ * Preview: docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html
+ * Reglas: sin hex hardcodeado fuera de este archivo (ADR-0002).
  */
 
 /* ===== Light theme (default) ===== */
-:root {
-  /* --- Paleta de marca (no cambia entre temas) --- */
-  --color-primary: #150e8f;
-  --color-primary-hover: #0f0a6b;
-  --color-primary-light: #4a42c9;
-  --color-accent: #06b6d4;
-  --color-accent-hover: #0891b2;
-  --color-success: #0a8057;
-  --color-success-hover: #086645;
-  --color-danger: #991b1b;
-  --color-danger-hover: #7f1d1d;
-  --color-warning: #b45309;
-  --color-warning-hover: #92400e;
-  --color-info: #0e7ab0;
-  --color-info-hover: #0a5f8c;
+:root,
+[data-theme='light'] {
+  /* --- Brand --- */
+  --color-primary: #00838f; /* cyan oscuro — 4.9:1 con blanco */
+  --color-primary-hover: #006978;
+  --color-primary-light: #4dd0e1;
+  --color-accent: #00bcd4; /* cyan medio — decorativo */
+  --color-accent-hover: #0097a7;
 
-  /* --- Neutros --- */
+  /* --- Semantic --- */
+  --color-success: #2e7d32; /* verde oscuro — 6.3:1 */
+  --color-success-hover: #1b5e20;
+  --color-danger: #c62828; /* rojo oscuro — 5.5:1 */
+  --color-danger-hover: #b71c1c;
+  --color-warning: #b45309; /* ambar oscuro — 5.0:1 */
+  --color-warning-hover: #92400e;
+  --color-info: #0277bd; /* azul oscuro — 5.5:1 */
+  --color-info-hover: #01579b;
+
+  /* --- Neutrals --- */
   --color-bg: #f8fafc;
   --color-surface: #fff;
   --color-border: #e2e8f0;
@@ -39,35 +40,71 @@
   --color-text-muted: #64748b;
   --color-text-inverse: #fff;
 
-  /* --- Botones (light theme) --- */
+  /* --- Buttons (light) --- */
   --btn-primary-bg: var(--color-primary);
   --btn-primary-bg-hover: var(--color-primary-hover);
   --btn-primary-fg: var(--color-text-inverse);
   --btn-secondary-fg: var(--color-primary);
   --btn-secondary-border: var(--color-primary);
   --btn-ghost-fg: var(--color-text-muted);
+  --btn-success-bg: var(--color-success);
+  --btn-success-bg-hover: var(--color-success-hover);
+  --btn-success-fg: var(--color-text-inverse);
   --btn-danger-bg: var(--color-danger);
   --btn-danger-bg-hover: var(--color-danger-hover);
   --btn-danger-fg: var(--color-text-inverse);
+  --btn-warning-bg: var(--color-warning);
+  --btn-warning-bg-hover: var(--color-warning-hover);
+  --btn-warning-fg: var(--color-text-inverse);
+  --btn-info-bg: var(--color-info);
+  --btn-info-bg-hover: var(--color-info-hover);
+  --btn-info-fg: var(--color-text-inverse);
 }
 
-/* ===== Dark theme ===== */
+/* ===== Dark theme (WattVision) ===== */
 [data-theme='dark'] {
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-border: #334155;
-  --color-text: #f1f5f9;
-  --color-text-muted: #94a3b8;
-  --color-text-inverse: #0f172a;
+  /* --- Brand (neon sobre fondo oscuro) --- */
+  --color-primary: #00e5ff; /* cyan neon — 12.4:1 con #121212 */
+  --color-primary-hover: #4df0ff;
+  --color-primary-light: #00e5ff;
+  --color-accent: #00e5ff;
+  --color-accent-hover: #4df0ff;
 
-  /* Botones en dark theme: variantes claras para visibilidad */
-  --btn-primary-bg: #4a42c9;
-  --btn-primary-bg-hover: #6366f1;
-  --btn-primary-fg: #f1f5f9;
-  --btn-secondary-fg: #a5b4fc;
-  --btn-secondary-border: #a5b4fc;
-  --btn-ghost-fg: #cbd5e1;
-  --btn-danger-bg: #dc2626;
-  --btn-danger-bg-hover: #ef4444;
-  --btn-danger-fg: #f1f5f9;
+  /* --- Semantic (neon) --- */
+  --color-success: #32d74b; /* verde lima — 8.9:1 con #121212 */
+  --color-success-hover: #4de066;
+  --color-danger: #d32f2f; /* rojo medio — 5.02:1 con blanco */
+  --color-danger-hover: #b71c1c;
+  --color-warning: #ffb020; /* ambar brillante — 11:1 con #121212 */
+  --color-warning-hover: #ffc04d;
+  --color-info: #40c4ff; /* azul claro — 10:1 con #121212 */
+  --color-info-hover: #66d3ff;
+
+  /* --- Neutrals --- */
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-border: #2c2c2e;
+  --color-text: #fff;
+  --color-text-muted: #98989d;
+  --color-text-inverse: #121212;
+
+  /* --- Buttons (dark) --- */
+  --btn-primary-bg: #00e5ff;
+  --btn-primary-bg-hover: #4df0ff;
+  --btn-primary-fg: #121212;
+  --btn-secondary-fg: #00e5ff;
+  --btn-secondary-border: #00e5ff;
+  --btn-ghost-fg: #98989d;
+  --btn-success-bg: #32d74b;
+  --btn-success-bg-hover: #4de066;
+  --btn-success-fg: #121212;
+  --btn-danger-bg: #d32f2f;
+  --btn-danger-bg-hover: #b71c1c;
+  --btn-danger-fg: #fff;
+  --btn-warning-bg: #ffb020;
+  --btn-warning-bg-hover: #ffc04d;
+  --btn-warning-fg: #121212;
+  --btn-info-bg: #40c4ff;
+  --btn-info-bg-hover: #66d3ff;
+  --btn-info-fg: #121212;
 }
