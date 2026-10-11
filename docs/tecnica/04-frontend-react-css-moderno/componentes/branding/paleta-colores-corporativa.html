@@ -1,433 +1,821 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<title>Paleta Corporativa — Investment Tracker Pro</title>
+<title>Design System — Investment Tracker Pro</title>
+
+<!-- ============================================================ -->
+<!-- CSS importados desde frontend/src/styles/branding/           -->
+<!-- Cualquier cambio en esos archivos se refleja aqui.           -->
+<!-- ============================================================ -->
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/paleta-colores-corporativa.css">
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/tipografia.css">
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/estilos-componentes.css">
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/layout.css">
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/motion.css">
+
 <style>
-  :root {
-    --color-primary: #150e8f;
-    --color-primary-hover: #0f0a6b;
-    --color-primary-light: #4a42c9;
-    --color-accent: #06b6d4;
-    --color-accent-hover: #0891b2;
-    --color-success: #0a8057;
-    --color-success-hover: #086645;
-    --color-danger: #991b1b;
-    --color-danger-hover: #7f1d1d;
-    --color-warning: #b45309;
-    --color-warning-hover: #92400e;
-    --color-info: #0e7ab0;
-    --color-info-hover: #0a5f8c;
-
-    --color-bg: #f8fafc;
-    --color-surface: #ffffff;
-    --color-border: #e2e8f0;
-    --color-text: #0f172a;
-    --color-text-muted: #64748b;
-    --color-text-inverse: #ffffff;
-
-    --btn-primary-bg: var(--color-primary);
-    --btn-primary-bg-hover: var(--color-primary-hover);
-    --btn-primary-fg: var(--color-text-inverse);
-    --btn-secondary-fg: var(--color-primary);
-    --btn-secondary-border: var(--color-primary);
-    --btn-ghost-fg: var(--color-text-muted);
-    --btn-danger-bg: var(--color-danger);
-    --btn-danger-bg-hover: var(--color-danger-hover);
-    --btn-danger-fg: var(--color-text-inverse);
-    --btn-success-bg: var(--color-success);
-    --btn-success-bg-hover: var(--color-success-hover);
-    --btn-warning-bg: var(--color-warning);
-    --btn-warning-bg-hover: var(--color-warning-hover);
-    --btn-info-bg: var(--color-info);
-    --btn-info-bg-hover: var(--color-info-hover);
-  }
-
-  [data-theme='dark'] {
-    --color-bg: #0f172a;
-    --color-surface: #1e293b;
-    --color-border: #334155;
-    --color-text: #f1f5f9;
-    --color-text-muted: #94a3b8;
-    --color-text-inverse: #0f172a;
-
-    --btn-primary-bg: #4a42c9;
-    --btn-primary-bg-hover: #6366f1;
-    --btn-primary-fg: #f1f5f9;
-    --btn-secondary-fg: #a5b4fc;
-    --btn-secondary-border: #a5b4fc;
-    --btn-ghost-fg: #cbd5e1;
-    --btn-danger-bg: #dc2626;
-    --btn-danger-bg-hover: #ef4444;
-    --btn-danger-fg: #f1f5f9;
-    --btn-success-bg: #10b981;
-    --btn-success-bg-hover: #059669;
-    --btn-warning-bg: #f59e0b;
-    --btn-warning-bg-hover: #d97706;
-    --btn-info-bg: #0ea5e9;
-    --btn-info-bg-hover: #0284c7;
-  }
+  /* ============================================================ */
+  /* Solo estilos del DOCUMENTO de referencia.                    */
+  /* Los tokens vienen de los CSS importados arriba.              */
+  /* ============================================================ */
 
   * { box-sizing: border-box; }
-  body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    max-width: 1280px; margin: 0 auto; padding: 40px 24px;
-    background: var(--color-bg); color: var(--color-text);
-  }
-  h1 { font-size: 32px; margin: 0 0 8px; letter-spacing: -0.02em; }
-  h2 { font-size: 20px; margin: 40px 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--color-border); }
-  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--color-text-muted); font-weight: 500; }
-  .subtitle { color: var(--color-text-muted); margin: 0 0 8px; font-size: 16px; }
-  .tagline { color: var(--color-text-muted); font-size: 14px; font-style: italic; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
-  .swatch { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden; }
-  .swatch-color { height: 90px; }
-  .swatch-info { padding: 14px; }
-  .swatch-name { font-weight: 600; display: block; font-size: 14px; margin-bottom: 6px; }
-  .swatch-value { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 12px; color: var(--color-text-muted); display: block; margin-bottom: 8px; }
-  .swatch-usage { font-size: 13px; line-height: 1.4; color: var(--color-text); }
-  .swatch-badge { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-top: 6px; }
-  .badge-pass { background: #d1fae5; color: #065f46; }
-  .badge-warn { background: #fef3c7; color: #92400e; }
 
-  .theme-section {
-    margin-top: 16px; padding: 28px; border-radius: 8px;
+  body {
+    padding: var(--space-6) var(--space-5);
+    max-width: 1280px;
+    margin: 0 auto;
+    background: var(--color-bg);
+    transition: background-color var(--duration-normal), color var(--duration-normal);
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-4);
+    border-bottom: 2px solid var(--color-border);
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  header h1 { font-size: var(--font-size-2xl); font-weight: 600; letter-spacing: -0.02em; }
+  header .subtitle { color: var(--color-text-muted); font-size: var(--font-size-sm); margin-top: 4px; }
+
+  .theme-toggle {
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+  .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+  section { margin-bottom: var(--space-8); }
+  section h2 {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-4);
+  }
+  section h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    margin: var(--space-5) 0 var(--space-3);
+  }
+  section .description {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-4);
+    line-height: 1.6;
+  }
+
+  /* Swatches */
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-3);
+  }
+  .swatch {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .swatch-color { height: 80px; border-bottom: 1px solid var(--color-border); }
+  .swatch-body { padding: var(--space-3); }
+  .swatch-name { display: block; font-weight: 600; font-size: var(--font-size-sm); margin-bottom: 4px; }
+  .swatch-token { display: block; font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); margin-bottom: 6px; }
+  .swatch-hex {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    background: var(--color-bg);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Tipografia */
+  .type-sample {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  .type-sample .label {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+  .type-h1 { font-size: var(--font-size-3xl); font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+  .type-h2 { font-size: var(--font-size-2xl); font-weight: 600; line-height: 1.2; }
+  .type-h3 { font-size: var(--font-size-xl); font-weight: 600; line-height: 1.2; }
+  .type-kpi { font-family: var(--font-mono); font-size: var(--font-size-3xl); font-weight: 700; color: var(--color-primary); }
+  .type-body { font-size: var(--font-size-sm); line-height: 1.5; }
+  .type-mono { font-family: var(--font-mono); font-size: var(--font-size-sm); }
+
+  /* Cards */
+  .card-demo {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4);
+    max-width: 400px;
+  }
+  .card-demo .kpi {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: var(--space-2) 0;
+  }
+  .card-demo .label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+  .card-demo .meta { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-2); }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
   }
-  .theme-section.dark {
-    background: #0f172a; color: #f1f5f9;
-    border-color: #334155;
-  }
-  .theme-section.dark .swatch {
-    background: #1e293b;
-    border-color: #334155;
-  }
-  .theme-section.dark .swatch-name { color: #f1f5f9; }
-  .theme-section.dark .swatch-value { color: #94a3b8; }
-  .theme-section.dark .swatch-usage { color: #cbd5e1; }
-
   .btn {
-    padding: 12px 24px; border-radius: 6px; font-weight: 500; cursor: pointer;
-    border: 1px solid transparent; margin-right: 12px; margin-bottom: 12px;
-    font-size: 16px; font-family: inherit;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
   }
   .btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-fg); }
   .btn-primary:hover { background: var(--btn-primary-bg-hover); }
   .btn-secondary { background: transparent; color: var(--btn-secondary-fg); border-color: var(--btn-secondary-border); }
-  .btn-secondary:hover { background: color-mix(in srgb, var(--btn-secondary-fg) 15%, transparent); }
+  .btn-secondary:hover { background: color-mix(in srgb, var(--btn-secondary-fg) 12%, transparent); }
   .btn-ghost { background: transparent; color: var(--btn-ghost-fg); }
   .btn-ghost:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
-  .btn-success { background: var(--btn-success-bg); color: var(--color-text-inverse); }
+  .btn-success { background: var(--btn-success-bg); color: var(--btn-success-fg); }
   .btn-success:hover { background: var(--btn-success-bg-hover); }
   .btn-danger { background: var(--btn-danger-bg); color: var(--btn-danger-fg); }
   .btn-danger:hover { background: var(--btn-danger-bg-hover); }
-  .btn-warning { background: var(--btn-warning-bg); color: var(--color-text-inverse); }
+  .btn-warning { background: var(--btn-warning-bg); color: var(--btn-warning-fg); }
   .btn-warning:hover { background: var(--btn-warning-bg-hover); }
-  .btn-info { background: var(--btn-info-bg); color: var(--color-text-inverse); }
+  .btn-info { background: var(--btn-info-bg); color: var(--btn-info-fg); }
   .btn-info:hover { background: var(--btn-info-bg-hover); }
 
-  .contrast-info { font-size: 12px; color: var(--color-text-muted); margin-top: 10px; font-family: ui-monospace, monospace; }
+  /* Table */
+  .table-demo {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .table-demo table { width: 100%; border-collapse: collapse; }
+  .table-demo th, .table-demo td {
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-sm);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .table-demo th {
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.05em;
+  }
+  .table-demo tr:hover td { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
+  .table-demo tr:last-child td { border-bottom: none; }
+  .table-demo .mono { font-family: var(--font-mono); }
+  .table-demo .positive { color: var(--color-success); font-weight: 600; }
+  .table-demo .negative { color: var(--color-danger); font-weight: 600; }
 
-  .notes { background: var(--color-surface); padding: 20px; border-radius: 8px; border: 1px solid var(--color-border); margin-top: 16px; font-size: 14px; line-height: 1.6; }
-  .notes code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #0f172a; }
-  .notes table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-  .notes th, .notes td { text-align: left; padding: 8px; border-bottom: 1px solid var(--color-border); font-size: 13px; }
-  .notes th { font-weight: 600; }
+  /* Alerts */
+  .alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border-left: 4px solid;
+    margin-bottom: var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+  .alert-info { background: color-mix(in srgb, var(--color-info) 10%, transparent); border-color: var(--color-info); }
+  .alert-success { background: color-mix(in srgb, var(--color-success) 10%, transparent); border-color: var(--color-success); }
+  .alert-warning { background: color-mix(in srgb, var(--color-warning) 10%, transparent); border-color: var(--color-warning); }
+  .alert-danger { background: color-mix(in srgb, var(--color-danger) 10%, transparent); border-color: var(--color-danger); }
+  .alert strong { display: block; margin-bottom: 4px; }
+
+  /* Layout */
+  .grid-demo { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--space-2); margin-bottom: var(--space-4); }
+  .grid-cell {
+    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    border: 1px solid var(--color-primary);
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  .spacing-demo { display: flex; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
+  .spacing-item { text-align: center; }
+  .spacing-bar { background: var(--color-primary); width: 48px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+  .spacing-label { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-2); display: block; }
+
+  /* Motion */
+  .motion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3); }
+  .motion-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .motion-card .name { font-family: var(--font-mono); font-size: var(--font-size-xs); display: block; margin-bottom: 4px; font-weight: 600; }
+  .motion-card .value { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); display: block; margin-bottom: var(--space-3); }
+  .motion-track { height: 40px; display: flex; align-items: center; }
+  .motion-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
+    transition-property: transform;
+    transition-duration: var(--duration-slow);
+  }
+  .motion-card:hover .motion-dot { transform: translateX(140px); }
+  .motion-card.ease-linear .motion-dot { transition-timing-function: linear; }
+  .motion-card.ease-in .motion-dot { transition-timing-function: var(--ease-in); }
+  .motion-card.ease-out .motion-dot { transition-timing-function: var(--ease-out); }
+  .motion-card.ease-in-out .motion-dot { transition-timing-function: var(--ease-in-out); }
+  .motion-card.ease-spring .motion-dot { transition-timing-function: var(--ease-spring); }
+
+  /* Vista comparativa Light / Dark */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+  .compare-panel {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  .compare-panel h4 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    margin-bottom: var(--space-3);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  @media (max-width: 640px) {
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Notes */
+  .note {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-info);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    margin-top: var(--space-3);
+  }
+  .note code {
+    font-family: var(--font-mono);
+    background: var(--color-bg);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9em;
+  }
+  .note strong { color: var(--color-text); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    body { padding: var(--space-4) var(--space-3); }
+    .swatch-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-demo { gap: 2px; }
+    .grid-cell { font-size: 8px; }
+  }
 </style>
 </head>
 <body>
 
-<h1>Paleta Corporativa — Investment Tracker Pro</h1>
-<p class="subtitle">Finanzas · Seguridad · Tecnología · IA</p>
-<p class="tagline">"Acompañamiento inteligente para tus inversiones"</p>
+<header>
+  <div>
+    <h1>Design System — Investment Tracker Pro</h1>
+    <p class="subtitle">Finanzas · Seguridad · Tecnología · IA — Identidad basada en WattVision</p>
+  </div>
+  <button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">
+    🌓 Cambiar tema
+  </button>
+</header>
 
-<h2>1. Colores de marca</h2>
-<div class="grid">
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-primary);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Primary</span>
-      <span class="swatch-value">--color-primary · #150E8F</span>
-      <span class="swatch-usage">Azul real profundo. Confianza, seguridad, tecnología.</span>
-      <span class="swatch-badge badge-pass">Texto blanco: 13.98:1 · AAA</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-primary-hover);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Primary Hover</span>
-      <span class="swatch-value">--color-primary-hover · #0F0A6B</span>
-      <span class="swatch-usage">Estado hover del primary.</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-primary-light);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Primary Light</span>
-      <span class="swatch-value">--color-primary-light · #4A42C9</span>
-      <span class="swatch-usage">Variante clara para temas oscuros.</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-accent);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Accent</span>
-      <span class="swatch-value">--color-accent · #06B6D4</span>
-      <span class="swatch-usage">Cyan. IA y destacados tecnológicos.</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-accent-hover);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Accent Hover</span>
-      <span class="swatch-value">--color-accent-hover · #0891B2</span>
-      <span class="swatch-usage">Estado hover del accent.</span>
-    </div>
-  </div>
-</div>
+<!-- ============================================ -->
+<!-- 1. COLORES -->
+<!-- ============================================ -->
+<section>
+  <h2>1. Colores</h2>
+  <p class="description">
+    Paleta corporativa adaptada a WCAG 2.2 AA en light y dark.
+    Los hex se leen en runtime desde el CSS real; cambian automáticamente según el tema.
+    Fuente: <code>frontend/src/styles/branding/paleta-colores-corporativa.css</code>.
+  </p>
 
-<h2>2. Colores semánticos</h2>
-<div class="grid">
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-success);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Success</span>
-      <span class="swatch-value">--color-success · #0A8057</span>
-      <span class="swatch-usage">Ganancias, confirmaciones.</span>
-      <span class="swatch-badge badge-pass">Texto blanco: 4.95:1 · AA</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-danger);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Danger</span>
-      <span class="swatch-value">--color-danger · #991B1B</span>
-      <span class="swatch-usage">Pérdidas, errores, acciones destructivas.</span>
-      <span class="swatch-badge badge-pass">Texto blanco: 8.31:1 · AAA</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-warning);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Warning</span>
-      <span class="swatch-value">--color-warning · #B45309</span>
-      <span class="swatch-usage">Advertencias.</span>
-      <span class="swatch-badge badge-pass">Texto blanco: 5.02:1 · AA</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-info);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Info</span>
-      <span class="swatch-value">--color-info · #0E7AB0</span>
-      <span class="swatch-usage">Información neutral.</span>
-      <span class="swatch-badge badge-pass">Texto blanco: 4.74:1 · AA</span>
-    </div>
-  </div>
-</div>
-
-<h2>3. Neutros — Light theme</h2>
-<div class="grid">
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-bg); border-bottom: 1px solid #e2e8f0;"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Background</span>
-      <span class="swatch-value">--color-bg · #F8FAFC</span>
-      <span class="swatch-usage">Fondo de página.</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-surface); border-bottom: 1px solid #e2e8f0;"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Surface</span>
-      <span class="swatch-value">--color-surface · #FFFFFF</span>
-      <span class="swatch-usage">Cards, modales, paneles.</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-border);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Border</span>
-      <span class="swatch-value">--color-border · #E2E8F0</span>
-      <span class="swatch-usage">Bordes sutiles, divisores.</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-text);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Text</span>
-      <span class="swatch-value">--color-text · #0F172A</span>
-      <span class="swatch-usage">Texto principal.</span>
-      <span class="swatch-badge badge-pass">Sobre bg: 15.62:1 · AAA</span>
-    </div>
-  </div>
-  <div class="swatch">
-    <div class="swatch-color" style="background: var(--color-text-muted);"></div>
-    <div class="swatch-info">
-      <span class="swatch-name">Text Muted</span>
-      <span class="swatch-value">--color-text-muted · #64748B</span>
-      <span class="swatch-usage">Texto secundario, placeholders.</span>
-      <span class="swatch-badge badge-pass">Sobre surface: 4.68:1 · AA</span>
-    </div>
-  </div>
-</div>
-
-<h2>4. Botones — Light theme (completo)</h2>
-<div class="theme-section">
-  <h3>Variantes base</h3>
-  <button class="btn btn-primary">Primary</button>
-  <button class="btn btn-secondary">Secondary</button>
-  <button class="btn btn-ghost">Ghost</button>
-  <button class="btn btn-success">Success</button>
-  <button class="btn btn-info">Info</button>
-  <button class="btn btn-warning">Warning</button>
-  <button class="btn btn-danger">Danger</button>
-  <p class="contrast-info">Hover disponible al pasar el mouse. Todos los botones con texto blanco pasan WCAG AA en light.</p>
-</div>
-
-<h2>5. Botones — Dark theme (completo)</h2>
-<div data-theme="dark" class="theme-section dark">
-  <h3>Variantes con tokens --btn-* sobrescritos</h3>
-  <button class="btn btn-primary">Primary</button>
-  <button class="btn btn-secondary">Secondary</button>
-  <button class="btn btn-ghost">Ghost</button>
-  <button class="btn btn-success">Success</button>
-  <button class="btn btn-info">Info</button>
-  <button class="btn btn-warning">Warning</button>
-  <button class="btn btn-danger">Danger</button>
-  <p class="contrast-info" style="color: #94a3b8;">Primary a #4A42C9, Secondary a #A5B4FC, Ghost a #CBD5E1, Danger a #DC2626, Success a #10B981, Warning a #F59E0B, Info a #0EA5E9. Todos legibles sobre fondo oscuro.</p>
-</div>
-
-<h2>6. Tokens de botón — Dark theme en detalle</h2>
-<div data-theme="dark" class="theme-section dark">
-  <h3>Valores de --btn-* en dark theme</h3>
-  <div class="grid">
-    <div class="swatch">
-      <div class="swatch-color" style="background: #4a42c9;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Primary bg</span>
-        <span class="swatch-value">--btn-primary-bg · #4A42C9</span>
-        <span class="swatch-usage">Texto #F1F5F9 sobre este fondo: <strong>7.33:1</strong> AAA</span>
+  <h3>Marca</h3>
+  <div class="swatch-grid">
+    <div class="swatch" data-token="--color-primary">
+      <div class="swatch-color" style="background: var(--color-primary);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Primary</span>
+        <span class="swatch-token">--color-primary</span>
+        <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #6366f1;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Primary hover</span>
-        <span class="swatch-value">--btn-primary-bg-hover · #6366F1</span>
-        <span class="swatch-usage">Hover. Texto #F1F5F9: <strong>5.63:1</strong> AA</span>
+    <div class="swatch" data-token="--color-primary-hover">
+      <div class="swatch-color" style="background: var(--color-primary-hover);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Primary Hover</span>
+        <span class="swatch-token">--color-primary-hover</span>
+        <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #a5b4fc;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Secondary fg</span>
-        <span class="swatch-value">--btn-secondary-fg · #A5B4FC</span>
-        <span class="swatch-usage">Sobre bg #0F172A: <strong>8.92:1</strong> AAA</span>
+    <div class="swatch" data-token="--color-primary-light">
+      <div class="swatch-color" style="background: var(--color-primary-light);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Primary Light</span>
+        <span class="swatch-token">--color-primary-light</span>
+        <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #cbd5e1;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Ghost fg</span>
-        <span class="swatch-value">--btn-ghost-fg · #CBD5E1</span>
-        <span class="swatch-usage">Sobre bg #0F172A: <strong>11.28:1</strong> AAA</span>
-      </div>
-    </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #dc2626;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Danger bg</span>
-        <span class="swatch-value">--btn-danger-bg · #DC2626</span>
-        <span class="swatch-usage">Texto #F1F5F9: <strong>4.83:1</strong> AA</span>
-      </div>
-    </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #ef4444;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Danger hover</span>
-        <span class="swatch-value">--btn-danger-bg-hover · #EF4444</span>
-        <span class="swatch-usage">Hover. Texto #F1F5F9: <strong>3.65:1</strong> — usar solo en estados hover de texto grande</span>
-      </div>
-    </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #10b981;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Success bg</span>
-        <span class="swatch-value">--btn-success-bg · #10B981</span>
-        <span class="swatch-usage">Texto #0F172A (inverse dark): <strong>7.05:1</strong> AAA</span>
-      </div>
-    </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #f59e0b;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Warning bg</span>
-        <span class="swatch-value">--btn-warning-bg · #F59E0B</span>
-        <span class="swatch-usage">Texto #0F172A: <strong>7.22:1</strong> AAA</span>
-      </div>
-    </div>
-    <div class="swatch">
-      <div class="swatch-color" style="background: #0ea5e9;"></div>
-      <div class="swatch-info">
-        <span class="swatch-name">Info bg</span>
-        <span class="swatch-value">--btn-info-bg · #0EA5E9</span>
-        <span class="swatch-usage">Texto #0F172A: <strong>6.31:1</strong> AA+</span>
+    <div class="swatch" data-token="--color-accent">
+      <div class="swatch-color" style="background: var(--color-accent);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Accent</span>
+        <span class="swatch-token">--color-accent</span>
+        <span class="swatch-hex">—</span>
       </div>
     </div>
   </div>
-</div>
 
-<h2>7. Accesibilidad WCAG 2.2 AA — tabla completa</h2>
-<div class="notes">
-  <p><strong>Regla:</strong> texto normal ≥4.5:1 · texto grande (≥18.66px bold o ≥24px) ≥3:1 · componentes UI ≥3:1</p>
+  <h3>Semánticos</h3>
+  <div class="swatch-grid">
+    <div class="swatch" data-token="--color-success">
+      <div class="swatch-color" style="background: var(--color-success);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Success</span>
+        <span class="swatch-token">--color-success</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+    <div class="swatch" data-token="--color-danger">
+      <div class="swatch-color" style="background: var(--color-danger);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Danger</span>
+        <span class="swatch-token">--color-danger</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+    <div class="swatch" data-token="--color-warning">
+      <div class="swatch-color" style="background: var(--color-warning);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Warning</span>
+        <span class="swatch-token">--color-warning</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+    <div class="swatch" data-token="--color-info">
+      <div class="swatch-color" style="background: var(--color-info);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Info</span>
+        <span class="swatch-token">--color-info</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+  </div>
 
-  <h3 style="margin-top: 20px;">Light theme</h3>
-  <table>
-    <thead>
-      <tr><th>Elemento / Combinación</th><th>Contraste</th><th>Estado</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Primary — texto blanco sobre #150E8F</td><td>13.98:1</td><td>AAA</td></tr>
-      <tr><td>Primary hover — texto blanco sobre #0F0A6B</td><td>18.62:1</td><td>AAA</td></tr>
-      <tr><td>Secondary — texto #150E8F sobre blanco</td><td>13.98:1</td><td>AAA</td></tr>
-      <tr><td>Secondary — borde #150E8F sobre blanco (UI)</td><td>13.98:1</td><td>AAA</td></tr>
-      <tr><td>Ghost — texto #64748B sobre blanco</td><td>4.68:1</td><td>AA</td></tr>
-      <tr><td>Success — texto blanco sobre #0A8057</td><td>4.95:1</td><td>AA</td></tr>
-      <tr><td>Info — texto blanco sobre #0E7AB0</td><td>4.74:1</td><td>AA</td></tr>
-      <tr><td>Warning — texto blanco sobre #B45309</td><td>5.02:1</td><td>AA</td></tr>
-      <tr><td>Danger — texto blanco sobre #991B1B</td><td>8.31:1</td><td>AAA</td></tr>
-      <tr><td>Danger hover — texto blanco sobre #7F1D1D</td><td>11.38:1</td><td>AAA</td></tr>
-      <tr><td>Texto #0F172A sobre bg #F8FAFC</td><td>15.62:1</td><td>AAA</td></tr>
-      <tr><td>Texto muted #64748B sobre surface #FFFFFF</td><td>4.68:1</td><td>AA</td></tr>
-    </tbody>
-  </table>
+  <h3>Neutros</h3>
+  <div class="swatch-grid">
+    <div class="swatch" data-token="--color-bg">
+      <div class="swatch-color" style="background: var(--color-bg); border-bottom: 1px solid var(--color-border);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Background</span>
+        <span class="swatch-token">--color-bg</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+    <div class="swatch" data-token="--color-surface">
+      <div class="swatch-color" style="background: var(--color-surface); border-bottom: 1px solid var(--color-border);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Surface</span>
+        <span class="swatch-token">--color-surface</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+    <div class="swatch" data-token="--color-border">
+      <div class="swatch-color" style="background: var(--color-border);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Border</span>
+        <span class="swatch-token">--color-border</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+    <div class="swatch" data-token="--color-text">
+      <div class="swatch-color" style="background: var(--color-text);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Text</span>
+        <span class="swatch-token">--color-text</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+    <div class="swatch" data-token="--color-text-muted">
+      <div class="swatch-color" style="background: var(--color-text-muted);"></div>
+      <div class="swatch-body">
+        <span class="swatch-name">Text Muted</span>
+        <span class="swatch-token">--color-text-muted</span>
+        <span class="swatch-hex">—</span>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <h3 style="margin-top: 24px;">Dark theme</h3>
-  <table>
-    <thead>
-      <tr><th>Elemento / Combinación</th><th>Contraste</th><th>Estado</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Primary — texto #F1F5F9 sobre #4A42C9</td><td>7.33:1</td><td>AAA</td></tr>
-      <tr><td>Primary hover — texto #F1F5F9 sobre #6366F1</td><td>5.63:1</td><td>AA</td></tr>
-      <tr><td>Secondary — texto #A5B4FC sobre bg #0F172A</td><td>8.92:1</td><td>AAA</td></tr>
-      <tr><td>Secondary — borde #A5B4FC sobre bg #0F172A (UI)</td><td>8.92:1</td><td>AAA</td></tr>
-      <tr><td>Ghost — texto #CBD5E1 sobre bg #0F172A</td><td>11.28:1</td><td>AAA</td></tr>
-      <tr><td>Success — texto #0F172A sobre #10B981</td><td>7.05:1</td><td>AAA</td></tr>
-      <tr><td>Info — texto #0F172A sobre #0EA5E9</td><td>6.31:1</td><td>AA+</td></tr>
-      <tr><td>Warning — texto #0F172A sobre #F59E0B</td><td>7.22:1</td><td>AAA</td></tr>
-      <tr><td>Danger — texto #F1F5F9 sobre #DC2626</td><td>4.83:1</td><td>AA</td></tr>
-      <tr><td>Danger hover — texto #F1F5F9 sobre #EF4444</td><td>3.65:1</td><td>Solo texto grande o íconos</td></tr>
-      <tr><td>Texto #F1F5F9 sobre bg #0F172A</td><td>14.32:1</td><td>AAA</td></tr>
-      <tr><td>Texto muted #94A3B8 sobre surface #1E293B</td><td>5.44:1</td><td>AA</td></tr>
-    </tbody>
-  </table>
+<!-- ============================================ -->
+<!-- 2. TIPOGRAFIA -->
+<!-- ============================================ -->
+<section>
+  <h2>2. Tipografía</h2>
+  <p class="description">
+    Inter para UI + JetBrains Mono para métricas.
+    Fuente: <code>frontend/src/styles/branding/tipografia.css</code>.
+  </p>
 
-  <p style="margin-top: 20px;"><strong>Uso:</strong> Todos los colores se acceden vía <code>var(--color-*)</code> o <code>var(--btn-*)</code>. Prohibido hardcodear hex fuera de <code>paleta-colores-corporativa.css</code> (ver ADR-0002).</p>
-  <p><strong>Tokens semánticos de botón:</strong> los botones usan <code>--btn-*</code> para permitir que cada tema sobrescriba sus valores sin tocar la paleta de marca.</p>
-  <p><strong>Nota sobre Danger hover en dark:</strong> #EF4444 con texto claro da 3.65:1, por debajo del mínimo AA para texto normal (4.5:1). Es aceptable en estados hover donde el usuario ya interactuó, pero si se necesita rigidez total, considerar oscurecerlo a #B91C1C (5.9:1).</p>
-</div>
+  <div class="type-sample">
+    <span class="label">--font-size-3xl · h1 · Inter SemiBold 32px</span>
+    <div class="type-h1">Titulares principales</div>
+  </div>
+
+  <div class="type-sample">
+    <span class="label">--font-size-2xl · h2 · Inter SemiBold 24px</span>
+    <div class="type-h2">Títulos de sección</div>
+  </div>
+
+  <div class="type-sample">
+    <span class="label">--font-size-xl · h3 · Inter SemiBold 20px</span>
+    <div class="type-h3">Subtítulos</div>
+  </div>
+
+  <div class="type-sample">
+    <span class="label">--font-size-3xl · --font-mono · JetBrains Mono Bold (KPIs)</span>
+    <div class="type-kpi">Bs. 12.458,30</div>
+  </div>
+
+  <div class="type-sample">
+    <span class="label">--font-size-sm · Inter Regular 14px (cuerpo)</span>
+    <div class="type-body">Este es el tamaño base para cuerpo de texto. Inter Regular 14px según DESIGN.md.</div>
+  </div>
+
+  <div class="type-sample">
+    <span class="label">--font-mono · JetBrains Mono (datos y código)</span>
+    <div class="type-mono">$ npm run dev · 32.5 kWh · #00E5FF</div>
+  </div>
+
+  <div class="note">
+    <strong>Do's:</strong> Usar JetBrains Mono para valores numéricos (Watts, kWh, Bs., porcentajes).<br>
+    <strong>Don'ts:</strong> Usar Inter para KPIs — los números pierden legibilidad comparados con monoespaciada.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 3. ESTILOS DE COMPONENTES -->
+<!-- ============================================ -->
+<section>
+  <h2>3. Estilos de componentes</h2>
+  <p class="description">
+    Radius, sombras y estilos base para cards, tablas y alertas.
+    Fuente: <code>frontend/src/styles/branding/estilos-componentes.css</code>.
+  </p>
+
+  <h3>Card con KPI (16px radius)</h3>
+  <div class="card-demo">
+    <div class="label">Consumo actual</div>
+    <div class="kpi">2.458 W</div>
+    <div class="meta">Equivalente a Bs. 1.230,00 / mes</div>
+  </div>
+
+  <h3>Botones (variantes)</h3>
+  <div class="btn-row">
+    <button class="btn btn-primary">Primary</button>
+    <button class="btn btn-secondary">Secondary</button>
+    <button class="btn btn-ghost">Ghost</button>
+    <button class="btn btn-success">Success</button>
+    <button class="btn btn-info">Info</button>
+    <button class="btn btn-warning">Warning</button>
+    <button class="btn btn-danger">Danger</button>
+  </div>
+
+  <h3>Tabla (con hover)</h3>
+  <div class="table-demo">
+    <table>
+      <thead>
+        <tr><th>Plataforma</th><th>Símbolo</th><th class="mono">Cantidad</th><th class="mono">Valor</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>eToro</td><td>AAPL</td><td class="mono">10</td><td class="mono positive">+$450.00</td></tr>
+        <tr><td>Binance</td><td>BTC</td><td class="mono">0.5</td><td class="mono positive">+$1,250.00</td></tr>
+        <tr><td>Interactive Brokers</td><td>TSLA</td><td class="mono">5</td><td class="mono negative">-$120.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Alertas</h3>
+  <div class="alert alert-info"><strong>Info</strong> Datos actualizados hace 5 minutos.</div>
+  <div class="alert alert-success"><strong>Success</strong> Transacción registrada correctamente.</div>
+  <div class="alert alert-warning"><strong>Warning</strong> El mercado cierra en 30 minutos.</div>
+  <div class="alert alert-danger"><strong>Danger</strong> No se pudo conectar con la plataforma.</div>
+
+  <div class="note">
+    <strong>Do's:</strong> Cards con <code>border-radius: 16px</code>. Filas de tabla con hover sutil.<br>
+    <strong>Don'ts:</strong> Usar sombras agresivas. Preferir borde sutil en dark mode.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 4. LAYOUT -->
+<!-- ============================================ -->
+<section>
+  <h2>4. Layout</h2>
+  <p class="description">
+    Grid 12 columnas, espaciado en múltiplos de 8px, breakpoints, z-index.
+    Fuente: <code>frontend/src/styles/branding/layout.css</code>.
+  </p>
+
+  <h3>Grid de 12 columnas</h3>
+  <div class="grid-demo">
+    <div class="grid-cell">1</div>
+    <div class="grid-cell">2</div>
+    <div class="grid-cell">3</div>
+    <div class="grid-cell">4</div>
+    <div class="grid-cell">5</div>
+    <div class="grid-cell">6</div>
+    <div class="grid-cell">7</div>
+    <div class="grid-cell">8</div>
+    <div class="grid-cell">9</div>
+    <div class="grid-cell">10</div>
+    <div class="grid-cell">11</div>
+    <div class="grid-cell">12</div>
+  </div>
+
+  <h3>Spacing (múltiplos de 8px)</h3>
+  <div class="spacing-demo">
+    <div class="spacing-item"><div class="spacing-bar" style="height: 8px;"></div><span class="spacing-label">--space-2</span></div>
+    <div class="spacing-item"><div class="spacing-bar" style="height: 16px;"></div><span class="spacing-label">--space-3</span></div>
+    <div class="spacing-item"><div class="spacing-bar" style="height: 24px;"></div><span class="spacing-label">--space-4</span></div>
+    <div class="spacing-item"><div class="spacing-bar" style="height: 32px;"></div><span class="spacing-label">--space-5</span></div>
+    <div class="spacing-item"><div class="spacing-bar" style="height: 40px;"></div><span class="spacing-label">--space-6</span></div>
+    <div class="spacing-item"><div class="spacing-bar" style="height: 64px;"></div><span class="spacing-label">--space-8</span></div>
+  </div>
+
+  <h3>Breakpoints</h3>
+  <div class="table-demo">
+    <table>
+      <thead>
+        <tr><th>Token</th><th>Valor</th><th>Target</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">--breakpoint-sm</td><td class="mono">640px</td><td>Móvil landscape</td></tr>
+        <tr><td class="mono">--breakpoint-md</td><td class="mono">768px</td><td>Tablet portrait</td></tr>
+        <tr><td class="mono">--breakpoint-lg</td><td class="mono">1024px</td><td>Tablet landscape / laptop</td></tr>
+        <tr><td class="mono">--breakpoint-xl</td><td class="mono">1280px</td><td>Desktop</td></tr>
+        <tr><td class="mono">--breakpoint-2xl</td><td class="mono">1920px</td><td>Smart TV</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong>Do's:</strong> Todo el spacing en múltiplos de 8px. Grid 12 columnas.<br>
+    <strong>Don'ts:</strong> Valores arbitrarios de spacing (5px, 13px, 27px). Todo debe salir de los tokens.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 5. MOTION -->
+<!-- ============================================ -->
+<section>
+  <h2>5. Motion</h2>
+  <p class="description">
+    Duraciones, easings y stagger. Los tokens están definidos; los componentes se construyen en FT-007 (InitPage).
+    Fuente: <code>frontend/src/styles/branding/motion.css</code>.
+  </p>
+
+  <h3>Easings (pasa el mouse sobre cada card)</h3>
+  <div class="motion-grid">
+    <div class="motion-card ease-linear">
+      <span class="name">--ease-linear</span>
+      <span class="value">linear</span>
+      <div class="motion-track"><div class="motion-dot"></div></div>
+    </div>
+    <div class="motion-card ease-in">
+      <span class="name">--ease-in</span>
+      <span class="value">cubic-bezier(0.4, 0, 1, 1)</span>
+      <div class="motion-track"><div class="motion-dot"></div></div>
+    </div>
+    <div class="motion-card ease-out">
+      <span class="name">--ease-out</span>
+      <span class="value">cubic-bezier(0, 0, 0.2, 1)</span>
+      <div class="motion-track"><div class="motion-dot"></div></div>
+    </div>
+    <div class="motion-card ease-in-out">
+      <span class="name">--ease-in-out</span>
+      <span class="value">cubic-bezier(0.4, 0, 0.2, 1)</span>
+      <div class="motion-track"><div class="motion-dot"></div></div>
+    </div>
+    <div class="motion-card ease-spring">
+      <span class="name">--ease-spring</span>
+      <span class="value">cubic-bezier(0.34, 1.56, 0.64, 1)</span>
+      <div class="motion-track"><div class="motion-dot"></div></div>
+    </div>
+  </div>
+
+  <h3>Duraciones</h3>
+  <div class="table-demo">
+    <table>
+      <thead>
+        <tr><th>Token</th><th>Valor</th><th>Uso</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">--duration-instant</td><td class="mono">100ms</td><td>Feedback inmediato (hover de íconos)</td></tr>
+        <tr><td class="mono">--duration-fast</td><td class="mono">150ms</td><td>Hover de botones, links</td></tr>
+        <tr><td class="mono">--duration-normal</td><td class="mono">250ms</td><td>Transiciones de tema, fade</td></tr>
+        <tr><td class="mono">--duration-slow</td><td class="mono">400ms</td><td>Aparición de modales</td></tr>
+        <tr><td class="mono">--duration-slower</td><td class="mono">600ms</td><td>Scroll reveal, marquee</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong>Do's:</strong> Animar solo <code>transform</code> y <code>opacity</code>. Respetar <code>prefers-reduced-motion</code>.<br>
+    <strong>Don'ts:</strong> Animar <code>width</code>, <code>height</code>, <code>top</code>, <code>left</code>, <code>box-shadow</code>.
+    Ver §24 del <code>agente-frontend.md</code> para el sistema completo.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 6. VISTA COMPARATIVA LIGHT / DARK -->
+<!-- ============================================ -->
+<section>
+  <h2>6. Vista comparativa Light / Dark</h2>
+  <p class="description">
+    Los mismos componentes renderizados simultáneamente con ambos temas.
+    Cada panel aplica su propio <code>data-theme</code> y hereda los tokens correspondientes.
+  </p>
+
+  <div class="compare-grid">
+    <div data-theme="light" class="compare-panel">
+      <h4>☀️ Light theme</h4>
+      <div style="padding: var(--space-3); background: var(--color-bg); color: var(--color-text); border-radius: var(--radius-md); margin-bottom: var(--space-3);">
+        Texto sobre <code>--color-bg</code> · <span style="color: var(--color-text-muted);">muted</span>
+      </div>
+      <div class="btn-row" style="margin-bottom: var(--space-3);">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-danger">Danger</button>
+      </div>
+      <div class="card-demo">
+        <div class="label">KPI</div>
+        <div class="kpi">2.458 W</div>
+      </div>
+      <div class="alert alert-info" style="margin-top: var(--space-3);"><strong>Info</strong> Panel light.</div>
+    </div>
+
+    <div data-theme="dark" class="compare-panel">
+      <h4>🌙 Dark theme</h4>
+      <div style="padding: var(--space-3); background: var(--color-bg); color: var(--color-text); border-radius: var(--radius-md); margin-bottom: var(--space-3);">
+        Texto sobre <code>--color-bg</code> · <span style="color: var(--color-text-muted);">muted</span>
+      </div>
+      <div class="btn-row" style="margin-bottom: var(--space-3);">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-danger">Danger</button>
+      </div>
+      <div class="card-demo">
+        <div class="label">KPI</div>
+        <div class="kpi">2.458 W</div>
+      </div>
+      <div class="alert alert-info" style="margin-top: var(--space-3);"><strong>Info</strong> Panel dark.</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Do's:</strong> Usar los mismos componentes en ambos temas — el CSS resuelve los tokens automáticamente.<br>
+    <strong>Don'ts:</strong> Duplicar clases o crear variantes específicas para dark. Todo debe pasar por tokens semánticos.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- 7. ACCESIBILIDAD -->
+<!-- ============================================ -->
+<section>
+  <h2>7. Accesibilidad WCAG 2.2 AA</h2>
+  <p class="description">
+    Regla: texto normal ≥4.5:1 · texto grande (≥18.66px bold o ≥24px) ≥3:1 · componentes UI ≥3:1.
+  </p>
+
+  <h3>Light theme</h3>
+  <div class="table-demo">
+    <table>
+      <thead><tr><th>Combinación</th><th>Contraste</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td>Texto blanco sobre Primary #00838F</td><td class="mono">4.9:1</td><td>✅ AA</td></tr>
+        <tr><td>Texto blanco sobre Success #2E7D32</td><td class="mono">6.3:1</td><td>✅ AA+</td></tr>
+        <tr><td>Texto blanco sobre Danger #C62828</td><td class="mono">5.5:1</td><td>✅ AA</td></tr>
+        <tr><td>Texto blanco sobre Warning #B45309</td><td class="mono">5.0:1</td><td>✅ AA</td></tr>
+        <tr><td>Texto blanco sobre Info #0277BD</td><td class="mono">5.5:1</td><td>✅ AA</td></tr>
+        <tr><td>Texto #0F172A sobre bg #F8FAFC</td><td class="mono">15.6:1</td><td>✅ AAA</td></tr>
+        <tr><td>Texto #64748B sobre surface #FFFFFF</td><td class="mono">4.7:1</td><td>✅ AA</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Dark theme</h3>
+  <div class="table-demo">
+    <table>
+      <thead><tr><th>Combinación</th><th>Contraste</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td>Texto #121212 sobre Primary #00E5FF</td><td class="mono">12.4:1</td><td>✅ AAA</td></tr>
+        <tr><td>Texto #121212 sobre Success #32D74B</td><td class="mono">8.9:1</td><td>✅ AAA</td></tr>
+        <tr><td>Texto #FFFFFF sobre Danger #D32F2F</td><td class="mono">5.0:1</td><td>✅ AA</td></tr>
+        <tr><td>Texto #121212 sobre Warning #FFB020</td><td class="mono">11.0:1</td><td>✅ AAA</td></tr>
+        <tr><td>Texto #121212 sobre Info #40C4FF</td><td class="mono">10.0:1</td><td>✅ AAA</td></tr>
+        <tr><td>Texto #FFFFFF sobre bg #121212</td><td class="mono">18.1:1</td><td>✅ AAA</td></tr>
+        <tr><td>Texto #98989D sobre surface #1E1E1E</td><td class="mono">7.0:1</td><td>✅ AA+</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong>Uso:</strong> Todos los colores se acceden vía <code>var(--color-*)</code> o <code>var(--btn-*)</code>.
+    Prohibido hardcodear hex fuera de los archivos CSS de <code>styles/branding/</code> (ver ADR-0002).
+  </div>
+</section>
+
+<script>
+  // Lee el hex real de cada token desde el CSS aplicado en el contexto del swatch.
+  // Al cambiar el tema (o cambiar el CSS fuente), los valores se actualizan solos.
+  const refreshSwatchHex = () => {
+    document.querySelectorAll('.swatch[data-token]').forEach(el => {
+      const token = el.dataset.token;
+      const hexEl = el.querySelector('.swatch-hex');
+      if (!hexEl) return;
+      const value = getComputedStyle(el).getPropertyValue(token).trim();
+      hexEl.textContent = value || '—';
+    });
+  };
+
+  const observer = new MutationObserver(refreshSwatchHex);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  document.addEventListener('DOMContentLoaded', refreshSwatchHex);
+  refreshSwatchHex();
+
+  // Detector: si los CSS importados no cargaron, avisar.
+  setTimeout(() => {
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+    if (!primary) {
+      document.body.insertAdjacentHTML('afterbegin',
+        '<div style="background:#fee;color:#900;padding:14px 18px;border-left:4px solid #c00;margin-bottom:20px;font-family:sans-serif;">' +
+        '⚠️ <strong>Los CSS externos no cargaron.</strong> El navegador bloquea imports file://↔file://. ' +
+        'Serví el proyecto con <code>python3 -m http.server 8000</code> desde la raíz del repo y abrí ' +
+        '<code>http://localhost:8000/docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html</code>.' +
+        '</div>');
+    }
+  }, 300);
+</script>
 
 </body>
 </html>

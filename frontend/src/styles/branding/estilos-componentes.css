@@ -1,0 +1,57 @@
+/**
+ * Estilos de componentes — Investment Tracker Pro
+ *
+ * Tokens de radius, sombras y estilos base para cards, tablas y alertas.
+ * Basado en DESIGN.md de WattVision.
+ *
+ * Preview: docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html
+ */
+
+:root,
+[data-theme='light'] {
+  /* --- Radius --- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px; /* cards segun DESIGN.md */
+  --radius-full: 9999px;
+
+  /* --- Shadows (light) --- */
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 5%);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 8%);
+  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 10%);
+
+  /* --- Card (light) --- */
+  --card-bg: var(--color-surface);
+  --card-border: 1px solid var(--color-border);
+  --card-radius: var(--radius-xl);
+  --card-padding: 20px;
+  --card-shadow: var(--shadow-sm);
+
+  /* --- Table (light) --- */
+  --table-row-border: 1px solid var(--color-border);
+  --table-row-hover-bg: #f1f5f9;
+
+  /* --- Alert (light) --- */
+  --alert-padding: 12px 16px;
+  --alert-radius: var(--radius-md);
+  --alert-border-left-width: 4px;
+}
+
+[data-theme='dark'] {
+  /* --- Shadows (dark) --- */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 40%);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 50%);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 60%);
+
+  /* --- Card (dark, WattVision) --- */
+  --card-bg: var(--color-surface);
+  --card-border: 1px solid var(--color-border);
+  --card-shadow: none;
+
+  /* --- Table (dark, WattVision) --- */
+  --table-row-hover-bg: #252525;
+
+  /* --- Alert (dark, WattVision) --- */
+  --alert-bg-tint: rgb(255 69 58 / 10%);
+}
