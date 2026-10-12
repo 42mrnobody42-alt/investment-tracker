@@ -1420,7 +1420,6 @@ Documentación por componente, organizada por nivel del Design System.
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md)
 
-
 <a id="adr-0008--mixins-base-de-estilos-focus-ring-container-truncate"></a>
 
 #### ADR-0008 — Mixins base de estilos (`focus-ring`, `container`, `truncate`)
@@ -1863,16 +1862,16 @@ y se vincula como **sub-issue** del nivel inmediatamente superior.
 
 ### Flujo de trabajo
 
-| Paso | Acción                       | Comando                                            |
-| ---- | ---------------------------- | -------------------------------------------------- |
-| 1    | Consultar tablero            | `gh project item-list 2 --owner 42mrnobody42-alt`  |
-| 2    | Crear rama desde `developer` | `git checkout -b feature/<ID>-<slug>`              |
-| 3    | Mover issue a `In progress`  | `./scripts/kanban-move.sh <N> progress`            |
-| 4    | Commit con `Closes #N`       | `git commit -m "feat(#N): ... Closes #N"`          |
-| 5    | Comentar SHA en el issue     | `./scripts/kanban-comment.sh <N> <sha> "<título>"` |
-| 6    | Mover a `In review`          | `./scripts/kanban-move.sh <N> review`              |
-| 7    | Abrir PR a `developer`       | `gh pr create --base developer`                    |
-| 8    | Mover a `Done` (post-merge)  | `./scripts/kanban-move.sh <N> done`                |
+| Paso | Acción                       | Comando                                           |
+| ---- | ---------------------------- | ------------------------------------------------- |
+| 1    | Consultar tablero            | `gh project item-list 2 --owner 42mrnobody42-alt` |
+| 2    | Crear rama desde `developer` | `git checkout -b feature/<ID>-<slug>`             |
+| 3    | Mover issue a `In progress`  | `./scripts/kanban-move.sh <N> progress`           |
+| 4    | Commit con `Closes #N`       | `git commit -m "feat(#N): ... Closes #N"`         |
+| 5    | Comentar SHA en el issue     | `./scripts/kanban-comment.sh <N> <sha> [template]`          |
+| 6    | Mover a `In review`          | `./scripts/kanban-move.sh <N> review`             |
+| 7    | Abrir PR a `developer`       | `gh pr create --base developer`                   |
+| 8    | Mover a `Done` (post-merge)  | `./scripts/kanban-move.sh <N> done`               |
 
 ### Comandos de consulta
 
@@ -1892,15 +1891,15 @@ done
 
 ### Scripts disponibles
 
-| Script                | Función                                 | Uso                                                |
-| --------------------- | --------------------------------------- | -------------------------------------------------- |
-| `create-cap01.sh`     | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
-| `delete-cap01.sh`     | Elimina CAP-01 + FT/US/TS (idempotente) | `./scripts/delete-cap01.sh`                        |
-| `regen-kanban-ids.sh` | Regenera `kanban-ids.env` desde GitHub  | `./scripts/regen-kanban-ids.sh`                    |
-| `clear-project.sh`    | Vacía el Project sin borrar issues      | `./scripts/clear-project.sh`                       |
-| `kanban-move.sh`      | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
-| `kanban-comment.sh`   | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
-| `retry-links.sh`      | Re-vincula sub-issues huérfanos         | `./scripts/retry-links.sh`                         |
+| Script                | Función                                 | Uso                                       |
+| --------------------- | --------------------------------------- | ----------------------------------------- |
+| `create-cap01.sh`     | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`               |
+| `delete-cap01.sh`     | Elimina CAP-01 + FT/US/TS (idempotente) | `./scripts/delete-cap01.sh`               |
+| `regen-kanban-ids.sh` | Regenera `kanban-ids.env` desde GitHub  | `./scripts/regen-kanban-ids.sh`           |
+| `clear-project.sh`    | Vacía el Project sin borrar issues      | `./scripts/clear-project.sh`              |
+| `kanban-move.sh`      | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`   |
+| `kanban-comment.sh`   | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> [template]` |
+| `retry-links.sh`      | Re-vincula sub-issues huérfanos         | `./scripts/retry-links.sh`                |
 
 ### Plantillas obligatorias
 
