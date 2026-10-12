@@ -18,8 +18,11 @@
 
   /* --- Shadows (light) --- */
   --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 5%);
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 3%);
   --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 8%);
   --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 10%);
+  --shadow-xl: 0 20px 40px -8px rgb(15 23 42 / 35%);
+  --shadow-2xl: 0 30px 60px -12px rgb(15 23 42 / 60%);
 
   /* --- Card (light) --- */
   --card-bg: var(--color-surface);
@@ -41,8 +44,11 @@
 [data-theme='dark'] {
   /* --- Shadows (dark) --- */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 40%);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 20%);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 50%);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 60%);
+  --shadow-xl: 0 20px 40px -8px rgb(0 0 0 / 80%);
+  --shadow-2xl: 0 30px 60px -12px rgb(0 0 0 / 100%);
 
   /* --- Card (dark, WattVision) --- */
   --card-bg: var(--color-surface);

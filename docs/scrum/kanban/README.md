@@ -40,7 +40,7 @@ de aceptación estén marcados.**
 | `create-cap01.sh`                        | Crea CAP-01 + 9 FT + 41 US + 141 TS |
 | `delete-cap01.sh`                        | Elimina todos los issues de CAP-01  |
 | `kanban-move.sh <N> <alias>`             | Mueve entre estados                 |
-| `kanban-comment.sh <N> <sha> "<título>"` | Comenta SHA + cambios               |
+| `kanban-comment.sh <N> <sha> [template]` | Comenta SHA + cambios               |
 | `retry-links.sh`                         | Revincula sub-issues huérfanos      |
 
 ## Flujo por unidad de trabajo

@@ -686,9 +686,14 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 ## 9. Estilos y theming
 
 - CSS moderno: custom properties, clamp(), min(), max(), container queries, :has(), color-mix(), nesting nativo.
-- Paleta de colores corporativa en `frontend/src/styles/branding/paleta-colores-corporativa.css` (tokens `--color-*`). Aprobada en TS-009. Preview: [`paleta-colores-corporativa.html`](../../tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html).
-- Resto de tokens (spacing, typography, radius, z-index) en `frontend/src/styles/tokens.css` (llega en TS-022 #627).
-- Tema claro/oscuro con data-theme en <html>. Existe tema de alto contraste.
+- Todos los design tokens viven en `frontend/src/styles/branding/` (creados en TS-144):
+  - `paleta-colores-corporativa.css` — colores (`--color-*`, `--btn-*`). Temas light, dark y **high-contrast** vía `[data-theme]`.
+  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing.
+  - `layout.css` — grid, spacing (`--space-*`), breakpoints, z-index.
+  - `estilos-componentes.css` — radius, shadows, cards, tables, alerts.
+  - `motion.css` — duraciones, easings y stagger (ver §24). Incluye los easings compuestos de péndulo (`--ease-pendulum`, `--ease-pendulum-damped`, amplitud parametrizable vía `--pendulum-amplitude`) y el retardo de barrido de página (`--pasar-pagina`, con 4 direcciones diagonales: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
+- **No existe `styles/tokens.css`** — la estructura `tokens.css` + `themes/` fue reemplazada por los 5 archivos de `styles/branding/`.
+- **Temas light/dark/high-contrast** con `data-theme` en `<html>`. Todos viven dentro de `paleta-colores-corporativa.css` (no existe `themes/`).
 - Breakpoints definidos una sola vez en frontend/src/shared/constants/breakpoints.ts y expuestos como custom properties.
 - Prohibido !important salvo justificación en PR.
 - Todos los tamaños con unidades relativas (rem, em, %, dvh) excepto bordes finos.
@@ -782,6 +787,7 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
   - `selector-class-pattern: "^[a-z][a-zA-Z0-9]*$"` — clases en **camelCase**.
   - `recess-order` — orden de propiedades (evita deuda de desorden).
   - Scripts separados: `lint:css` y `lint:css:fix` (ver ADR-0002).
+  - **Orden de ejecución**: Prettier antes de Stylelint en el flujo local (`npx prettier --write ... && npx stylelint ... --fix`). Ver ADR-0002 §Decisión 3.
 - Reglas obligatorias **en nivel `error`** (no `warn`):
   - `eslint-plugin-jsx-a11y` (WCAG 2.2 AA)
   - `eslint-plugin-import` (`no-unresolved`, `no-cycle`, `no-duplicates`, `first`, `newline-after-import`)
@@ -976,17 +982,21 @@ arquitectónicas permanentes.
 
 Y al final, sección **"Gatillo de resolución"** con el procedimiento.
 
+### Regla de lectura obligatoria
+
+Cuando se vaya a modificar cualquier artefacto que dependa de un ADR, **leer el archivo completo del ADR** — no solo la fila de la tabla resumen. Los ADRs contienen contexto, motivos, gatillos de revisión y consecuencias que no caben en una fila.
+
 ### Ejemplos activos
 
-| ADR      | Se resuelve en    | Documentación final                 |
-| -------- | ----------------- | ----------------------------------- |
+| ADR      | Se resuelve en | Documentación final                 |
+| -------- | -------------- | ----------------------------------- |
 | ADR-0001 | TS-142 (#760)  | `convenciones/convenciones.md`      |
-| ADR-0002 | TS-022 (#629)     | `convenciones/convenciones.md`      |
-| ADR-0003 | TS-031 (#636) | `convenciones/convenciones.md`      |
+| ADR-0002 | TS-022 (#627)  | `convenciones/convenciones.md`      |
+| ADR-0003 | TS-031 (#636)  | `convenciones/convenciones.md`      |
 | ADR-0004 | TS-143 (#761)  | `seguridad/cvss-deuda-seguridad.md` |
-| ADR-0005 | TS-024 (#629)     | `convenciones/storybook.md`         |
-| ADR-0006 | TS-026 (#631)     | `convenciones/storybook.md`         |
-| ADR-0007 | TS-070 (#675)     | `convenciones/storybook.md`         |
+| ADR-0005 | TS-024 (#629)  | `convenciones/storybook.md`         |
+| ADR-0006 | TS-026 (#631)  | `convenciones/storybook.md`         |
+| ADR-0007 | TS-070 (#675)  | `convenciones/storybook.md`         |
 
 ---
 
@@ -1113,7 +1123,7 @@ Reglas de implementación:
 - Si `trigger === 'both'`, se dispara en ambos.
 - Si `prefers-reduced-motion: reduce` o el dispositivo es táctil, no se dispara la onda; el botón conserva su `:hover`/`:active` estándar.
 - `ringCount` se valida entre 1 y 6. Fuera de rango, se hace fallback a 3 y se registra un `console.warn` en desarrollo.
-- El foco visible (`:focus-visible` con `focus-ring` de `styles/mixins/`) es independiente del efecto de onda.
+- El foco visible (`:focus-visible` con `focus-ring` de `styles/mixins/` (creado en TS-145)) es independiente del efecto de onda.
 - Stories obligatorias: `Default`, `Hover`, `Click`, `Both`, `Variants`, `Sizes`, `Loading`, `Disabled`, `RingCount1`, `RingCount6`, `ReducedMotion`, `DarkMode`.
 
 #### 24.3.2 `Marquee` — API configurable
@@ -1269,7 +1279,7 @@ Presupuesto de motion (complementa §13):
   - `useParallax` y `useRevealOnScroll` aplican el estado final sin transición.
 - El cursor personalizado **nunca** oculta información ni impide la interacción. El cursor nativo se oculta solo con `cursor: none` sobre el `body` y se restaura en inputs, textareas y elementos editables.
 - `CursorFollower` y `AuraBackground` llevan `aria-hidden="true"` y `pointer-events: none`.
-- `SineWaveButton` conserva el foco visible (`:focus-visible` con `focus-ring` de `styles/mixins/`), independientemente del efecto de onda.
+- `SineWaveButton` conserva el foco visible (`:focus-visible` con `focus-ring` de `styles/mixins/` (creado en TS-145)), independientemente del efecto de onda.
 - Ninguna animación es la única forma de transmitir información (WCAG 1.3.3, 2.2.2).
 - Los tests E2E de a11y (`tests/e2e/a11y.spec.ts`) deben correr también con `prefers-reduced-motion: reduce` (Playwright permite emularlo).
 

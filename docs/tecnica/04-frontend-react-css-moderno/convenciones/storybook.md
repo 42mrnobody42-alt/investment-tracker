@@ -184,9 +184,66 @@ stories, actualizar esta tabla, eliminar el ADR y tachar la fila en la tabla del
 - TODOs documentados para los 3 decoradores pendientes
 - 3 ADRs creados (ADR-0005, ADR-0006, ADR-0007)
 
+### TS-010 (completado)
+
+Story `DesignTokens/Overview` (9 sub-stories). Componente `DesignTokens`
+(`frontend/src/components/atoms/DesignTokens/`) tratado como átomo del Design
+System. Consume **todos** los tokens de `frontend/src/styles/branding/` y los lee
+con `getComputedStyle` para reflejar el tema activo (`data-theme`).
+
+#### Sub-stories y sus subgrupos
+
+**`Colors`** — 3 bloques por tema (`light`, `dark`, `high-contrast`), cada uno con
+3 subgrupos:
+
+- `Brand` — 5 tokens (`--color-primary`, `--color-primary-hover`,
+  `--color-primary-light`, `--color-accent`, `--color-accent-hover`).
+- `Semantic` — 8 tokens (success, danger, warning, info + variantes `-hover`).
+- `Neutral` — 6 tokens (bg, surface, border, text, text-muted, text-inverse).
+
+**`Typography`** — 6 subgrupos:
+
+- `Font families` — `--font-sans`, `--font-mono`.
+- `Font sizes` — 8 escalas (`xs` → `4xl`).
+- `Font weights` — 4 pesos (regular, medium, semibold, bold).
+- `Line heights` — 3 valores (tight, normal, relaxed).
+- `Letter spacing` — 3 valores (tight, normal, wide).
+- `Demo` — muestra `h1`, `h2`, `h3`, párrafo y `code` reales.
+
+**`Spacing`** — 8 tokens (`--space-1` → `--space-10`) con barra proporcional y valor.
+
+**`Radius`** — 5 tokens (`--radius-sm` → `--radius-full`) con caja cuadrada demostrativa.
+
+**`Shadows`** — 6 tokens (`--shadow-xs/sm/md/lg/xl/2xl`) sobre fondo tintado para
+hacer visible el salto entre intensidades.
+
+**`Layout`** — 3 subgrupos:
+
+- `Grid` — `--grid-columns`, `--grid-gutter` (ejemplo visual de espaciado entre
+  celdas), `--container-max-width`.
+- `Breakpoints` — 5 tokens (`sm` → `2xl`) con barra escalada.
+- `Z-index` — 8 tokens (`base` → `toast`) con pila visual + tabla lateral
+  (Token / Profundidad / Valor).
+
+**`Motion`** — 4 subgrupos:
+
+- `Durations` — 5 tokens (`instant` → `slower`) con replay animado.
+- `Easings` — 5 curvas (`linear`, `in`, `out`, `in-out`, `spring`) con SVG + bola
+  animada, más 2 easings compuestos: `--ease-pendulum` y `--ease-pendulum-damped`
+  (amplitud parametrizable vía `--pendulum-amplitude`).
+- `Stagger` — 3 tokens (`fast`, `normal`, `slow`) con 5 puntos que aparecen
+  escalonados.
+- `Barrido de página (4 direcciones)` — basado en `--pasar-pagina`, con grid 8×4 y
+  4 variantes diagonales: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`,
+  `sweepCellBrTl`. Cada bloque muestra la dirección + el nombre de la clase CSS
+  aplicable.
+
+**`Dark`** — todo el catálogo (7 secciones) con `data-theme="dark"`.
+
+**`HighContrast`** — todo el catálogo con `data-theme="high-contrast"`.
+
 ### Pendiente
 
-- Story `DesignTokens/Overview` (TS-010)
 - Build estatico versionado (TS-011)
 
 ## Convenciones de stories
@@ -214,6 +271,14 @@ Junto al componente, en su carpeta:
 - `frontend/src/components/atoms/Button/Button.types.ts`
 - `frontend/src/components/atoms/Button/Button.stories.tsx`
 - `frontend/src/components/atoms/Button/index.ts`
+
+Y para el átomo DesignTokens (TS-010):
+
+- `frontend/src/components/atoms/DesignTokens/DesignTokens.tsx`
+- `frontend/src/components/atoms/DesignTokens/DesignTokens.module.css`
+- `frontend/src/components/atoms/DesignTokens/DesignTokens.types.ts`
+- `frontend/src/components/atoms/DesignTokens/DesignTokens.stories.tsx`
+- `frontend/src/components/atoms/DesignTokens/index.ts`
 
 ## Configuracion del glob
 
