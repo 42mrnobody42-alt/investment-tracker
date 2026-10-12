@@ -93,6 +93,41 @@ los tokens reales.
 
 ---
 
+## Decisión 3 — Orden de ejecución: Prettier antes de Stylelint
+
+**Problema**: durante **TS-010 (#615)** surgió la hipótesis de un conflicto entre
+Prettier 3.9.9 y Stylelint 17.15.0 al procesar `@keyframes`. Se temía que:
+
+- Prettier colapsara `@keyframes` eliminando líneas vacías entre reglas.
+- `recess-order` (vía `stylelint-config-recess-order`) exigiera `rule-empty-line-before`
+  dentro de los `@keyframes`, provocando un ping-pong entre ambos linters.
+
+**Decisión**: ejecutar **Prettier primero, Stylelint después** en el flujo local
+(`npx prettier --write ... && npx stylelint ... --fix`).
+
+**Motivo (verificado en TS-010)**:
+
+1. **Prettier no colapsa `@keyframes` en este proyecto.** La hipótesis inicial era
+   incorrecta: Prettier conserva las líneas vacías entre reglas dentro de bloques
+   anidados, por lo que `stylelint --fix` no tiene nada que corregir.
+2. **La verificación conjunta pasó.** `npx stylelint ... && npx prettier --check ...`
+   sobre el mismo archivo devuelven verde sin necesidad de tocar
+   `.stylelintrc.json` ni `.prettierrc`.
+3. **No aplicamos la opción de excepción** (`rule-empty-line-before` con `ignore`);
+   no es necesaria con el orden actual.
+
+**Gatillos de revisión**:
+
+- Si en el futuro se cambia `.prettierrc` (por ejemplo, `printWidth` más agresivo
+  o un plugin nuevo) y Prettier comienza a colapsar `@keyframes`, reevaluar.
+- Si en algún PR se detecta formato inconsistente tras correr ambos linters,
+  documentar aquí el caso y la regla excepcional.
+
+**Nota**: esta decisión es **de proceso**, no de configuración. No requiere cambios
+en `.stylelintrc.json` ni en `.prettierrc`. Solo documenta el orden recomendado.
+
+---
+
 ## Consecuencias
 
 ### Positivas

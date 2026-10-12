@@ -168,6 +168,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
     - [ADR-0005 — Decorador withTheme pendiente](#adr-0005--decorador-withtheme-pendiente)
     - [ADR-0006 — Decorador withI18n pendiente](#adr-0006--decorador-withi18n-pendiente)
     - [ADR-0007 — Decorador withRouter pendiente](#adr-0007--decorador-withrouter-pendiente)
+    - [ADR-0008 — Mixins base de estilos (focus-ring, container, truncate)](#adr-0008--mixins-base-de-estilos-focus-ring-container-truncate)
   - [Convenciones del Frontend](#convenciones-del-frontend)
   - [Componentes del Frontend](#componentes-del-frontend)
     - [Atoms](#atoms-del-frontend)
@@ -1252,7 +1253,13 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 
 **Principios rectores** (detalle completo en `docs/prompts/agente-frontend.md`):
 
-- **Paleta de colores corporativa** en `frontend/src/styles/branding/paleta-colores-corporativa.css` (tokens `--color-*` y `--btn-*`). Colores de marca (primary azul profundo, accent cyan), semánticos (success, danger, warning, info) y neutros. Soporta temas light y dark. Aprobada en TS-009 con accesibilidad WCAG 2.2 AA validada. **Preview visual**: [paleta-colores-corporativa.html](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html).
+- **Design tokens de la identidad corporativa** centralizados en `frontend/src/styles/branding/` (creados en TS-144):
+  - `paleta-colores-corporativa.css` — colores (`--color-*`, `--btn-*`). Temas **light**, **dark** y **high-contrast** vía `[data-theme]`. Aprobada en TS-009 con accesibilidad WCAG 2.2 AA validada.
+  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing.
+  - `layout.css` — grid, spacing (`--space-*`), breakpoints, z-index.
+  - `estilos-componentes.css` — radius, shadows, cards, tables, alerts.
+  - `motion.css` — duraciones, easings y stagger. Incluye los easings compuestos de péndulo (`--ease-pendulum`, `--ease-pendulum-damped`, con amplitud parametrizable vía `--pendulum-amplitude`) y el retardo de barrido de página (`--pasar-pagina`, con 4 direcciones: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
+  - **Preview visual**: [paleta-colores-corporativa.html](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html).
 - Separación por orientación: `views/horizontal/` (PC, tablet apaisada, Smart TV)
   y `views/vertical/` (móvil, tablet retrato). Sin mezclas.
 - Design System propio en `src/components/{atoms,molecules,organisms,layout}/`.
@@ -1298,6 +1305,7 @@ Los Architecture Decision Records del frontend viven en
 | [ADR-0005](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-theme-pendiente.md)  | Decorador `withTheme` pendiente de ThemeProvider                  | 🟡 Pendiente | 2026-10-03 | TS-024 (#629)  |
 | [ADR-0006](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md)   | Decorador `withI18n` pendiente de i18next                         | 🟡 Pendiente | 2026-10-03 | TS-026 (#631)  |
 | [ADR-0007](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md) | Decorador `withRouter` pendiente de React Router                  | 🟡 Pendiente | 2026-10-03 | TS-070 (#675)  |
+| [ADR-0008](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md)          | Mixins base de estilos (focus-ring, container, truncate)          | 🟡 Pendiente | 2026-10-11 | TS-145 (#766)  |
 
 <a id="adr-0001--eslint-9395-eol"></a>
 
@@ -1411,6 +1419,20 @@ Documentación por componente, organizada por nivel del Design System.
 
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md)
+
+
+<a id="adr-0008--mixins-base-de-estilos-focus-ring-container-truncate"></a>
+
+#### ADR-0008 — Mixins base de estilos (`focus-ring`, `container`, `truncate`)
+
+> 🟡 **Deuda pendiente — se resuelve en TS-145 (#766)**
+
+**Decisión**: Diferir la creación de los 3 mixins base (`focus-ring`, `container`, `truncate`) hasta TS-145. Mientras no existan, US-007, US-010, US-011, US-013 y US-014 quedan bloqueadas.
+
+**Importancia**: sin `focus-ring` cada componente reinventa el foco visible (riesgo WCAG); sin `container` los breakpoints se duplican en cada componente; sin `truncate` las tablas se rompen con textos largos.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md)
 
 <a id="seguridad-del-frontend"></a>
 
@@ -1689,7 +1711,10 @@ impacto real y gatillos de revisión) se documentan en:
       - **`views/`** - Vistas por orientación (horizontal, vertical)
       - **`shared/`** - Transversales (hooks, utils, constants, types, services)
       - **`i18n/`** - Internacionalización (es, en)
-      - **`styles/`** - Estilos globales (index.css, app/app.css)
+      - **`styles/`** - Estilos globales
+        - `index.css` - Entry point (importa todos los branding)
+        - `app/` - Estilos del starter/demo (`app.css`)
+        - `branding/` - Design tokens de la identidad corporativa (TS-144): `paleta-colores-corporativa.css`, `tipografia.css`, `layout.css`, `estilos-componentes.css`, `motion.css`
       - **`assets/`** - Iconos técnicos e imágenes acopladas (import de bundler)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
@@ -1783,7 +1808,7 @@ impacto real y gatillos de revisión) se documentan en:
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
-- **Paleta corporativa frontend**: `frontend/src/styles/branding/paleta-colores-corporativa.css` — tokens `--color-*` aprobados en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada.
+- **Design tokens del frontend**: `frontend/src/styles/branding/` — `paleta-colores-corporativa.css` (colores light+dark+high-contrast), `tipografia.css`, `layout.css`, `estilos-componentes.css`, `motion.css`. Paleta aprobada en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada.
 - **Storybook frontend**: 10.6.1 (puerto dev `3010`), autodocs global, 3 decoradores activos (`withPadding`, `withBackground`, `withViewport`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
 - **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md).
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
