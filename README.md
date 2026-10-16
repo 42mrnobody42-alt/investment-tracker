@@ -1255,7 +1255,7 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 
 - **Design tokens de la identidad corporativa** centralizados en `frontend/src/styles/branding/` (creados en TS-144):
   - `paleta-colores-corporativa.css` — colores (`--color-*`, `--btn-*`). Temas **light**, **dark** y **high-contrast** vía `[data-theme]`. Aprobada en TS-009 con accesibilidad WCAG 2.2 AA validada.
-  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing.
+  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing. Importa `../fuentes/fuentes.css` (declara `@font-face` de Inter y JetBrains Mono).
   - `layout.css` — grid, spacing (`--space-*`), breakpoints, z-index.
   - `estilos-componentes.css` — radius, shadows, cards, tables, alerts.
   - `motion.css` — duraciones, easings y stagger. Incluye los easings compuestos de péndulo (`--ease-pendulum`, `--ease-pendulum-damped`, con amplitud parametrizable vía `--pendulum-amplitude`) y el retardo de barrido de página (`--pasar-pagina`, con 4 direcciones: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
@@ -1714,6 +1714,7 @@ impacto real y gatillos de revisión) se documentan en:
         - `index.css` - Entry point (importa todos los branding)
         - `app/` - Estilos del starter/demo (`app.css`)
         - `branding/` - Design tokens de la identidad corporativa (TS-144): `paleta-colores-corporativa.css`, `tipografia.css`, `layout.css`, `estilos-componentes.css`, `motion.css`
+        - `fuentes/` - Fuentes self-hosted (TS-011): `fuentes.css` + `.woff2` (Inter + JetBrains Mono), importadas por `branding/tipografia.css`
       - **`assets/`** - Iconos técnicos e imágenes acopladas (import de bundler)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura

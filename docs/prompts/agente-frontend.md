@@ -106,7 +106,6 @@ Solo se listan las ramas relevantes al frontend y a los contenedores. Las ramas 
     - **`.storybook/`** - History Book de componentes
       - `main.ts` - Configuración principal (addons, framework, stories glob)
       - `preview.tsx` - Decoradores activos (`withPadding`, `withBackground`, `withViewport`) + tags autodocs + import de branding CSS
-      - `preview-head.html` - Carga de fuentes y tokens en Storybook
       - `manager.ts` - Personalización de la UI de Storybook (marca, temas)
       - `tsconfig.json` - TS config específico para Storybook (evita TS2882)
     - **`public/`** - Assets públicos servidos tal cual
@@ -647,7 +646,7 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 | ------------------------------------- | ---------------------- | --------------------------------------- |
 | Branding / contenido configurable     | `public/assets/...`    | URL estable + `useAsset()` (TS-009)     |
 | Iconos técnicos / acoplados al código | `src/assets/...`       | Import de bundler (hash + tree-shaking) |
-| Fuentes self-hosted                   | `public/assets/fonts/` | URL estable                             |
+| Fuentes self-hosted                   | `src/styles/fuentes/`  | Import de bundler (hashed)              |
 | Iconos de app (favicon, PWA)          | `public/` (raíz)       | URL estable                             |
 
 ### Árbol
@@ -657,10 +656,10 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
     - `logos/` — logos de marca
     - `images/{dominio}/` — imágenes de marketing (`initPage/`, `login/`, `home/`…)
     - `icons/` — iconos consumidos por config/JSON (no por componentes)
-    - `fonts/` — fuentes self-hosted (regla fija)
-  - **No** → `src/assets/`
+  - **No** → `src/assets/` o `src/styles/fuentes/`
     - `icons/` — SVG consumidos por componentes React
     - `images/` — ilustraciones acopladas a componentes
+    - `src/styles/fuentes/` — fuentes self-hosted (tipografía de la plataforma, NO editable post-deploy)
 
 ### Reglas por modelo
 
@@ -688,7 +687,7 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 - CSS moderno: custom properties, clamp(), min(), max(), container queries, :has(), color-mix(), nesting nativo.
 - Todos los design tokens viven en `frontend/src/styles/branding/` (creados en TS-144):
   - `paleta-colores-corporativa.css` — colores (`--color-*`, `--btn-*`). Temas light, dark y **high-contrast** vía `[data-theme]`.
-  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing.
+  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing. Importa `../fuentes/fuentes.css` que declara los `@font-face` (Inter + JetBrains Mono).
   - `layout.css` — grid, spacing (`--space-*`), breakpoints, z-index.
   - `estilos-componentes.css` — radius, shadows, cards, tables, alerts.
   - `motion.css` — duraciones, easings y stagger (ver §24). Incluye los easings compuestos de péndulo (`--ease-pendulum`, `--ease-pendulum-damped`, amplitud parametrizable vía `--pendulum-amplitude`) y el retardo de barrido de página (`--pasar-pagina`, con 4 direcciones diagonales: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
