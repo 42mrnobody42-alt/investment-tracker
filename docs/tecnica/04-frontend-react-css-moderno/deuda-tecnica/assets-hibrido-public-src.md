@@ -4,9 +4,9 @@
 - **Fecha**: 2026-10-02
 - **Capa**: Frontend (React + TypeScript + Vite)
 - **Decisores**: Equipo Investment Tracker
-- **Relacionado**: TS-005 (#610), US-002 (#566), FT-001 (#556), CAP-01 (#554), ADR-0002
+- **Relacionado**: TS-005 (#610), US-002 (#566), FT-001 (#556), CAP-01 (#554), TS-011 (#616), ADR-0002
 - **Reemplaza a**: Interpretación estricta de `agente-frontend.md` §8 ("todo a `public/`")
-- **Reemplazado por**: (pendiente cuando TS-009 implemente `useAsset()`)
+- **Reemplazado por**: (pendiente cuando TS-009 implemente `useAsset()`). Actualizado en TS-011 (#616) con el caso de migración de tipografía.
 
 ## Contexto
 
@@ -33,7 +33,7 @@ Adoptar un **modelo híbrido** con criterios claros de clasificación:
 | ------------------------------------------------ | --------------------------------- | ----------------------------------- | ------------------------------------------- |
 | **Branding / contenido configurable**            | `public/assets/{categoría}/`      | URL estable + `useAsset()` (TS-009) | hero, logo, banner, imagen de marketing     |
 | **Iconos técnicos / assets acoplados al código** | `src/assets/{categoría}/`         | Import de bundler                   | SVG de UI, sprites, ilustraciones de página |
-| **Fuentes self-hosted**                          | `public/assets/fonts/` (regla §8) | URL estable                         | Inter, Roboto                               |
+| **Fuentes self-hosted**                          | `src/styles/fuentes/`             | Import de bundler + relative URL    | Inter, JetBrains Mono                       |
 | **Iconos de app (favicon, PWA)**                 | `public/` (raíz)                  | URL estable                         | `favicon.ico`, `icon-192.png`               |
 
 ### Criterio de decisión (árbol)
@@ -61,6 +61,38 @@ Adoptar un **modelo híbrido** con criterios claros de clasificación:
    bundle inicial vs. cargar todo desde `public/`.
 5. **Coherencia con TS-009**: `useAsset()` seguirá leyendo de `public/assets/manifest.json`.
    Los assets técnicos quedan fuera de ese sistema porque no necesitan runtime swap.
+
+## Ejemplo — Migración de tipografía (TS-011)
+
+**Caso real** que motivó refinar el criterio del árbol:
+
+Durante TS-011 se detectó que la tipografía de la plataforma (Inter + JetBrains
+Mono) estaba mal ubicada en `public/assets/tipografia/`, siguiendo la regla
+estricta de "todo asset self-hosted va a `public/`".
+
+**Análisis**: la tipografía de la plataforma **no es branding reemplazable por
+el cliente**. Es parte del código: si cambia, requiere rebuild, versionado y
+revisión. Tampoco es un asset runtime-swappable (no se edita post-deploy).
+
+**Decisión**: mover a `src/styles/fuentes/`. Los `.woff2` conviven con
+`fuentes.css` (que declara los `@font-face`) y son referenciados con rutas
+relativas (`./Inter-Regular.woff2`). Vite los hashea al build
+(`Inter-Regular-<hash>.woff2`), beneficiando el cache inmutable.
+
+**Criterio refinado** para assets self-hosted:
+
+| Tipo del asset                    | Ubicación              | Motivo                          |
+| --------------------------------- | ---------------------- | ------------------------------- |
+| Tipografía de la plataforma       | `src/styles/fuentes/`  | Código, requiere rebuild        |
+| Tipografía configurable por admin | `public/assets/...`    | Runtime, editable post-deploy   |
+| Logos de marca                    | `public/assets/logos/` | Branding reemplazable           |
+| Iconos técnicos                   | `src/assets/icons/`    | Acoplados al código             |
+
+**Resultado**: la regla "fuentes self-hosted → `public/assets/fonts/`" del
+`agente-frontend.md` §8 se matiza. Solo van a `public/` si son branding
+editable post-deploy. La tipografía de la plataforma vive en `src/styles/`.
+
+---
 
 ## Consecuencias
 

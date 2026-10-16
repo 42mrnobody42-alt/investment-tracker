@@ -16,7 +16,6 @@
 
 - `frontend/.storybook/main.ts` — Configuracion principal (addons, framework, stories glob)
 - `frontend/.storybook/preview.tsx` — Decoradores globales y parametros aplicados a todas las stories
-- `frontend/.storybook/preview-head.html` — Contenido extra en el head del iframe de preview
 - `frontend/.storybook/manager.ts` — Personalizacion de la UI del Storybook
 
 ## Addons configurados
@@ -174,7 +173,7 @@ stories, actualizar esta tabla, eliminar el ADR y tachar la fila en la tabla del
 
 - `main.ts` con los 3 addons
 - `preview.tsx` con `tags: ['autodocs']` global
-- `preview-head.html` + `manager.ts` como stubs
+- `manager.ts` como stub
 - Primera story: `Button.stories.tsx` con `Default`
 
 ### TS-009 (completado)
@@ -242,9 +241,45 @@ hacer visible el salto entre intensidades.
 
 **`HighContrast`** — todo el catálogo con `data-theme="high-contrast"`.
 
+### TS-011 (completado)
+
+- Comando `npm run build-storybook` genera `storybook-static/` (~8.5 MB).
+- `storybook-static/` está en `frontend/.gitignore` (no versionado; reproducible con el comando).
+- Fuentes self-hosted movidas a `src/styles/fuentes/` (Inter + JetBrains Mono), importadas vía `tipografia.css`.
+- `preview-head.html` eliminado (no era necesario; las fuentes se cargan vía `preview.tsx` → `tipografia.css` → `fuentes.css`).
+- Warnings conocidos y aceptados: `Skipping docgen` + `chunkSizeWarningLimit` (internos de Storybook).
+
 ### Pendiente
 
+- (nada)
+
 - Build estatico versionado (TS-011)
+
+## Build estático
+
+`npm run build-storybook` genera el sitio estático en `frontend/storybook-static/`
+(~8.5 MB). El directorio **no se versiona** en git: está en `frontend/.gitignore`.
+Se regenera con el comando cuando se necesita revisar o desplegar.
+
+### Verificación del build
+
+```bash
+cd frontend
+npm run build-storybook    # debe terminar con exit 0
+ls storybook-static/        # debe contener index.html + assets/ + sb-*/
+```
+
+### Warnings esperados (no bloqueantes)
+
+| Warning                                                              | Origen                       | Estado   |
+| -------------------------------------------------------------------- | ---------------------------- | -------- |
+| \`Skipping docgen for .storybook/preview.tsx\`                          | \`react-docgen-typescript\`     | Aceptado |
+| \`Some chunks are larger than 500 kB after minification\`               | Vite (chunks de Storybook)   | Aceptado |
+
+Ambos son internos de Storybook/Vite, no del código del proyecto. Documentación
+detallada en [\`warnings-storybook.md\`](./warnings-storybook.md).
+
+---
 
 ## Convenciones de stories
 
@@ -287,6 +322,40 @@ main.ts busca stories en:
     stories: ['../src/**/*.stories.@(ts|tsx)']
 
 Cualquier archivo .stories.tsx bajo src/ es detectado automaticamente.
+
+## Fuentes self-hosted
+
+Las fuentes de la plataforma viven en \`frontend/src/styles/fuentes/\`:
+
+- \`fuentes.css\` — declara los \`@font-face\` para \`Inter\` (400/500/600/700) y \`JetBrains Mono\` (400/500).
+- \`Inter-*.woff2\`, \`JetBrainsMono-*.woff2\` — archivos referenciados con rutas relativas.
+
+Storybook los carga vía \`preview.tsx\` → \`branding/tipografia.css\` → \`fuentes/fuentes.css\`.
+Vite los hashea al build (\`Inter-Regular-<hash>.woff2\`), aplicando cache inmutable.
+
+### Verificar que las fuentes cargan
+
+En Storybook (\`http://localhost:3010/\`), abrir DevTools → Console del iframe
+(cambiar el dropdown de \`top\` al iframe \`sb-show-preview\`) y ejecutar:
+
+```js
+document.fonts.forEach(f => console.log(\`\${f.family} | peso \${f.weight} | \${f.status}\`));
+```
+
+Salida esperada:
+
+```
+Inter | peso 400 | loaded
+Inter | peso 500 | loaded
+Inter | peso 600 | unloaded  (se carga al abrir \`Typography\`)
+Inter | peso 700 | unloaded  (idem)
+JetBrains Mono | peso 400 | unloaded  (se carga al mostrar \`code\`)
+JetBrains Mono | peso 500 | unloaded  (idem)
+```
+
+\`unloaded\` no es error: significa declarada pero sin texto visible que la use.
+
+---
 
 ## Warnings conocidos
 
