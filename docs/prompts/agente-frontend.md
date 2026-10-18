@@ -769,31 +769,21 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
 - **Entorno DOM**: jsdom 30.1.3.
 - **Cobertura mínima**: 80% en `Stmts`, `Branch`, `Funcs` y `Lines`, tanto **global** como **por archivo**. Threshold en modo `error` (falla el CI si no se cumple). Excepciones justificadas en ADR-0009 (`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`).
 - **Comandos**:
-  - \`npm test\` — modo watch (desarrollo).
-  - \`npm run test:run\` — modo CI (una ejecución, sale con código).
-  - \`npm run test:coverage\` — genera reporte en \`frontend/coverage/\`.
+  - `npm test` — modo watch (desarrollo).
+  - `npm run test:run` — modo CI (una ejecución, sale con código).
+  - `npm run test:coverage` — genera reporte en `frontend/coverage/`.
 - **Integración**: flujos de vista (login -> home -> consulta).
-- **E2E**: Playwright con proyectos mobile-chrome, mobile-safari, desktop-chrome, tablet, tv (TS-013).
+- **E2E**: Playwright con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`) configurados en `frontend/playwright.config.ts` (TS-013).
 - **a11y**: @axe-core/playwright en cada vista (TS-014).
 - **Visual**: Chromatic o Playwright snapshots.
 - **Ubicación de tests**:
-  - Unitarios de componentes: \`frontend/tests/unit/components/<atoms|molecules|organisms>/\`.
-  - Unitarios de shared: \`frontend/tests/unit/shared/\`.
-  - Integración: \`frontend/tests/integration/\` (cuando existan flujos).
-  - E2E: \`frontend/tests/e2e/\` (TS-013).
+  - Unitarios de componentes: `frontend/tests/unit/components/<atoms|molecules|organisms>/`.
+  - Unitarios de shared: `frontend/tests/unit/shared/`.
+  - Integración: `frontend/tests/integration/` (cuando existan flujos).
+  - E2E: `frontend/tests/e2e/` + `frontend/playwright.config.ts` (TS-013).
 - **Mocks**: alineados con los DTO reales del backend (ver README.md).
 - **Exclusiones de cobertura**: ver ADR-0009 (`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`).
 - **Convenciones completas de testing**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](../tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md). Incluye reglas permanentes (framework, comandos, estructura, cobertura global y por archivo, exclusiones permanentes, líneas con exclusión justificada, convenciones de escritura, mocks, alineación con el backend).
-
----
-
-- Unitario: Vitest + Testing Library. Cobertura mínima 80% en components/ y shared/.
-- Integración: flujos de vista (login -> home -> consulta).
-- E2E: Playwright con proyectos mobile-chrome, mobile-safari, desktop-chrome, tablet, tv.
-- Visual: Chromatic o Playwright snapshots.
-- a11y: @axe-core/playwright en cada vista.
-- Los tests viven junto al código (\*.test.tsx) o en frontend/tests/ según tipo.
-- Los tests usan mocks alineados con los DTO reales del backend (ver README.md).
 
 ---
 

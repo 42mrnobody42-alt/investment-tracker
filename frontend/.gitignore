@@ -32,3 +32,9 @@ storybook-static/
 
 # Vitest coverage output
 coverage/
+
+# Playwright
+playwright-report/
+blob-report/
+playwright/.cache/
+test-results/

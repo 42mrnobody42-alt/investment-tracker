@@ -171,6 +171,8 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
     - [ADR-0008 — Mixins base de estilos (focus-ring, container, truncate)](#adr-0008--mixins-base-de-estilos-focus-ring-container-truncate)
     - [ADR-0009 — Exclusión temporal de App.tsx en cobertura de tests](#adr-0009--exclusión-temporal-de-apptsx-en-cobertura-de-tests)
   - [Convenciones del Frontend](#convenciones-del-frontend)
+  - [Pruebas Frontend](#pruebas-frontend)
+    - [Listado de pruebas](#listado-de-pruebas)
   - [Componentes del Frontend](#componentes-del-frontend)
     - [Atoms](#atoms-del-frontend)
       - [Button](#button-atoms)
@@ -1358,6 +1360,28 @@ Las convenciones generales de código (nombres, exports, orden interno, ejemplos
 
 Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
 
+### Pruebas Frontend
+
+- **Unitarias e integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. **55 tests**. Cobertura mínima 80% global y por archivo (modo `error`). Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
+- **E2E**: Playwright 1.64.1 con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Smoke tests: `frontend/tests/e2e/smoke.spec.ts`. Helpers: `frontend/tests/e2e/helpers/`. Traces `on-first-retry` + screenshots `only-on-failure`.
+  - **Pendiente TS-122 (#727)**: el smoke test del health endpoint (`GET /api/test/health`) usa mock vía `page.route`. Será reemplazado por una llamada real cuando se implemente el servicio de consumo (`system.service.ts`). A medida que se publiquen endpoints (ver §"Tabla de Endpoints publicados"), se añadirán más smoke tests al mismo archivo.
+- **a11y (pendiente)**: `@axe-core/playwright` — se integrará en TS-014 (#619).
+- **Exclusión temporal de cobertura**: `src/app/App.tsx` (starter demo de Vite) está excluido del cómputo de Vitest. Ver [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md). Se resolverá en **TS-146 (#769)** (sub-issue de US-024), que reemplazará `App.tsx` por la composición real de la InitPage.
+- **Convenciones completas**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
+
+#### Listado de pruebas
+
+**Unitarias (Vitest)** — 55 tests en 3 archivos:
+
+- `tests/unit/components/atoms/Button.test.tsx` — 18 tests (render, variantes, tamaños, estados, a11y, click handlers).
+- `tests/unit/components/atoms/DesignTokens.test.tsx` — 34 tests (Colors, Typography, Spacing, Radius, Shadows, Layout, Motion, Dark, HighContrast).
+- `tests/unit/shared/constants/assets.test.ts` — 3 tests (estructura del objeto `ASSETS`).
+
+**E2E (Playwright)** — 2 tests × 7 proyectos = 14 ejecuciones:
+
+- `tests/e2e/smoke.spec.ts:5` — `frontend home responde 200 y renderiza` — Valida que la home responde 200, el `<body>` es visible y el título no está vacío. Se ejecuta en los 7 proyectos.
+- `tests/e2e/smoke.spec.ts:11` — `health endpoint (mock) — TODO: reemplazar por llamada real en TS-122 (#727)` — Mock de `GET /api/test/health` vía `page.route`. Se reemplazará por llamada real cuando se implemente `system.service.ts` (TS-122 #727).
+
 <a id="componentes-del-frontend"></a>
 
 ### Componentes del Frontend
@@ -1724,10 +1748,13 @@ impacto real y gatillos de revisión) se documentan en:
     - `tsconfig.paths.json` - Alias de imports (@app, @components, @views, @shared, @i18n, @styles)
     - `vite.config.ts` - Vite (puerto 3000, strictPort, resolve.tsconfigPaths nativo)
     - `vitest.config.ts` - Vitest (jsdom, coverage v8, thresholds 80%, ver ADR-0009)
+    - `playwright.config.ts` - Playwright (7 proyectos E2E, webServer, traces, screenshots)
     - **`tests/`** - Pruebas (TS-012):
       - `unit/setup.ts` - Setup global (jest-dom + mocks de jsdom)
       - `unit/components/atoms/` - Tests unitarios de átomos
       - `unit/shared/constants/` - Tests unitarios de shared
+      - `e2e/smoke.spec.ts` - Smoke tests E2E (frontend + health mock) (TS-013)
+      - `e2e/helpers/` - Fixtures y navegación para E2E (TS-013)
     - **`public/`** - Assets de branding (URL estable, editable post-deploy)
       - `assets/images/starter/` - Imágenes del starter (hero)
       - `favicon.svg`, `icons.svg` - Iconos de app
@@ -1834,7 +1861,9 @@ impacto real y gatillos de revisión) se documentan en:
 - **Lint frontend**: ESLint 9.39.5 (EOL) + `eslint-plugin-jsx-a11y` 6.10.2 + `eslint-plugin-import` 2.32.0 + `eslint-plugin-simple-import-sort` 14.0.0
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
 - **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1 (ver [ADR-0002](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts))
-- **Testing frontend**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. Cobertura mínima 80% global y por archivo. Convenciones: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md). Exclusión temporal de `App.tsx`: [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md).
+- **Testing frontend**:
+  - **Unitarias/integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. Cobertura mínima 80% global y por archivo. 55 tests.
+  - **Stack completo** (unitarias, integración, E2E con 7 proyectos de Playwright, cobertura 80%, exclusiones, convenciones): ver [Pruebas Frontend](#pruebas-frontend).
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
