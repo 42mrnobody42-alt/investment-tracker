@@ -21,7 +21,7 @@ backend/org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 # =============================================
 # IDE - VS Code
 # =============================================
-.vscode/
+.vscode/*
 !.vscode/settings.json
 .idea/
 *.iml
