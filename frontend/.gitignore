@@ -29,3 +29,6 @@ storybook-static/
 
 # Logs
 *.log
+
+# Vitest coverage output
+coverage/

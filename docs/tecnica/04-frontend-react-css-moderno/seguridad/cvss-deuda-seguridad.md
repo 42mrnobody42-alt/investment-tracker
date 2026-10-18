@@ -123,4 +123,31 @@ Listado (por cadena de dependencias):
 
 ## Resueltas
 
+### VULN-002 — `source-map-js` CWE-1284 (DoS por offsets en source maps)
+
+| Campo           | Valor                                                                    |
+| --------------- | ------------------------------------------------------------------------ |
+| **ID**          | VULN-002                                                                 |
+| **Paquete**     | `source-map-js@1.2.1` (resuelto a 1.2.2)                                 |
+| **Severidad**   | High                                                                     |
+| **CWE**         | CWE-1284 (Improper Validation of Specified Quantity in Input)            |
+| **Advisory**    | [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) |
+| **Cadena**      | `@vitest/coverage-v8@5.0.5` → `magicast@0.5.5` → `source-map-js@1.2.1`<br />`jsdom@30.1.3` → `css-tree@3.2.1` → `source-map-js@1.2.1`<br />`stylelint-order@8.1.1` → `postcss@8.5.28` → `source-map-js@1.2.1` |
+| **Tipo**        | Dev dependency — nunca llega a producción                                |
+| **Estado**      | 🟢 Resuelta                                                              |
+| **Resuelta el** | 2026-10-17 (TS-012)                                                      |
+
+#### Acción
+
+Fix aplicado con `npm audit fix` (sin `--force`). `source-map-js` pasa de 1.2.1 a **1.2.2**, la versión que corrige el advisory. Solo cambió 1 paquete; el resto del stack no se tocó.
+
+Verificado con:
+```bash
+npm ls source-map-js        # 1.2.2 en las 3 cadenas
+npm audit --audit-level=high # 11 high restantes (todas VULN-001)
+```
+
+---
+
+
 _(vacío)_

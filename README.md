@@ -169,6 +169,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
     - [ADR-0006 — Decorador withI18n pendiente](#adr-0006--decorador-withi18n-pendiente)
     - [ADR-0007 — Decorador withRouter pendiente](#adr-0007--decorador-withrouter-pendiente)
     - [ADR-0008 — Mixins base de estilos (focus-ring, container, truncate)](#adr-0008--mixins-base-de-estilos-focus-ring-container-truncate)
+    - [ADR-0009 — Exclusión temporal de App.tsx en cobertura de tests](#adr-0009--exclusión-temporal-de-apptsx-en-cobertura-de-tests)
   - [Convenciones del Frontend](#convenciones-del-frontend)
   - [Componentes del Frontend](#componentes-del-frontend)
     - [Atoms](#atoms-del-frontend)
@@ -1306,6 +1307,7 @@ Los Architecture Decision Records del frontend viven en
 | [ADR-0006](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md)   | Decorador `withI18n` pendiente de i18next                         | 🟡 Pendiente | 2026-10-03 | TS-026 (#631)  |
 | [ADR-0007](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md) | Decorador `withRouter` pendiente de React Router                  | 🟡 Pendiente | 2026-10-03 | TS-070 (#675)  |
 | [ADR-0008](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md)          | Mixins base de estilos (focus-ring, container, truncate)          | 🟡 Pendiente | 2026-10-11 | TS-145 (#766)  |
+| [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md)     | Exclusión temporal de `App.tsx` en cobertura de tests             | 🟡 Pendiente | 2026-10-17 | TS-146 (#769)  |
 
 <a id="adr-0001--eslint-9395-eol"></a>
 
@@ -1347,6 +1349,12 @@ Dos decisiones documentadas en ADR-0002:
 Las convenciones generales de código (nombres, exports, orden interno, ejemplos por tipo) están en:
 
 📄 [`docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md)
+
+📄 **Convenciones de testing**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md) — reglas permanentes de Vitest, Testing Library, cobertura global y por archivo, exclusiones permanentes, convenciones de escritura y mocks.
+
+📄 **Guía operativa de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md) — autodocs, decoradores, build estático y fuentes self-hosted.
+
+📄 **Warnings aceptados de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
 
 Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
 
@@ -1432,6 +1440,21 @@ Documentación por componente, organizada por nivel del Design System.
 
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md)
+
+<a id="adr-0009--exclusión-temporal-de-apptsx-en-cobertura-de-tests"></a>
+
+#### ADR-0009 — Exclusión temporal de `App.tsx` en cobertura de tests
+
+> 🟡 **Deuda temporal — se resuelve en TS-146 (#769), sub-issue de US-024**
+
+**Decisión**: Excluir `src/app/App.tsx` (starter demo de Vite) del cómputo de cobertura de Vitest mientras siga siendo código de demo. Al reemplazarse por la composición real de la InitPage horizontal (US-024), se elimina la exclusión, se añade test y se resuelve este ADR.
+
+**Motivo**: testear `App.tsx` hoy implica escribir tests que se borran cuando el archivo desaparezca. Coste sin retorno.
+
+**Convenciones completas de testing**: [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md)
 
 <a id="seguridad-del-frontend"></a>
 
@@ -1700,6 +1723,11 @@ impacto real y gatillos de revisión) se documentan en:
     - `tsconfig.node.json` - Config TS del tooling
     - `tsconfig.paths.json` - Alias de imports (@app, @components, @views, @shared, @i18n, @styles)
     - `vite.config.ts` - Vite (puerto 3000, strictPort, resolve.tsconfigPaths nativo)
+    - `vitest.config.ts` - Vitest (jsdom, coverage v8, thresholds 80%, ver ADR-0009)
+    - **`tests/`** - Pruebas (TS-012):
+      - `unit/setup.ts` - Setup global (jest-dom + mocks de jsdom)
+      - `unit/components/atoms/` - Tests unitarios de átomos
+      - `unit/shared/constants/` - Tests unitarios de shared
     - **`public/`** - Assets de branding (URL estable, editable post-deploy)
       - `assets/images/starter/` - Imágenes del starter (hero)
       - `favicon.svg`, `icons.svg` - Iconos de app
@@ -1776,6 +1804,7 @@ impacto real y gatillos de revisión) se documentan en:
         - **`convenciones/`**
           - `convenciones.md` - Convenciones de código del frontend
           - `storybook.md` - Guía de Storybook (creado en TS-008)
+          - `pruebas.md` - Convenciones de testing (creado en TS-012)
         - **`componentes/`**
           - **`atoms/`**
             - `button.md` - Documentación del componente Button (ejemplo TS-007)
@@ -1805,6 +1834,7 @@ impacto real y gatillos de revisión) se documentan en:
 - **Lint frontend**: ESLint 9.39.5 (EOL) + `eslint-plugin-jsx-a11y` 6.10.2 + `eslint-plugin-import` 2.32.0 + `eslint-plugin-simple-import-sort` 14.0.0
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
 - **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1 (ver [ADR-0002](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts))
+- **Testing frontend**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. Cobertura mínima 80% global y por archivo. Convenciones: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md). Exclusión temporal de `App.tsx`: [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md).
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
@@ -1863,16 +1893,16 @@ y se vincula como **sub-issue** del nivel inmediatamente superior.
 
 ### Flujo de trabajo
 
-| Paso | Acción                       | Comando                                           |
-| ---- | ---------------------------- | ------------------------------------------------- |
-| 1    | Consultar tablero            | `gh project item-list 2 --owner 42mrnobody42-alt` |
-| 2    | Crear rama desde `developer` | `git checkout -b feature/<ID>-<slug>`             |
-| 3    | Mover issue a `In progress`  | `./scripts/kanban-move.sh <N> progress`           |
-| 4    | Commit con `Closes #N`       | `git commit -m "feat(#N): ... Closes #N"`         |
-| 5    | Comentar SHA en el issue     | `./scripts/kanban-comment.sh <N> <sha> [template]`          |
-| 6    | Mover a `In review`          | `./scripts/kanban-move.sh <N> review`             |
-| 7    | Abrir PR a `developer`       | `gh pr create --base developer`                   |
-| 8    | Mover a `Done` (post-merge)  | `./scripts/kanban-move.sh <N> done`               |
+| Paso | Acción                       | Comando                                            |
+| ---- | ---------------------------- | -------------------------------------------------- |
+| 1    | Consultar tablero            | `gh project item-list 2 --owner 42mrnobody42-alt`  |
+| 2    | Crear rama desde `developer` | `git checkout -b feature/<ID>-<slug>`              |
+| 3    | Mover issue a `In progress`  | `./scripts/kanban-move.sh <N> progress`            |
+| 4    | Commit con `Closes #N`       | `git commit -m "feat(#N): ... Closes #N"`          |
+| 5    | Comentar SHA en el issue     | `./scripts/kanban-comment.sh <N> <sha> [template]` |
+| 6    | Mover a `In review`          | `./scripts/kanban-move.sh <N> review`              |
+| 7    | Abrir PR a `developer`       | `gh pr create --base developer`                    |
+| 8    | Mover a `Done` (post-merge)  | `./scripts/kanban-move.sh <N> done`                |
 
 ### Comandos de consulta
 
@@ -1892,15 +1922,15 @@ done
 
 ### Scripts disponibles
 
-| Script                | Función                                 | Uso                                       |
-| --------------------- | --------------------------------------- | ----------------------------------------- |
-| `create-cap01.sh`     | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`               |
-| `delete-cap01.sh`     | Elimina CAP-01 + FT/US/TS (idempotente) | `./scripts/delete-cap01.sh`               |
-| `regen-kanban-ids.sh` | Regenera `kanban-ids.env` desde GitHub  | `./scripts/regen-kanban-ids.sh`           |
-| `clear-project.sh`    | Vacía el Project sin borrar issues      | `./scripts/clear-project.sh`              |
-| `kanban-move.sh`      | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`   |
+| Script                | Función                                 | Uso                                                |
+| --------------------- | --------------------------------------- | -------------------------------------------------- |
+| `create-cap01.sh`     | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
+| `delete-cap01.sh`     | Elimina CAP-01 + FT/US/TS (idempotente) | `./scripts/delete-cap01.sh`                        |
+| `regen-kanban-ids.sh` | Regenera `kanban-ids.env` desde GitHub  | `./scripts/regen-kanban-ids.sh`                    |
+| `clear-project.sh`    | Vacía el Project sin borrar issues      | `./scripts/clear-project.sh`                       |
+| `kanban-move.sh`      | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
 | `kanban-comment.sh`   | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> [template]` |
-| `retry-links.sh`      | Re-vincula sub-issues huérfanos         | `./scripts/retry-links.sh`                |
+| `retry-links.sh`      | Re-vincula sub-issues huérfanos         | `./scripts/retry-links.sh`                         |
 
 ### Plantillas obligatorias
 

@@ -540,8 +540,8 @@ Definidos en §24. Se listan aquí para que la jerarquía del Design System qued
   - `withI18n` → TS-026 (#631), ADR-0006
   - `withRouter` → TS-070 (#675), ADR-0007
 - Cada componente atómico/molecular/organismo tiene su .stories.tsx obligatoriamente.
-- Guía operativa: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](../../tecnica/04-frontend-react-css-moderno/convenciones/storybook.md).
-- Warnings conocidos: [`warnings-storybook.md`](../../tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
+- Guía operativa: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](../tecnica/04-frontend-react-css-moderno/convenciones/storybook.md).
+- Warnings conocidos: [`warnings-storybook.md`](../tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
 - Stories mínimas por componente:
   - Default
   - Variants
@@ -642,12 +642,12 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 
 ### Criterio de clasificación
 
-| Tipo                                  | Ubicación              | Modelo                                  |
-| ------------------------------------- | ---------------------- | --------------------------------------- |
-| Branding / contenido configurable     | `public/assets/...`    | URL estable + `useAsset()` (TS-009)     |
-| Iconos técnicos / acoplados al código | `src/assets/...`       | Import de bundler (hash + tree-shaking) |
-| Fuentes self-hosted                   | `src/styles/fuentes/`  | Import de bundler (hashed)              |
-| Iconos de app (favicon, PWA)          | `public/` (raíz)       | URL estable                             |
+| Tipo                                  | Ubicación             | Modelo                                  |
+| ------------------------------------- | --------------------- | --------------------------------------- |
+| Branding / contenido configurable     | `public/assets/...`   | URL estable + `useAsset()` (TS-009)     |
+| Iconos técnicos / acoplados al código | `src/assets/...`      | Import de bundler (hash + tree-shaking) |
+| Fuentes self-hosted                   | `src/styles/fuentes/` | Import de bundler (hashed)              |
+| Iconos de app (favicon, PWA)          | `public/` (raíz)      | URL estable                             |
 
 ### Árbol
 
@@ -765,6 +765,28 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
 
 ## 14. Testing
 
+- **Unitario**: Vitest 5.0.5 + Testing Library (@testing-library/react 16.3.3, jest-dom 7.0.1, user-event 14.6.8, dom 10.4.2). Configuración en `frontend/vitest.config.ts`. Setup en `frontend/tests/unit/setup.ts`.
+- **Entorno DOM**: jsdom 30.1.3.
+- **Cobertura mínima**: 80% en `Stmts`, `Branch`, `Funcs` y `Lines`, tanto **global** como **por archivo**. Threshold en modo `error` (falla el CI si no se cumple). Excepciones justificadas en ADR-0009 (`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`).
+- **Comandos**:
+  - \`npm test\` — modo watch (desarrollo).
+  - \`npm run test:run\` — modo CI (una ejecución, sale con código).
+  - \`npm run test:coverage\` — genera reporte en \`frontend/coverage/\`.
+- **Integración**: flujos de vista (login -> home -> consulta).
+- **E2E**: Playwright con proyectos mobile-chrome, mobile-safari, desktop-chrome, tablet, tv (TS-013).
+- **a11y**: @axe-core/playwright en cada vista (TS-014).
+- **Visual**: Chromatic o Playwright snapshots.
+- **Ubicación de tests**:
+  - Unitarios de componentes: \`frontend/tests/unit/components/<atoms|molecules|organisms>/\`.
+  - Unitarios de shared: \`frontend/tests/unit/shared/\`.
+  - Integración: \`frontend/tests/integration/\` (cuando existan flujos).
+  - E2E: \`frontend/tests/e2e/\` (TS-013).
+- **Mocks**: alineados con los DTO reales del backend (ver README.md).
+- **Exclusiones de cobertura**: ver ADR-0009 (`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`).
+- **Convenciones completas de testing**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](../tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md). Incluye reglas permanentes (framework, comandos, estructura, cobertura global y por archivo, exclusiones permanentes, líneas con exclusión justificada, convenciones de escritura, mocks, alineación con el backend).
+
+---
+
 - Unitario: Vitest + Testing Library. Cobertura mínima 80% en components/ y shared/.
 - Integración: flujos de vista (login -> home -> consulta).
 - E2E: Playwright con proyectos mobile-chrome, mobile-safari, desktop-chrome, tablet, tv.
@@ -869,8 +891,8 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
 ## 19. Anti-patrones prohibidos
 
 - Ejecutar `npm audit fix --force` o `npm audit fix --legacy-peer-deps`. Ver
-  política en [ADR-0004](../../tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md)
-  y log en [`cvss-deuda-seguridad.md`](../../tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md).
+  política en [ADR-0004](../tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md)
+  y log en [`cvss-deuda-seguridad.md`](../tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md).
   El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
 - Textos hardcodeados en JSX.
 - Colores/espaciados hardcodeados fuera de tokens.
