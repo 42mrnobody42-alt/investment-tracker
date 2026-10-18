@@ -142,7 +142,13 @@ function Section({ title, children }: { title: string; children: ReactNode }): R
   );
 }
 
-function TokenCard({ name, variant }: { name: string; variant: TokenVariant }): ReactElement {
+export function TokenCard({
+  name,
+  variant,
+}: {
+  name: string;
+  variant: TokenVariant;
+}): ReactElement {
   return (
     <div className={styles.card}>
       {variant === 'swatch' && (
