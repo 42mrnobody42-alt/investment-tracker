@@ -16,25 +16,29 @@ viven en ADRs individuales, no aquí.
 
 ## Stack de testing
 
-| Paquete | Versión | Rol |
-| --- | --- | --- |
-| `vitest` | 5.0.5 | Runner y framework de tests |
-| `@vitest/coverage-v8` | 5.0.5 | Provider de cobertura (v8) |
-| `jsdom` | 30.1.3 | Entorno DOM simulado |
-| `@testing-library/react` | 16.3.3 | Render + queries de React |
-| `@testing-library/dom` | 10.4.2 | Utilidades DOM compartidas (peer de react) |
-| `@testing-library/jest-dom` | 7.0.1 | Matchers (`toBeInTheDocument`, `toHaveClass`, etc.) |
-| `@testing-library/user-event` | 14.6.8 | Simulación de interacción del usuario |
+| Paquete                       | Versión | Rol                                                 |
+| ----------------------------- | ------- | --------------------------------------------------- |
+| `vitest`                      | 5.0.5   | Runner y framework de tests                         |
+| `@vitest/coverage-v8`         | 5.0.5   | Provider de cobertura (v8)                          |
+| `jsdom`                       | 30.1.3  | Entorno DOM simulado                                |
+| `@testing-library/react`      | 16.3.3  | Render + queries de React                           |
+| `@testing-library/dom`        | 10.4.2  | Utilidades DOM compartidas (peer de react)          |
+| `@testing-library/jest-dom`   | 7.0.1   | Matchers (`toBeInTheDocument`, `toHaveClass`, etc.) |
+| `@testing-library/user-event` | 14.6.8  | Simulación de interacción del usuario               |
+| `@playwright/test`            | 1.64.1  | E2E: runner de Playwright con 7 proyectos           |
 
 **Pineo exacto** (sin `^` ni `~`), coherente con `frontend/.npmrc` (`save-exact=true`).
 
 ## Comandos
 
-| Comando | Uso |
-| --- | --- |
-| `npm test` | Modo watch (desarrollo). |
-| `npm run test:run` | Modo CI (una ejecución, sale con código). |
-| `npm run test:coverage` | Ejecuta + genera reporte en `frontend/coverage/`. |
+| Comando                   | Uso                                               |
+| ------------------------- | ------------------------------------------------- |
+| `npm test`                | Modo watch (desarrollo).                          |
+| `npm run test:run`        | Modo CI (una ejecución, sale con código).         |
+| `npm run test:coverage`   | Ejecuta + genera reporte en `frontend/coverage/`. |
+| `npm run test:e2e`        | Ejecuta Playwright E2E (7 proyectos).             |
+| `npm run test:e2e:ui`     | Modo UI interactivo de Playwright.                |
+| `npm run test:e2e:report` | Abre el último reporte HTML.                      |
 
 `frontend/coverage/` está en `.gitignore`. **Nunca se commitea.**
 
@@ -45,7 +49,9 @@ viven en ADRs individuales, no aquí.
 - `frontend/tests/unit/components/{atoms,molecules,organisms}/` — tests unitarios de componentes.
 - `frontend/tests/unit/shared/` — tests unitarios de código transversal (hooks, utils, constants).
 - `frontend/tests/integration/` — flujos de vista (login → home → consulta) cuando existan (TS-014+).
-- `frontend/tests/e2e/` — Playwright (TS-013).
+- `frontend/playwright.config.ts` — configuración de Playwright (7 proyectos, webServer, traces).
+- `frontend/tests/e2e/helpers/` — fixtures y helpers E2E (`navigation.ts`, `fixtures.ts`).
+- `frontend/tests/e2e/` — tests E2E (`*.spec.ts`).
 
 ## Configuración del tsconfig
 
@@ -77,27 +83,80 @@ Los siguientes archivos **nunca** se incluyen en el cómputo de cobertura
 (`coverage.exclude` en `vitest.config.ts`). Su justificación es estructural, no
 deuda.
 
-| Archivo | Motivo |
-| --- | --- |
-| `src/main.tsx` | Entry point: ejecuta `createRoot().render()` como side effect de módulo. Testeable solo con hacks no estándar. Si falla, falla la app entera. |
-| `src/**/*.stories.tsx` | Archivos de Storybook: renderizan las stories, no contienen lógica de negocio. Validación visual (Chromatic o equivalente en TS posterior). |
-| `src/**/*.types.ts` | Solo tipos TypeScript. Sin código ejecutable. |
-| `src/**/index.ts` | Barrel exports: re-exportan símbolos ya definidos. Testear el barrel es testear el módulo real. |
-| `src/vite-env.d.ts` | Declaración de tipos de Vite. Solo tipos. |
+| Archivo                | Motivo                                                                                                                                        |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/main.tsx`         | Entry point: ejecuta `createRoot().render()` como side effect de módulo. Testeable solo con hacks no estándar. Si falla, falla la app entera. |
+| `src/**/*.stories.tsx` | Archivos de Storybook: renderizan las stories, no contienen lógica de negocio. Validación visual (Chromatic o equivalente en TS posterior).   |
+| `src/**/*.types.ts`    | Solo tipos TypeScript. Sin código ejecutable.                                                                                                 |
+| `src/**/index.ts`      | Barrel exports: re-exportan símbolos ya definidos. Testear el barrel es testear el módulo real.                                               |
+| `src/vite-env.d.ts`    | Declaración de tipos de Vite. Solo tipos.                                                                                                     |
 
 ## Líneas con exclusión justificada
 
 Algunas líneas concretas quedan por debajo del 100% branch y **NO** se tapan con
 `/* v8 ignore */` ni con tests artificiales. Se documentan aquí:
 
-| Archivo | Línea | Código | Tipo | Motivo |
-| --- | --- | --- | --- | --- |
-| `DesignTokens.tsx` | 128 | `if (ref.current) {` | Defensiva | `useRef` sobre `<span ref>` garantiza no-null en el primer `useEffect`. |
-| `DesignTokens.tsx` | 450 | `d={EASING_PATHS[name] ?? ''}` | Fallback | Todos los tokens de `TOKENS.easings` están mapeados. El fallback solo se ejecuta con datos nuevos sin curva. |
+| Archivo            | Línea | Código                         | Tipo      | Motivo                                                                                                       |
+| ------------------ | ----- | ------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------ |
+| `DesignTokens.tsx` | 128   | `if (ref.current) {`           | Defensiva | `useRef` sobre `<span ref>` garantiza no-null en el primer `useEffect`.                                      |
+| `DesignTokens.tsx` | 450   | `d={EASING_PATHS[name] ?? ''}` | Fallback  | Todos los tokens de `TOKENS.easings` están mapeados. El fallback solo se ejecuta con datos nuevos sin curva. |
 
 **Regla:** estas entradas se actualizan si el código cambia. Si la línea
 desaparece, se elimina del listado. Si aparece una línea nueva con la misma
 justificación, se añade.
+
+## E2E (Playwright)
+
+E2E de la app en 7 configuraciones de dispositivo, cubriendo desktop, 3 móviles (Android e iOS), tablet y TV (FHD y 4K).
+
+**Stack:** `@playwright/test@1.64.1` (pineado con `--save-exact`).
+
+### Proyectos configurados
+
+| Proyecto         | Engine   | Viewport    | dpr  | Touch | Dispositivo objetivo   |
+| ---------------- | -------- | ----------- | ---- | ----- | ---------------------- |
+| `mobile-chrome`  | Chromium | 393 × 873   | 2.75 | Sí    | Infinix GT 30 Pro      |
+| `mobile-android` | Chromium | 393 × 873   | 2.75 | Sí    | Xiaomi Redmi Note 14   |
+| `mobile-safari`  | WebKit   | 393 × 852   | 3    | Sí    | iPhone 14 Pro (preset) |
+| `tablet`         | Chromium | 768 × 1024  | 2    | Sí    | iPad portrait          |
+| `desktop`        | Chromium | 1920 × 1080 | 1    | No    | Desktop                |
+| `tv-fhd`         | Chromium | 1920 × 1080 | 1    | No    | Smart TV FHD           |
+| `tv-4k`          | Chromium | 3840 × 2160 | 2    | No    | Smart TV 4K            |
+
+### Traces y screenshots
+
+- `trace: 'on-first-retry'` — trace solo en el primer reintento del test fallido.
+- `screenshot: 'only-on-failure'` — screenshot solo si el test falla.
+- `video: 'retain-on-failure'` — video solo si falla.
+
+Artefactos en `test-results/` y `playwright-report/` (ambos en `.gitignore`).
+
+### Estructura
+
+- `playwright.config.ts` — 7 proyectos, webServer, traces, screenshots.
+- `tests/e2e/helpers/navigation.ts` — `gotoHome(page)`: navega + espera SPA + valida 200.
+- `tests/e2e/helpers/fixtures.ts` — `test` extendido con `homeReady`.
+- `tests/e2e/*.spec.ts` — tests por dominio.
+
+### WebServer
+
+Playwright levanta Vite automáticamente (`npm run dev` en `localhost:3000`). Fuera de CI, reusa servidor existente.
+
+### Requisitos del sistema
+
+- Navegadores: `npx playwright install chromium webkit`.
+- En Linux (Pop!_OS / Ubuntu 22.04): `sudo apt-get install -y libevent-2.1-7 libavif13` para WebKit.
+
+### Smoke tests y evolución
+
+En `tests/e2e/smoke.spec.ts`:
+
+- Frontend: `GET /` → 200 + título visible.
+- Health endpoint: mock vía `page.route('**/api/test/health')`. Marcado con TODO.
+
+A medida que se publiquen endpoints (README §"Tabla de Endpoints publicados"), se añadirán más smoke tests. **TS-122 (#727)** reemplazará el mock del health por una llamada real.
+
+---
 
 ## Convenciones de escritura
 
