@@ -158,6 +158,25 @@ A medida que se publiquen endpoints (README §"Tabla de Endpoints publicados"), 
 
 ---
 
+### E2E a11y (Playwright + axe)
+
+Auditoría automatizada WCAG 2.2 AA en tests E2E, vía `@axe-core/playwright@4.14.0`.
+
+- Helper: `frontend/tests/e2e/helpers/a11y.ts` → `runA11y(page, options?, testInfo?)`.
+- Tags por defecto: `['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']`.
+- Sin exclusiones por defecto. Si un elemento del mockup falla, **se corrige el mockup**, no se relaja el test. Toda exclusión debe justificarse en un comentario del propio test.
+- Falla con lista de reglas violadas + adjunta `axe-report.html` y `axe-raw.json` al reporte de Playwright (`testInfo.attach`).
+- Test base: `frontend/tests/e2e/a11y.spec.ts` escanea `tests/e2e/fixtures/mock-view.html` (mockup accesible de una vista) en los **7 proyectos**.
+
+**`prefers-reduced-motion: reduce` (beneficio + riesgo).**
+
+Todo test a11y emula `prefers-reduced-motion: reduce` vía `page.emulateMedia({ reducedMotion: 'reduce' })`.
+
+- **Beneficio**: valida WCAG 2.3.3 (Animation from Interactions) — la UI debe ser usable con animaciones desactivadas. Previene regresiones silenciosas cuando se añaden animaciones que dependen del motion para transmitir estado (opacidad en 0 sin la animación → contraste/visibilidad rotos).
+- **Riesgo**: puede detectar violaciones "falsas" si el CSS está mal escrito (ej. `transition: opacity` que deja el elemento en `0` sin el effect). En ese caso se corrige el CSS, no se relaja el test ni se excluye la regla.
+
+**Evolución.** TS-138 (#743) reemplaza el mockup por navegación real a las vistas de US-024/025 y añade un test a11y por vista construida. El helper `runA11y()` se reutiliza sin cambios.
+
 ## Convenciones de escritura
 
 - **Un archivo `*.test.{ts,tsx}` por unidad bajo prueba.** Mismo nombre que el

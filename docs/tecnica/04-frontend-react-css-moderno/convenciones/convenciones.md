@@ -127,10 +127,46 @@ export const ASSETS = {
 - **Alias obligatorios** para imports internos: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`.
 - **Commits** con formato `tipo(#N): descripción`. Referenciar el issue con `Closes #N` o `Refs #N`.
 
-## 6. Referencias
+## 6. Pruebas
+
+Estrategia de pruebas del frontend. Resumen corto; detalle completo en [`pruebas.md`](./pruebas.md).
+
+- **Unitarias + integración**: **Vitest 5.0.5** + **Testing Library** (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. Cobertura mínima **80% en Stmts, Branch, Funcs y Lines**, global y por archivo (modo `error`). **55 tests** en 3 archivos. Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
+- **E2E**: **Playwright 1.64.1** con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Traces `on-first-retry`, screenshots `only-on-failure`, video `retain-on-failure`. **2 tests × 7 proyectos = 14 ejecuciones** (`tests/e2e/smoke.spec.ts`).
+- **a11y**: **`@axe-core/playwright` 4.14.0** + helper `runA11y()` en `frontend/tests/e2e/helpers/a11y.ts`. Tags WCAG 2.2 AA (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`). Test base sobre `frontend/tests/e2e/fixtures/mock-view.html` en los 7 proyectos (`tests/e2e/a11y.spec.ts`). Aplicación a todas las vistas reales: **TS-138 (#743)**.
+- **Stack de build**: Vite 8.3.4 (`npm run build`), TypeScript 6.0.2 (`npm run type-check`).
+- **Comandos**:
+  - `npm test` — Vitest en modo watch.
+  - `npm run test:run` — Vitest modo CI.
+  - `npm run test:coverage` — Vitest + reporte de cobertura en `frontend/coverage/`.
+  - `npm run test:e2e` — Playwright (7 proyectos).
+  - `npm run test:e2e:ui` — Playwright modo UI interactivo.
+  - `npm run test:e2e:report` — Abre el último reporte HTML de Playwright.
+- **Exclusión temporal de cobertura**: `src/app/App.tsx` (starter demo de Vite). Ver [ADR-0009](../deuda-tecnica/exclusiones-cobertura-tests.md). Se resuelve en **TS-146 (#769)** (sub-issue de US-024).
+
+## 7. ADRs activos (deudas técnicas)
+
+Los ADRs del frontend viven en [`../deuda-tecnica/`](../deuda-tecnica/). Registran **deudas técnicas pendientes** (no decisiones arquitectónicas permanentes). Al resolverse, el ADR se elimina y la documentación migra al archivo correspondiente.
+
+| ADR                                                             | Título                                                            | Estado       | Se resuelve en |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- | ------------ | -------------- |
+| [ADR-0001](../deuda-tecnica/eslint-9-eol.md)                    | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | 🟡 Pendiente | TS-142 (#760)  |
+| [ADR-0002](../deuda-tecnica/stylelint-scope-y-colores.md)       | Alcance de Stylelint: colores y separación de scripts             | 🟡 Pendiente | TS-022 (#627)  |
+| [ADR-0003](../deuda-tecnica/assets-hibrido-public-src.md)       | Modelo híbrido de assets: public/ + src/assets/                   | 🟡 Pendiente | TS-031 (#636)  |
+| [ADR-0004](../deuda-tecnica/vulnerabilidades-policy.md)         | Política de vulnerabilidades aceptadas                            | 🟡 Pendiente | TS-143 (#761)  |
+| [ADR-0005](../deuda-tecnica/decorador-with-theme-pendiente.md)  | Decorador `withTheme` pendiente de ThemeProvider                  | 🟡 Pendiente | TS-024 (#629)  |
+| [ADR-0006](../deuda-tecnica/decorador-with-i18n-pendiente.md)   | Decorador `withI18n` pendiente de i18next                         | 🟡 Pendiente | TS-026 (#631)  |
+| [ADR-0007](../deuda-tecnica/decorador-with-router-pendiente.md) | Decorador `withRouter` pendiente de React Router                  | 🟡 Pendiente | TS-070 (#675)  |
+| [ADR-0008](../deuda-tecnica/mixins-base-pendientes.md)          | Mixins base de estilos (focus-ring, container, truncate)          | 🟡 Pendiente | TS-145 (#766)  |
+| [ADR-0009](../deuda-tecnica/exclusiones-cobertura-tests.md)     | Exclusión temporal de `App.tsx` en cobertura de tests y a11y      | 🟡 Pendiente | TS-146 (#769)  |
+
+**Regla de lectura obligatoria**: antes de modificar cualquier artefacto que dependa de un ADR, leer el archivo completo del ADR (no solo la fila de la tabla resumen).
+
+## 8. Referencias
 
 - Reglas completas: [`agente-frontend.md`](../../../prompts/agente-frontend.md).
 - Estructura de directorios: `agente-frontend.md` §2.
 - Convenciones de código: `agente-frontend.md` §15.
 - Alias: [`frontend/tsconfig.paths.json`](../../../../frontend/tsconfig.paths.json).
 - ADRs: `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/`.
+- Convenciones de testing: [`pruebas.md`](./pruebas.md).

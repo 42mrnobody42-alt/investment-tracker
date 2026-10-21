@@ -146,3 +146,13 @@ npm run build
 - [eslint-plugin-import — peerDependencies](https://www.npmjs.com/package/eslint-plugin-import)
 - `docs/prompts/agente-frontend.md` §15 — Stack obligatorio de linting
 - `README.md` §104 — Stack tecnológico del proyecto
+
+---
+
+## Nota de actualización (2026-10-20 — TS-014)
+
+Vite fue actualizado de `8.3.1` a `8.3.4` como fix de seguridad colateral en TS-014 (CVE `launch-editor`: escape de argumentos en Windows + CLI flag misinterpretation + bypass de `fs.existsSync()`). El árbol de `launch-editor` desapareció del bundle de dependencias con este bump.
+
+**Impacto en este ADR**: ninguno. El anclaje de ESLint 9.39.5 documentado aquí es independiente de Vite. El motivo del pin (incompatibilidad de plugins con ESLint 10) no cambia.
+
+**Alcance del CVE**: solo Windows; el proyecto corre en Pop!_OS 22.04 + Docker Linux; `launch-editor` es dependencia de desarrollo y no llega al bundle de producción. Riesgo real: nulo.
