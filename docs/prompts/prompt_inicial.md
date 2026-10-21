@@ -54,7 +54,7 @@ Si la IA detecta una contradicción, debe señalarla, proponer la corrección y 
 
 - **Backend**: Java LTS 21 (Spring Boot 3.3.0)
 - **Base de datos**: PostgreSQL 16
-- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1
+- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.4
 - **Node.js (build frontend)**: 24.21.0 (LTS activa)
 - **Lint frontend**: ESLint 9.39.5 (EOL, ver ADR `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md`) + `eslint-plugin-jsx-a11y` + `eslint-plugin-import` + `eslint-plugin-simple-import-sort`
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier`
@@ -367,6 +367,18 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
     Las vulnerabilidades aceptadas se registran en
     `docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`
     (política en ADR-0004). Aplica a las 3 capas (frontend, backend, database).
+
+31. **Validación obligatoria antes del commit de la ISSUE**.
+    Antes de cualquier commit DEBES ejecutar las validaciones de los criterios de aceptación del ISSUE del tablero. Sin esa validación, el commit se considera incompleto.
+
+    **Estándar obligatorio de validaciones**:
+
+    - **Todas las validaciones en una sola ejecución.** Puedes usar plantillas o archivos temporales para textos o mensajes grandes; no se aceptan validaciones dispersas en múltiples mensajes.
+    - **Cada validación debidamente identificada y separada**, con su resultado impreso en pantalla.
+    - **Comparar explícitamente el valor esperado contra el obtenido.** No basta con imprimir el resultado; debe declararse la comparación (`esperado: X — obtenido: Y`).
+    - **Al final, un resumen de la comparación** con veredicto explícito para cada validación: `aprobó` / `no aprobó` / `contradicción`, seguido de un veredicto global (`aprobó` / `no aprobó`).
+
+    La validación se ejecuta contra el código real, no contra supuestos. Si falta contexto (endpoint, DTO, campo, versión, diseño), se solicita antes de avanzar (regla 24).
 
 ## 📊 Gestión del Proyecto
 

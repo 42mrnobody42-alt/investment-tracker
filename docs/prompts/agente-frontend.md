@@ -774,7 +774,7 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
   - `npm run test:coverage` — genera reporte en `frontend/coverage/`.
 - **Integración**: flujos de vista (login -> home -> consulta).
 - **E2E**: Playwright con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`) configurados en `frontend/playwright.config.ts` (TS-013).
-- **a11y**: @axe-core/playwright en cada vista (TS-014).
+- **a11y**: `@axe-core/playwright@4.14.0` + helper `runA11y()` en `tests/e2e/helpers/a11y.ts`. Mockup base en `tests/e2e/fixtures/mock-view.html` (TS-014). Aplicación a todas las vistas reales: **TS-138 (#743)**. Ver subsección `### E2E a11y (Playwright + axe)` en `pruebas.md`.
 - **Visual**: Chromatic o Playwright snapshots.
 - **Ubicación de tests**:
   - Unitarios de componentes: `frontend/tests/unit/components/<atoms|molecules|organisms>/`.

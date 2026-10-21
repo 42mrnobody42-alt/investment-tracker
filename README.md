@@ -252,7 +252,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 │   PL/pgSQL + UUID + 54 monedas│   │   http://localhost:5050       │
 └──────────────────────────────┘    └──────────────────────────────┘
 
-> **Stack del frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 + Node.js 24.21.0 (build).
+> **Stack del frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.4 + Node.js 24.21.0 (build).
 > Detalle completo en la [sección 4](#4-frontend---react-y-css-moderno).
 ```
 
@@ -1269,23 +1269,27 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 - Vistas autenticadas siempre dentro de `AppShell` (TopBar + Sidebar plegable + Workspace).
 - i18n obligatorio (es/en) sin textos hardcodeados.
 - Assets corporativos mutables en runtime (`public/assets/` + `manifest.json` + `useAsset()`).
-- Accesibilidad WCAG 2.2 AA verificada con `axe-core` en CI.
+- Accesibilidad WCAG 2.2 AA verificada con `axe-core` en CI: helper `runA11y()` sobre mockup base en los 7 proyectos (TS-014); aplicación a todas las vistas reales en **TS-138 (#743)**.
 - Sin `any`, sin colores hardcodeados, sin secretos en el bundle.
 
 ### Stack Tecnológico del Frontend
 
-| Componente        | Versión                     | Notas                                                                      |
-| ----------------- | --------------------------- | -------------------------------------------------------------------------- |
-| React             | 19.2.8                      | Versión estable activa                                                     |
-| React DOM         | 19.2.8                      | Sincronizado con React                                                     |
-| TypeScript        | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`               |
-| Vite              | 8.3.1                       | Bundler y dev server (puerto 3000, `strictPort: true`)                     |
-| Node.js (build)   | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                |
-| ESLint            | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                    |
-| Prettier          | 3.9.9                       | Formateo (`.prettierrc.json`)                                              |
-| Stylelint         | 17.15.0                     | Lint CSS / CSS Modules (`.stylelintrc.json`)                               |
-| ESLint plugins    | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh` |
-| Stylelint configs | ver `frontend/package.json` | `stylelint-config-standard`, `css-modules`, `recess-order`                 |
+| Componente           | Versión                     | Notas                                                                                                           |
+| -------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| React                | 19.2.8                      | Versión estable activa                                                                                          |
+| React DOM            | 19.2.8                      | Sincronizado con React                                                                                          |
+| TypeScript           | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`                                                    |
+| Vite                 | 8.3.4                       | Bundler y dev server (puerto 3000, `strictPort: true`)                                                          |
+| Node.js (build)      | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                                                     |
+| ESLint               | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                                                         |
+| Prettier             | 3.9.9                       | Formateo (`.prettierrc.json`)                                                                                   |
+| Stylelint            | 17.15.0                     | Lint CSS / CSS Modules (`.stylelintrc.json`)                                                                    |
+| ESLint plugins       | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh`                                      |
+| Stylelint configs    | ver `frontend/package.json` | `stylelint-config-standard`, `css-modules`, `recess-order`                                                      |
+| Vitest               | 5.0.5                       | Unitarias + integración (jsdom, coverage v8, thresholds 80%)                                                    |
+| Testing Library      | 16.3.3 (react)              | `@testing-library/react` + `jest-dom` 7.0.1 + `user-event` 14.6.8 + `dom` 10.4.2                                |
+| Playwright           | 1.64.1                      | E2E en 7 proyectos (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`) |
+| @axe-core/playwright | 4.14.0                      | Auditoría a11y WCAG 2.2 AA en E2E                                                                               |
 
 **Pineo de versiones**: `frontend/.npmrc` con `save-exact=true`. Ninguna
 dependencia usa `^` ni `~` en `package.json`.
@@ -1346,70 +1350,6 @@ Dos decisiones documentadas en ADR-0002:
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)
 
-### Convenciones del Frontend
-
-Las convenciones generales de código (nombres, exports, orden interno, ejemplos por tipo) están en:
-
-📄 [`docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md)
-
-📄 **Convenciones de testing**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md) — reglas permanentes de Vitest, Testing Library, cobertura global y por archivo, exclusiones permanentes, convenciones de escritura y mocks.
-
-📄 **Guía operativa de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md) — autodocs, decoradores, build estático y fuentes self-hosted.
-
-📄 **Warnings aceptados de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
-
-Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
-
-### Pruebas Frontend
-
-- **Unitarias e integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. **55 tests**. Cobertura mínima 80% global y por archivo (modo `error`). Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
-- **E2E**: Playwright 1.64.1 con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Smoke tests: `frontend/tests/e2e/smoke.spec.ts`. Helpers: `frontend/tests/e2e/helpers/`. Traces `on-first-retry` + screenshots `only-on-failure`.
-  - **Pendiente TS-122 (#727)**: el smoke test del health endpoint (`GET /api/test/health`) usa mock vía `page.route`. Será reemplazado por una llamada real cuando se implemente el servicio de consumo (`system.service.ts`). A medida que se publiquen endpoints (ver §"Tabla de Endpoints publicados"), se añadirán más smoke tests al mismo archivo.
-- **a11y (pendiente)**: `@axe-core/playwright` — se integrará en TS-014 (#619).
-- **Exclusión temporal de cobertura**: `src/app/App.tsx` (starter demo de Vite) está excluido del cómputo de Vitest. Ver [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md). Se resolverá en **TS-146 (#769)** (sub-issue de US-024), que reemplazará `App.tsx` por la composición real de la InitPage.
-- **Convenciones completas**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
-
-#### Listado de pruebas
-
-**Unitarias (Vitest)** — 55 tests en 3 archivos:
-
-- `tests/unit/components/atoms/Button.test.tsx` — 18 tests (render, variantes, tamaños, estados, a11y, click handlers).
-- `tests/unit/components/atoms/DesignTokens.test.tsx` — 34 tests (Colors, Typography, Spacing, Radius, Shadows, Layout, Motion, Dark, HighContrast).
-- `tests/unit/shared/constants/assets.test.ts` — 3 tests (estructura del objeto `ASSETS`).
-
-**E2E (Playwright)** — 2 tests × 7 proyectos = 14 ejecuciones:
-
-- `tests/e2e/smoke.spec.ts:5` — `frontend home responde 200 y renderiza` — Valida que la home responde 200, el `<body>` es visible y el título no está vacío. Se ejecuta en los 7 proyectos.
-- `tests/e2e/smoke.spec.ts:11` — `health endpoint (mock) — TODO: reemplazar por llamada real en TS-122 (#727)` — Mock de `GET /api/test/health` vía `page.route`. Se reemplazará por llamada real cuando se implemente `system.service.ts` (TS-122 #727).
-
-<a id="componentes-del-frontend"></a>
-
-### Componentes del Frontend
-
-Documentación por componente, organizada por nivel del Design System.
-
-<a id="atoms-del-frontend"></a>
-
-#### Atoms
-
-- [Button](#button-atoms) — ver el resumen inline más abajo.
-
-<a id="button-atoms"></a>
-
-#### Button
-
-> **Ejemplo provisional** creado en TS-007. Se reemplazará por la versión definitiva en **FT-003 (Design System: átomos)**.
-
-- **Ubicación**: `frontend/src/components/atoms/Button/`
-- **Props**: `variant` (`'primary' | 'secondary' | 'ghost' | 'danger'`), `size` (`'sm' | 'md' | 'lg'`), `loading`, `children`, más todas las de `<button>`.
-- **Uso**: `import { Button } from '@components/atoms/Button';` → `<Button>Enviar</Button>`
-- **Convenciones aplicadas**: named export, CSS Module con clases camelCase, props tipadas en archivo separado, barrel export.
-
-📄 **ADR completo**:
-[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)
-
-<a id="adr-0004--política-de-vulnerabilidades-aceptadas"></a>
-
 #### ADR-0004 — Política de vulnerabilidades aceptadas
 
 > 🔒 **Política de seguridad para dependencias del frontend**
@@ -1467,18 +1407,89 @@ Documentación por componente, organizada por nivel del Design System.
 
 <a id="adr-0009--exclusión-temporal-de-apptsx-en-cobertura-de-tests"></a>
 
-#### ADR-0009 — Exclusión temporal de `App.tsx` en cobertura de tests
+#### ADR-0009 — Exclusión temporal de `App.tsx` en cobertura de tests y a11y
 
-> 🟡 **Deuda temporal — se resuelve en TS-146 (#769), sub-issue de US-024**
+> 🟡 **Deuda temporal — se resuelve en TS-146 (#769), sub-issue de US-024. Incluye: reemplazar `App.tsx`, eliminar exclusiones de cobertura (Vitest y a11y), añadir test unitario y test a11y del nuevo código.**
 
-**Decisión**: Excluir `src/app/App.tsx` (starter demo de Vite) del cómputo de cobertura de Vitest mientras siga siendo código de demo. Al reemplazarse por la composición real de la InitPage horizontal (US-024), se elimina la exclusión, se añade test y se resuelve este ADR.
+**Capa**: Frontend (React + TypeScript + Vite + Vitest + Playwright).
+
+**Decisión**: Excluir `src/app/App.tsx` (starter demo de Vite) del cómputo de cobertura de Vitest y de los tests a11y (Playwright + axe) mientras siga siendo código de demo. Al reemplazarse por la composición real de la InitPage horizontal (US-024), se eliminan ambas exclusiones, se añaden tests unitario y a11y, y se resuelve este ADR.
 
 **Motivo**: testear `App.tsx` hoy implica escribir tests que se borran cuando el archivo desaparezca. Coste sin retorno.
+
+**Nota a11y (TS-014 #619)**: la exclusión también aplica a los tests de accesibilidad. TS-014 valida el helper `runA11y()` contra un **mockup HTML** (`tests/e2e/fixtures/mock-view.html`), no contra `App.tsx`. TS-138 (#743) aplica el helper a las vistas reales de US-024/025 y posteriores.
+
+**Relacionado**: US-004 (#568), TS-012 (#617), TS-014 (#619), TS-138 (#743), US-024 (#588), US-025 (#589), US-041 (#605), TS-146 (#769), ADR-0002.
 
 **Convenciones completas de testing**: [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
 
 📄 **ADR completo**:
 [`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md)
+
+### Convenciones del Frontend
+
+Las convenciones generales de código (nombres, exports, orden interno, ejemplos por tipo) están en:
+
+📄 [`docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md)
+
+📄 **Convenciones de testing**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md) — reglas permanentes de Vitest, Testing Library, cobertura global y por archivo, exclusiones permanentes, convenciones de escritura y mocks.
+
+📄 **Guía operativa de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md) — autodocs, decoradores, build estático y fuentes self-hosted.
+
+📄 **Warnings aceptados de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
+
+Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
+
+### Pruebas Frontend
+
+- **Unitarias e integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. **55 tests**. Cobertura mínima 80% global y por archivo (modo `error`). Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
+- **E2E**: Playwright 1.64.1 con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Smoke tests: `frontend/tests/e2e/smoke.spec.ts`. Helpers: `frontend/tests/e2e/helpers/`. Traces `on-first-retry` + screenshots `only-on-failure`.
+  - **Pendiente TS-122 (#727)**: el smoke test del health endpoint (`GET /api/test/health`) usa mock vía `page.route`. Será reemplazado por una llamada real cuando se implemente el servicio de consumo (`system.service.ts`). A medida que se publiquen endpoints (ver §"Tabla de Endpoints publicados"), se añadirán más smoke tests al mismo archivo.
+- **a11y**: `@axe-core/playwright@4.14.0` + helper `runA11y()` (`frontend/tests/e2e/helpers/a11y.ts`). Test base sobre `frontend/tests/e2e/fixtures/mock-view.html` en los 7 proyectos (TS-014). Aplicación a todas las vistas reales: **TS-138 (#743)**. Falla con reporte HTML adjunto por `testInfo.attach`.
+- **Exclusión temporal de cobertura**: `src/app/App.tsx` (starter demo de Vite) está excluido del cómputo de Vitest. Ver [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md). Se resolverá en **TS-146 (#769)** (sub-issue de US-024), que reemplazará `App.tsx` por la composición real de la InitPage.
+- **Convenciones completas**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
+
+#### Listado de pruebas
+
+**Unitarias (Vitest)** — 55 tests en 3 archivos:
+
+- `tests/unit/components/atoms/Button.test.tsx` — 18 tests (render, variantes, tamaños, estados, a11y, click handlers).
+- `tests/unit/components/atoms/DesignTokens.test.tsx` — 34 tests (Colors, Typography, Spacing, Radius, Shadows, Layout, Motion, Dark, HighContrast).
+- `tests/unit/shared/constants/assets.test.ts` — 3 tests (estructura del objeto `ASSETS`).
+
+**E2E (Playwright)** — 2 tests × 7 proyectos = 14 ejecuciones:
+
+- `tests/e2e/smoke.spec.ts:5` — `frontend home responde 200 y renderiza` — Valida que la home responde 200, el `<body>` es visible y el título no está vacío. Se ejecuta en los 7 proyectos.
+- `tests/e2e/smoke.spec.ts:11` — `health endpoint (mock) — TODO: reemplazar por llamada real en TS-122 (#727)` — Mock de `GET /api/test/health` vía `page.route`. Se reemplazará por llamada real cuando se implemente `system.service.ts` (TS-122 #727).
+- `tests/e2e/a11y.spec.ts:12` — `A11y base — WCAG 2.2 AA › mock-view pasa la auditoría de axe` — Escanea `mock-view.html` con `runA11y()` (tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`), `prefers-reduced-motion: reduce` emulado. Se ejecuta en los 7 proyectos (TS-014).
+
+<a id="componentes-del-frontend"></a>
+
+### Componentes del Frontend
+
+Documentación por componente, organizada por nivel del Design System.
+
+<a id="atoms-del-frontend"></a>
+
+#### Atoms
+
+- [Button](#button-atoms) — ver el resumen inline más abajo.
+
+<a id="button-atoms"></a>
+
+#### Button
+
+> **Ejemplo provisional** creado en TS-007. Se reemplazará por la versión definitiva en **FT-003 (Design System: átomos)**.
+
+- **Ubicación**: `frontend/src/components/atoms/Button/`
+- **Props**: `variant` (`'primary' | 'secondary' | 'ghost' | 'danger'`), `size` (`'sm' | 'md' | 'lg'`), `loading`, `children`, más todas las de `<button>`.
+- **Uso**: `import { Button } from '@components/atoms/Button';` → `<Button>Enviar</Button>`
+- **Convenciones aplicadas**: named export, CSS Module con clases camelCase, props tipadas en archivo separado, barrel export.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)
+
+<a id="adr-0004--política-de-vulnerabilidades-aceptadas"></a>
 
 <a id="seguridad-del-frontend"></a>
 
@@ -1754,7 +1765,9 @@ impacto real y gatillos de revisión) se documentan en:
       - `unit/components/atoms/` - Tests unitarios de átomos
       - `unit/shared/constants/` - Tests unitarios de shared
       - `e2e/smoke.spec.ts` - Smoke tests E2E (frontend + health mock) (TS-013)
-      - `e2e/helpers/` - Fixtures y navegación para E2E (TS-013)
+      - `e2e/a11y.spec.ts` - Auditoría a11y con axe-core WCAG 2.2 AA (TS-014)
+      - `e2e/helpers/` - Fixtures, navegación y `runA11y()` para E2E (TS-013 / TS-014)
+      - `e2e/fixtures/` - Mockup accesible `mock-view.html` para a11y (TS-014)
     - **`public/`** - Assets de branding (URL estable, editable post-deploy)
       - `assets/images/starter/` - Imágenes del starter (hero)
       - `favicon.svg`, `icons.svg` - Iconos de app
@@ -1828,10 +1841,13 @@ impacto real y gatillos de revisión) se documentan en:
           - `decorador-with-theme-pendiente.md` (ADR-0005)
           - `decorador-with-i18n-pendiente.md` (ADR-0006)
           - `decorador-with-router-pendiente.md` (ADR-0007)
+          - `mixins-base-pendientes.md` (ADR-0008)
+          - `exclusiones-cobertura-tests.md` (ADR-0009)
         - **`convenciones/`**
           - `convenciones.md` - Convenciones de código del frontend
           - `storybook.md` - Guía de Storybook (creado en TS-008)
           - `pruebas.md` - Convenciones de testing (creado en TS-012)
+          - `warnings-storybook.md` - Warnings aceptados de Storybook (creado en TS-009)
         - **`componentes/`**
           - **`atoms/`**
             - `button.md` - Documentación del componente Button (ejemplo TS-007)
@@ -1856,13 +1872,14 @@ impacto real y gatillos de revisión) se documentan en:
 
 - **Backend**: Java LTS 21 (Spring Boot 3.x)
 - **Base de datos**: PostgreSQL 16
-- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 (ver ADR `eslint-9-eol.md`)
+- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.4 (ver ADR `eslint-9-eol.md`)
 - **Node.js (build frontend)**: 24.21.0 (LTS activa) — fijado en `frontend/.nvmrc`
 - **Lint frontend**: ESLint 9.39.5 (EOL) + `eslint-plugin-jsx-a11y` 6.10.2 + `eslint-plugin-import` 2.32.0 + `eslint-plugin-simple-import-sort` 14.0.0
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
 - **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1 (ver [ADR-0002](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts))
 - **Testing frontend**:
   - **Unitarias/integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. Cobertura mínima 80% global y por archivo. 55 tests.
+  - **E2E a11y**: `@axe-core/playwright` 4.14.0 + helper `runA11y()` en `frontend/tests/e2e/helpers/a11y.ts`. Test base sobre mockup accesible (`tests/e2e/fixtures/mock-view.html`) en los 7 proyectos. Aplicación a vistas reales: TS-138 (#743).
   - **Stack completo** (unitarias, integración, E2E con 7 proyectos de Playwright, cobertura 80%, exclusiones, convenciones): ver [Pruebas Frontend](#pruebas-frontend).
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
