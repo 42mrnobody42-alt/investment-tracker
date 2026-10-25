@@ -53,49 +53,6 @@ Es **ruido del terminal**. Al verlo:
 
 ---
 
-## W-002 — `ariaLabel` en `PopoverProvider` (anticipo Storybook 11)
-
-### El warning
-
-En la consola del navegador al abrir Storybook:
-
-    globals-runtime.js:123 The 'ariaLabel' prop on 'PopoverProvider' will
-    become mandatory in Storybook 11. Provide a concise, accessible label
-    describing the popover's purpose.
-
-### Por qué ocurre
-
-Storybook 10.6.1 emite este aviso para anticipar un cambio que vendrá en
-**Storybook 11**: el prop `ariaLabel` del componente interno `PopoverProvider`
-pasará de ser opcional a obligatorio.
-
-**No es un problema de nuestro código**: el warning viene de la propia
-implementación interna de Storybook (probablemente del addon `themes` o
-`a11y`). Nuestro proyecto no usa `PopoverProvider` directamente.
-
-### Por qué se acepta
-
-1. **Es interno de Storybook**: no aparece en nuestro código.
-2. **No afecta funcionalidad**: es un aviso anticipado, no un error.
-3. **No hay fix posible sin parchear Storybook**.
-4. **Se resolverá solo**: cuando actualicemos a Storybook 11, el prop será
-   obligatorio y Storybook lo manejará internamente.
-
-### Cómo leerlo
-
-Es **un aviso de migración futura**. Al verlo:
-
-- Se puede ignorar con seguridad en Storybook 10.
-- No aparece en producción.
-- No requiere acción por parte del proyecto.
-
-### Cuándo revisar esta decisión
-
-- Cuando actualicemos a **Storybook 11** y verifiquemos que el aviso desaparece.
-- Si el warning muta a error en una versión futura de Storybook 10.x.
-
----
-
 ## Referencias
 
 - `storybook.md` — guía operativa de Storybook.

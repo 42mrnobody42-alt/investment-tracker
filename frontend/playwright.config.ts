@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const FRONTEND_PORT = process.env.FRONTEND_PORT || '3000';
+
 /**
  * Playwright configuration — Investment Tracker Pro
  *
@@ -23,7 +25,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: `http://localhost:${FRONTEND_PORT}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -104,7 +106,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: `http://localhost:${FRONTEND_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     stdout: 'ignore',

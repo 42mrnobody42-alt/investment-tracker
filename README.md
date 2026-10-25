@@ -102,6 +102,10 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
      - `docs/tecnica/04-frontend-react-css-moderno/…` (se puebla con CAP-01)
    - La migración física de los archivos existentes se hará cuando la documentación actual deje de dar abasto.
 
+6. **`frontend/tests/shellTest/Frontend-test-Dev.sh`**
+   - Runner unificado de tests del frontend. Gate **obligatorio** antes de commit, PR y cierre de issue: ejecuta ESLint, Stylelint, Prettier, TypeScript, Vitest, Playwright (smoke + a11y), Vite build y Storybook build; emite resumen clasificado `[E-NNN]/[W-NNN]/[S-NNN]`. Regla completa en `prompt_inicial.md` (regla 32). Detalle en `pruebas.md`.
+   - Ruta: `frontend/tests/shellTest/Frontend-test-Dev.sh`.
+
 **Regla de solicitud de archivos**: cuando un agente (humano o IA) necesite contexto que no está en los documentos anteriores, DEBE solicitar los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras. El procedimiento detallado vive en `docs/prompts/agente-frontend.md` sección 21 y en `docs/prompts/prompt_inicial.md` (Reglas generales para la IA, reglas 24-28).
 
 **Consistencia**: cualquier cambio en endpoints, DTOs, roles, códigos de error o convenciones de frontend debe reflejarse en el mismo PR en este README, en `prompt_inicial.md` y/o en el agente correspondiente.
@@ -1441,6 +1445,52 @@ Las convenciones generales de código (nombres, exports, orden interno, ejemplos
 Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
 
 ### Pruebas Frontend
+
+> **Testing:** el runner unificado `frontend/tests/shellTest/Frontend-test-Dev.sh` es el gate obligatorio antes de push, PR y merge (commit WIP permitido con `ALLOW_NEW=1`). Warnings/errores nuevos bloquean push/merge hasta documentarse en `approved-warnings.txt`. Regla completa en [`prompt_inicial.md`](docs/prompts/prompt_inicial.md) (regla 32). Detalle en [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
+
+
+#### Opciones del runner (`Frontend-test-Dev.sh`)
+
+El runner acepta overrides por variables de entorno. Uso típico:
+
+| Variable | Ejemplo | Efecto |
+|---|---|---|
+| `RUN_AUTOFIX=0` | `RUN_AUTOFIX=0 ...` | Salta el auto-fix pre-run |
+| `RUN_LINT=0` | `RUN_LINT=0 ...` | Salta ESLint + Stylelint + Prettier |
+| `RUN_TYPES=0` | `RUN_TYPES=0 ...` | Salta TypeScript |
+| `RUN_UNIT=0` | `RUN_UNIT=0 ...` | Salta Vitest |
+| `RUN_BUILD=0` | `RUN_BUILD=0 ...` | Salta Vite build + Storybook build |
+| `RUN_E2E=0` | `RUN_E2E=0 ...` | Salta Playwright smoke + a11y + Storybook manager |
+| `RUN_SERVICES=0` | `RUN_SERVICES=0 ...` | No levanta Storybook dev manualmente (Playwright webServer lo gestiona) |
+| `RUN_CLEANUP=0` | `RUN_CLEANUP=0 ...` | No ejecuta cleanup al final (debug) |
+| `RUN_ESLINT=0` | `RUN_ESLINT=0 ...` | Salta solo ESLint dentro de `RUN_LINT` |
+| `RUN_SMOKE=0` | `RUN_SMOKE=0 ...` | Salta solo Playwright smoke dentro de `RUN_E2E` |
+| `RUN_A11Y=0` | `RUN_A11Y=0 ...` | Salta solo Playwright a11y dentro de `RUN_E2E` |
+| `ALLOW_NEW=1` | `ALLOW_NEW=1 ...` | **Modo WIP**: exit 0 aunque haya warnings/errores nuevos. NO autoriza push/merge. |
+| `DEBUG=1` / `--debug` | `DEBUG=1 ...` | Output completo de cada grupo |
+| `STORYBOOK_PORT=<n>` | `STORYBOOK_PORT=3010 ...` | Override puerto Storybook (default: leído de `package.json`) |
+| `FRONTEND_PORT=<n>` | `FRONTEND_PORT=3000 ...` | Override puerto Vite (default: leído de `vite.config.ts`) |
+
+**Recipes comunes**:
+
+```bash
+# Todo
+bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo unit
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_BUILD=0 RUN_E2E=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo E2E
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_UNIT=0 RUN_BUILD=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# WIP (checkpoint local, no push)
+ALLOW_NEW=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+```
+
+Detalle completo, thresholds y árbol de grupos: [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md) §Runner unificado.
+
 
 - **Unitarias e integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. **55 tests**. Cobertura mínima 80% global y por archivo (modo `error`). Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
 - **E2E**: Playwright 1.64.1 con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Smoke tests: `frontend/tests/e2e/smoke.spec.ts`. Helpers: `frontend/tests/e2e/helpers/`. Traces `on-first-retry` + screenshots `only-on-failure`.

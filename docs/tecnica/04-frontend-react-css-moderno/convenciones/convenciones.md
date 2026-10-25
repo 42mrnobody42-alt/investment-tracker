@@ -129,7 +129,7 @@ export const ASSETS = {
 
 ## 6. Pruebas
 
-Estrategia de pruebas del frontend. Resumen corto; detalle completo en [`pruebas.md`](./pruebas.md).
+- **Runner unificado**: `frontend/tests/shellTest/Frontend-test-Dev.sh` centraliza ESLint, Stylelint, Prettier, TypeScript, Vitest, Playwright (smoke + a11y), Vite build y Storybook build. Resumen clasificado en `[W-DOC]`/`[W-NEW]`/`[E-DOC]`/`[E-NEW]`/`[S-NNN]`. Warnings/errores nuevos bloquean push/merge (no commit WIP). Detalle en [`pruebas.md`](./pruebas.md).
 
 - **Unitarias + integración**: **Vitest 5.0.5** + **Testing Library** (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. Cobertura mínima **80% en Stmts, Branch, Funcs y Lines**, global y por archivo (modo `error`). **55 tests** en 3 archivos. Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
 - **E2E**: **Playwright 1.64.1** con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Traces `on-first-retry`, screenshots `only-on-failure`, video `retain-on-failure`. **2 tests × 7 proyectos = 14 ejecuciones** (`tests/e2e/smoke.spec.ts`).

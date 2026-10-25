@@ -380,6 +380,27 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
     La validación se ejecuta contra el código real, no contra supuestos. Si falta contexto (endpoint, DTO, campo, versión, diseño), se solicita antes de avanzar (regla 24).
 
+32. **Runner unificado de tests del frontend (obligatorio)**.
+    Todo cambio en código frontend DEBE ejecutar `frontend/tests/shellTest/Frontend-test-Dev.sh` y aprobar con exit 0 ANTES de:
+    - Hacer **push** a origin.
+    - Abrir un **PR** a `developer`.
+    - Hacer **merge** a `developer`, `lastest` o `qa`.
+    - Marcar el issue como `Done`.
+
+    **Commits locales (checkpoint)**: se permite commit WIP como punto de control en la rama local con `ALLOW_NEW=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh`. Este modo permite que haya warnings/errores NUEVOS sin bloquear el commit, pero **NO autoriza push ni merge**. El mensaje de commit debe incluir `[WIP]` en el prefijo.
+
+    El runner ejecuta todos los gates del frontend (ESLint, Stylelint, Prettier, TypeScript, Vitest, Playwright smoke, Playwright a11y, Vite build, Storybook build), agrupa resultados y emite un resumen clasificado:
+    - `[W-DOC-NNN]` warnings documentados (mapean 1:1 a `approved-warnings.txt` → doc de referencia).
+    - `[W-NEW-NNN]` warnings nuevos (bloquean push/merge hasta documentarse o resolverse).
+    - `[E-DOC-NNN]` errores documentados.
+    - `[E-NEW-NNN]` errores nuevos (bloquean push/merge).
+    - `[S-NNN]` éxitos.
+
+    **Registro de aprobados**: `frontend/tests/shellTest/approved-warnings.txt` (formato bloque `[W-DOC-NNN]` con `category/group/ref/message/pattern`). Cada entrada documenta el mensaje literal y su `pattern` (regex ERE). Cualquier warning/error del output que no matchee → se clasifica como NUEVO.
+
+    **Regla derivada**: todo test/gate nuevo creado en cualquier tarea futura DEBE añadirse al runner en el mismo PR. Un cambio que rompa el runner sin actualizarlo bloquea el push/merge.
+
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero
