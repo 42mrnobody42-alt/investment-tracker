@@ -14,6 +14,222 @@ cobertura, exclusiones permanentes y convenciones de escritura.
 Las **deudas temporales** de cobertura (archivos excluidos que dejarán de estarlo)
 viven en ADRs individuales, no aquí.
 
+## Runner unificado (`Frontend-test-Dev.sh`)
+
+### Qué es
+
+`frontend/tests/shellTest/Frontend-test-Dev.sh` — runner en bash que ejecuta la totalidad de los tests y gates de calidad del frontend en un solo comando. **Gate obligatorio** antes de push, PR o merge (ver §Gate obligatorio).
+
+### Por qué existe
+
+Antes de centralizar, los tests vivían dispersos en scripts npm individuales y cada gate requería recordar su comando y umbral. El runner resuelve:
+
+1. **Comando único** antes de push/PR/merge.
+2. **Auto-fix pre-run** (Prettier → Stylelint → ESLint) que elimina falsos positivos de formato antes de evaluar.
+3. **Clasificación 1:1** de warnings/errores contra `approved-warnings.txt`.
+4. **Resumen clasificado** con códigos `[W-DOC]/[W-NEW]/[E-DOC]/[E-NEW]/[S-NNN]`.
+5. **Toggles granular** por grupo o familia vía variables de entorno.
+6. **Cleanup defensivo** con `setsid` (no cierra la terminal del usuario).
+
+### Grupos ejecutados (12)
+
+| # | Grupo | Comando | Threshold `MIN_SUCCESSES` |
+|---|---|---|---|
+| 1 | Auto-fix pre-run | Prettier → Stylelint → ESLint | exit codes 0/0/0 |
+| 2 | ESLint | `npm run lint` | 1 |
+| 3 | Stylelint | `npm run lint:css` | 1 |
+| 4 | Prettier | `npm run format:check` | 1 |
+| 5 | TypeScript | `npm run type-check` | 1 |
+| 6 | Vitest (unit) | `npm run test:run` | **55** (tests) |
+| 7 | Vite build | `npm run build` | 1 |
+| 8 | Storybook build | `npm run build-storybook` | 1 |
+| 9 | Servicios | `npm run storybook` (setsid) | setup + health check |
+| 10 | Playwright smoke | `npx playwright test tests/e2e/smoke.spec.ts` | **14** (2×7 proyectos) |
+| 11 | Playwright a11y | `npx playwright test tests/e2e/a11y.spec.ts` | **7** (1×7 proyectos) |
+| 12 | Storybook manager E2E | `npx playwright test --config playwright.storybook.config.ts` | **2** (solo desktop) |
+
+> Los thresholds son **exactos**: si un día se añade o quita un test, el runner falla intencionalmente hasta que se actualice `MIN_SUCCESSES`. Esto detecta cambios silenciosos en la suite.
+
+### Árbol de control (`RUN_*`)
+
+**Padres** (saltan el grupo completo + sus hijos):
+
+| Variable | Salta |
+|---|---|
+| `RUN_AUTOFIX` | Auto-fix pre-run |
+| `RUN_LINT` | ESLint + Stylelint + Prettier |
+| `RUN_TYPES` | TypeScript |
+| `RUN_UNIT` | Vitest |
+| `RUN_BUILD` | Vite build + Storybook build |
+| `RUN_E2E` | Playwright smoke + a11y + Storybook manager |
+| `RUN_SERVICES` | Setup manual de Storybook dev |
+| `RUN_CLEANUP` | Cleanup al final (¡dejar en 1 salvo debug!) |
+
+**Hijos** (saltan solo ese grupo dentro del padre):
+
+| Variable | Salta |
+|---|---|
+| `RUN_ESLINT` | Solo ESLint |
+| `RUN_STYLELINT` | Solo Stylelint |
+| `RUN_PRETTIER` | Solo Prettier |
+| `RUN_TYPECHECK` | Solo TypeScript |
+| `RUN_VITEST` | Solo Vitest |
+| `RUN_VITE_BUILD` | Solo Vite build |
+| `RUN_STORYBOOK_BUILD` | Solo Storybook build |
+| `RUN_SMOKE` | Solo Playwright smoke |
+| `RUN_A11Y` | Solo Playwright a11y |
+| `RUN_STORYBOOK_MANAGER` | Solo Storybook manager E2E |
+
+### Modos especiales
+
+| Variable / flag | Valor | Efecto |
+|---|---|---|
+| `DEBUG` / `--debug` | `1` | Imprime output completo de cada grupo + logs `[DEBUG]`. |
+| `ALLOW_NEW` | `1` | **Modo WIP**: exit 0 aunque haya `[W-NEW]/[E-NEW]`. NO autoriza push/merge. |
+| `STORYBOOK_PORT` | número | Override puerto Storybook (default: leído de `package.json → scripts.storybook → -p <puerto>`). Fallback `3010`. |
+| `FRONTEND_PORT` | número | Override puerto Vite (default: leído de `vite.config.ts → server.port`). Fallback `3000`. |
+
+### Recipes comunes
+
+```bash
+# Ejecutar todo (default)
+bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo lint (sin autofix)
+RUN_AUTOFIX=0 RUN_TYPES=0 RUN_UNIT=0 RUN_BUILD=0 RUN_E2E=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo tests unitarios
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_BUILD=0 RUN_E2E=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo E2E (Playwright gestiona Storybook vía webServer)
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_UNIT=0 RUN_BUILD=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo a11y
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_UNIT=0 RUN_BUILD=0 RUN_SERVICES=0 \
+  RUN_SMOKE=0 RUN_STORYBOOK_MANAGER=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo builds
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_UNIT=0 RUN_E2E=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo Storybook manager E2E
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_UNIT=0 RUN_BUILD=0 RUN_SERVICES=0 \
+  RUN_SMOKE=0 RUN_A11Y=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Commit WIP (warnings nuevos permitidos, NO autoriza push/merge)
+ALLOW_NEW=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Debug completo (output de cada grupo)
+DEBUG=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Setup manual de Storybook (en lugar de Playwright webServer)
+RUN_SERVICES=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+```
+
+### Estructura del resumen final (5 bloques)
+
+```
+── WARNINGS DOCUMENTADOS (N) ──
+  [W-DOC-001] <grupo>
+    ↳ Mensaje: "<texto>"
+    ↳ Ref: <ruta doc> → <ID interno>
+
+── WARNINGS NUEVOS (N) ──          (bloquea push/merge)
+  [W-NEW-001] <grupo>
+    ↳ Mensaje: <línea del output>
+
+── ERRORES DOCUMENTADOS (N) ──
+  [E-DOC-001] <grupo> ...
+
+── ERRORES NUEVOS (N) ──           (bloquea push/merge)
+  [E-NEW-001] <grupo> ...
+
+── ÉXITOS (N) ──
+  [S-001] <grupo> (exit=0 success=<N>) ...
+
+── TOTALES ──
+  ✅ PASS: N
+  ⚠️  WARN: N documentados, N nuevos
+  ❌ ERR:  N documentados, N nuevos
+  ⏭️  SKIP: N
+  📄 Log: <ruta>
+```
+
+### Exit codes
+
+| Código | Situación |
+|---|---|
+| `0` | Todo verde (0 `[W-NEW]` y 0 `[E-NEW]`), o `ALLOW_NEW=1` con nuevos. |
+| `1` | Al menos 1 `[W-NEW]` o `[E-NEW]` sin `ALLOW_NEW=1`. |
+| `130` | Interrumpido por Ctrl+C / SIGTERM. |
+
+### Logs
+
+Un único log por ejecución: `logs/Frontend/Dev/Frontend-test-Dev_<timestamp>.log`. Incluye output completo de cada grupo, thresholds aplicados y resumen final. Cubierto por `.gitignore → logs/`, nunca se commitea.
+
+### Gate obligatorio
+
+El runner es el gate **obligatorio antes de push, PR o merge**. Sin exit 0:
+
+- No se hace `git push origin`.
+- No se abre PR a `developer`.
+- No se hace merge a `developer`, `lastest` o `qa`.
+
+**Commit WIP como checkpoint local**: se permite commit en la rama local con `ALLOW_NEW=1`. El mensaje de commit DEBE empezar con `[WIP]`. Este modo **NO autoriza push ni merge** — solo guarda un punto de retorno para no perder trabajo al resolver warnings.
+
+**Flujo completo al detectar un warning/error nuevo**:
+
+1. Ejecutar el runner y ver el nuevo.
+2. Commit WIP con `ALLOW_NEW=1` (checkpoint).
+3. Intentar resolver.
+4. **Si se resuelve** → commit final + check verde sin `[WIP]`.
+5. **Si no se puede resolver** → documentarlo en `approved-warnings.txt` con motivo (por qué se da, por qué no se pudo resolver, por qué se acepta) y commit final con `Closes #N`.
+
+### Clasificación de warnings y errores
+
+- `[W-DOC-NNN]` — documentado en `approved-warnings.txt` → no bloquea.
+- `[W-NEW-NNN]` — no documentado → bloquea push/merge.
+- `[E-DOC-NNN]` — error documentado → no bloquea.
+- `[E-NEW-NNN]` — error nuevo → bloquea push/merge.
+
+Cada item del output se evalúa 1:1 contra las entradas del registro por `group` + `pattern`.
+
+### `approved-warnings.txt` — cómo añadir una entrada
+
+Ubicación: `frontend/tests/shellTest/approved-warnings.txt`. Formato bloque:
+
+```
+[W-DOC-NNN]
+category = warning
+group    = <nombre exacto del grupo: eslint, stylelint, prettier, typescript, vitest, vite-build, storybook-build, storybook-manager, playwright-smoke, playwright-a11y>
+ref      = <ruta del doc donde se justifica> → <ID interno del doc>
+message  = "<texto legible para el resumen>"
+pattern  = <regex ERE compatible con grep -E>
+```
+
+Reglas:
+
+- **`pattern` debe ser específico** — si matchea cualquier línea genérica (`warning`, `error`) podrías ocultar problemas nuevos.
+- **`ref` debe apuntar a un doc versionado** que explique por qué se acepta.
+- **`group` debe coincidir exactamente** con el nombre del grupo en `run_check`. Si cambia, la entrada deja de matchear.
+- Un warning/error solo se considera **DOCUMENTADO** si al menos una entrada del mismo `group` matchea su `pattern`.
+
+### Cleanup defensivo
+
+El setup manual de servicios (`RUN_SERVICES=1`) lanza procesos con `setsid` para desacoplarlos del TTY. El cleanup:
+
+- **Solo** mata PIDs en `PIDS_LAUNCHED` verificados como líderes de process group.
+- **Nunca** `pkill -P`, nunca `xargs kill`, nunca kill por puerto, nunca `kill -9` a procesos ajenos.
+- **`check_ports_occupied()`** solo informa (nunca mata por coincidencia de puerto).
+- Si el proceso lanzado no muere con `SIGTERM`, `SIGKILL` **solo** si sigue siendo líder de su propio group.
+
+**Por qué `setsid`**: sin él, el proceso hijo queda en el process group del shell del usuario. Un `kill` mal dirigido (por puerto o por `pkill -P`) puede matar el árbol completo incluyendo la terminal del usuario. Con `setsid`, `kill -TERM -- "-<PGID>"` actúa solo sobre el subárbol del servicio.
+
 ## Stack de testing
 
 | Paquete                       | Versión | Rol                                                 |

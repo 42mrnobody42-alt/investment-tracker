@@ -765,6 +765,10 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
 
 ## 14. Testing
 
+**Gate obligatorio antes de push/PR/merge**: `frontend/tests/shellTest/Frontend-test-Dev.sh` debe terminar en verde (exit 0) antes de hacer push, abrir PR a `developer` o mergear. Commit WIP como checkpoint local permitido con `ALLOW_NEW=1` (prefijo `[WIP]` en el mensaje), pero no autoriza push ni merge. Si la tarea añade un test nuevo (Vitest, Playwright, axe, i18n-check, assets-manifest, bundle-analyze, husky), el test DEBE registrarse en el runner en el mismo PR. Warnings y errores nuevos bloquean push/merge hasta documentarse en `approved-warnings.txt` o resolverse.
+
+
+
 - **Unitario**: Vitest 5.0.5 + Testing Library (@testing-library/react 16.3.3, jest-dom 7.0.1, user-event 14.6.8, dom 10.4.2). Configuración en `frontend/vitest.config.ts`. Setup en `frontend/tests/unit/setup.ts`.
 - **Entorno DOM**: jsdom 30.1.3.
 - **Cobertura mínima**: 80% en `Stmts`, `Branch`, `Funcs` y `Lines`, tanto **global** como **por archivo**. Threshold en modo `error` (falla el CI si no se cumple). Excepciones justificadas en ADR-0009 (`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`).
