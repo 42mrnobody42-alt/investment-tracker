@@ -13,8 +13,13 @@
 
 ## Criterios de aceptación
 
-- [ ] <Criterio 1>
-- [ ] <Criterio 2>
+Cada criterio DEBE tener un código único `**CA_##:**` al inicio. El MISMO
+código se usa como primer argumento de `check()` en el validador
+(`/tmp/validate-ftXXX.sh`). Sin coincidencia código↔criterio, la validación
+no cubre el criterio.
+
+- [ ] **CA_01:** <criterio 1>
+- [ ] **CA_02:** <criterio 2>
 
 ## Dependencias
 

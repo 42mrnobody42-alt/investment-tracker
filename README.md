@@ -106,6 +106,10 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
    - Runner unificado de tests del frontend. Gate **obligatorio** antes de commit, PR y cierre de issue: ejecuta ESLint, Stylelint, Prettier, TypeScript, Vitest, Playwright (smoke + a11y), Vite build y Storybook build; emite resumen clasificado `[E-NNN]/[W-NNN]/[S-NNN]`. Regla completa en `prompt_inicial.md` (regla 32). Detalle en `pruebas.md`.
    - Ruta: `frontend/tests/shellTest/Frontend-test-Dev.sh`.
 
+7. **`docs/scrum/kanban/templates/`**
+   - Plantillas obligatorias para crear CAP / FT / US / TS con la estructura mínima exigida (Contexto, Alcance/Entregable, Criterios de aceptación con códigos `CA_##`, Dependencias, Estimación). Ningún issue se crea sin seguir su plantilla. Además incluye `VALIDATION-template.sh`, base para los shells de validación de criterios de cada task.
+   - Ruta: `docs/scrum/kanban/templates/`.
+
 **Regla de solicitud de archivos**: cuando un agente (humano o IA) necesite contexto que no está en los documentos anteriores, DEBE solicitar los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras. El procedimiento detallado vive en `docs/prompts/agente-frontend.md` sección 21 y en `docs/prompts/prompt_inicial.md` (Reglas generales para la IA, reglas 24-28).
 
 **Consistencia**: cualquier cambio en endpoints, DTOs, roles, códigos de error o convenciones de frontend debe reflejarse en el mismo PR en este README, en `prompt_inicial.md` y/o en el agente correspondiente.
@@ -1448,28 +1452,27 @@ Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompt
 
 > **Testing:** el runner unificado `frontend/tests/shellTest/Frontend-test-Dev.sh` es el gate obligatorio antes de push, PR y merge (commit WIP permitido con `ALLOW_NEW=1`). Warnings/errores nuevos bloquean push/merge hasta documentarse en `approved-warnings.txt`. Regla completa en [`prompt_inicial.md`](docs/prompts/prompt_inicial.md) (regla 32). Detalle en [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
 
-
 #### Opciones del runner (`Frontend-test-Dev.sh`)
 
 El runner acepta overrides por variables de entorno. Uso típico:
 
-| Variable | Ejemplo | Efecto |
-|---|---|---|
-| `RUN_AUTOFIX=0` | `RUN_AUTOFIX=0 ...` | Salta el auto-fix pre-run |
-| `RUN_LINT=0` | `RUN_LINT=0 ...` | Salta ESLint + Stylelint + Prettier |
-| `RUN_TYPES=0` | `RUN_TYPES=0 ...` | Salta TypeScript |
-| `RUN_UNIT=0` | `RUN_UNIT=0 ...` | Salta Vitest |
-| `RUN_BUILD=0` | `RUN_BUILD=0 ...` | Salta Vite build + Storybook build |
-| `RUN_E2E=0` | `RUN_E2E=0 ...` | Salta Playwright smoke + a11y + Storybook manager |
-| `RUN_SERVICES=0` | `RUN_SERVICES=0 ...` | No levanta Storybook dev manualmente (Playwright webServer lo gestiona) |
-| `RUN_CLEANUP=0` | `RUN_CLEANUP=0 ...` | No ejecuta cleanup al final (debug) |
-| `RUN_ESLINT=0` | `RUN_ESLINT=0 ...` | Salta solo ESLint dentro de `RUN_LINT` |
-| `RUN_SMOKE=0` | `RUN_SMOKE=0 ...` | Salta solo Playwright smoke dentro de `RUN_E2E` |
-| `RUN_A11Y=0` | `RUN_A11Y=0 ...` | Salta solo Playwright a11y dentro de `RUN_E2E` |
-| `ALLOW_NEW=1` | `ALLOW_NEW=1 ...` | **Modo WIP**: exit 0 aunque haya warnings/errores nuevos. NO autoriza push/merge. |
-| `DEBUG=1` / `--debug` | `DEBUG=1 ...` | Output completo de cada grupo |
-| `STORYBOOK_PORT=<n>` | `STORYBOOK_PORT=3010 ...` | Override puerto Storybook (default: leído de `package.json`) |
-| `FRONTEND_PORT=<n>` | `FRONTEND_PORT=3000 ...` | Override puerto Vite (default: leído de `vite.config.ts`) |
+| Variable              | Ejemplo                   | Efecto                                                                            |
+| --------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| `RUN_AUTOFIX=0`       | `RUN_AUTOFIX=0 ...`       | Salta el auto-fix pre-run                                                         |
+| `RUN_LINT=0`          | `RUN_LINT=0 ...`          | Salta ESLint + Stylelint + Prettier                                               |
+| `RUN_TYPES=0`         | `RUN_TYPES=0 ...`         | Salta TypeScript                                                                  |
+| `RUN_UNIT=0`          | `RUN_UNIT=0 ...`          | Salta Vitest                                                                      |
+| `RUN_BUILD=0`         | `RUN_BUILD=0 ...`         | Salta Vite build + Storybook build                                                |
+| `RUN_E2E=0`           | `RUN_E2E=0 ...`           | Salta Playwright smoke + a11y + Storybook manager                                 |
+| `RUN_SERVICES=0`      | `RUN_SERVICES=0 ...`      | No levanta Storybook dev manualmente (Playwright webServer lo gestiona)           |
+| `RUN_CLEANUP=0`       | `RUN_CLEANUP=0 ...`       | No ejecuta cleanup al final (debug)                                               |
+| `RUN_ESLINT=0`        | `RUN_ESLINT=0 ...`        | Salta solo ESLint dentro de `RUN_LINT`                                            |
+| `RUN_SMOKE=0`         | `RUN_SMOKE=0 ...`         | Salta solo Playwright smoke dentro de `RUN_E2E`                                   |
+| `RUN_A11Y=0`          | `RUN_A11Y=0 ...`          | Salta solo Playwright a11y dentro de `RUN_E2E`                                    |
+| `ALLOW_NEW=1`         | `ALLOW_NEW=1 ...`         | **Modo WIP**: exit 0 aunque haya warnings/errores nuevos. NO autoriza push/merge. |
+| `DEBUG=1` / `--debug` | `DEBUG=1 ...`             | Output completo de cada grupo                                                     |
+| `STORYBOOK_PORT=<n>`  | `STORYBOOK_PORT=3010 ...` | Override puerto Storybook (default: leído de `package.json`)                      |
+| `FRONTEND_PORT=<n>`   | `FRONTEND_PORT=3000 ...`  | Override puerto Vite (default: leído de `vite.config.ts`)                         |
 
 **Recipes comunes**:
 
@@ -1490,7 +1493,6 @@ ALLOW_NEW=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh
 ```
 
 Detalle completo, thresholds y árbol de grupos: [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md) §Runner unificado.
-
 
 - **Unitarias e integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. **55 tests**. Cobertura mínima 80% global y por archivo (modo `error`). Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
 - **E2E**: Playwright 1.64.1 con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Smoke tests: `frontend/tests/e2e/smoke.spec.ts`. Helpers: `frontend/tests/e2e/helpers/`. Traces `on-first-retry` + screenshots `only-on-failure`.
@@ -1795,6 +1797,9 @@ impacto real y gatillos de revisión) se documentan en:
       - **`surefire-reports/`** - Reportes de pruebas
       - **`test-classes/`** - Clases de pruebas compiladas
   - **`frontend/`** - SPA React 19 + TypeScript 6 + Vite 8 (base de CAP-01)
+    - **`.husky/`** - Hooks de git (Husky v9)
+      - `pre-commit` - lint-staged + type-check (TS-016)
+    - `.lintstagedrc.json` - Config de lint-staged (autofix por archivo) (TS-016)
     - `.npmrc` - `save-exact=true` (pineo de versiones)
     - `.nvmrc` - Node.js 24.21.0
     - `.prettierrc.json` - Formato Prettier
@@ -1810,6 +1815,7 @@ impacto real y gatillos de revisión) se documentan en:
     - `vite.config.ts` - Vite (puerto 3000, strictPort, resolve.tsconfigPaths nativo)
     - `vitest.config.ts` - Vitest (jsdom, coverage v8, thresholds 80%, ver ADR-0009)
     - `playwright.config.ts` - Playwright (7 proyectos E2E, webServer, traces, screenshots)
+    - `playwright.storybook.config.ts` - Playwright config para E2E del manager de Storybook (TS-015)
     - **`tests/`** - Pruebas (TS-012):
       - `unit/setup.ts` - Setup global (jest-dom + mocks de jsdom)
       - `unit/components/atoms/` - Tests unitarios de átomos
@@ -1818,6 +1824,10 @@ impacto real y gatillos de revisión) se documentan en:
       - `e2e/a11y.spec.ts` - Auditoría a11y con axe-core WCAG 2.2 AA (TS-014)
       - `e2e/helpers/` - Fixtures, navegación y `runA11y()` para E2E (TS-013 / TS-014)
       - `e2e/fixtures/` - Mockup accesible `mock-view.html` para a11y (TS-014)
+      - `e2e/storybook-manager.spec.ts` - E2E del manager de Storybook + render de stories (TS-015)
+      - **`shellTest/`** - Runner unificado de tests (TS-015)
+        - `Frontend-test-Dev.sh` - Runner unificado (auto-fix + 11 gates + clasificación W/E)
+        - `approved-warnings.txt` - Registro de warnings/errores documentados
     - **`public/`** - Assets de branding (URL estable, editable post-deploy)
       - `assets/images/starter/` - Imágenes del starter (hero)
       - `favicon.svg`, `icons.svg` - Iconos de app
@@ -1851,6 +1861,7 @@ impacto real y gatillos de revisión) se documentan en:
           - `FT-template.md` - Plantilla de Feature
           - `US-template.md` - Plantilla de User Story
           - `TS-template.md` - Plantilla de Task
+          - `VALIDATION-template.sh` - Plantilla de shell de validación de criterios CA_##
         - **`capabilities/`** - `CAP-XX.md` — plan maestro de la capability
         - **`features/`** - `FT-XXX.md` — plan por feature
         - **`user-stories/`** - `US-XXX.md` — plan por user story
@@ -1863,6 +1874,7 @@ impacto real y gatillos de revisión) se documentan en:
           - `kanban-move.sh` - Mueve un issue entre estados del tablero
           - `kanban-comment.sh` - Comenta SHA + cambios en el issue
           - `retry-links.sh` - Re-vincula sub-issues huérfanos
+          - `validate-task-in-kanban.sh` - Valida criterios CA_## de una task (existencia, ejecutable, bash -n)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
     - **`tecnica/`** - Documentación técnica por capítulo del README

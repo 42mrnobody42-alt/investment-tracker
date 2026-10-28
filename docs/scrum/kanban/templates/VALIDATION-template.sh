@@ -3,12 +3,16 @@
 # VALIDATION-template.sh — Plantilla de shell de validación de criterios
 # ============================================================================
 # Copiar a /tmp/validate-tsXXX.sh por cada tarea (la instancia NO se comitea).
-# Esta plantilla SÍ se comitea como scaffold reutilizable.
 #
-# Regla de nombres:
+# REGLA: cada criterio de aceptación del issue DEBE tener un código único
+# **CA_##** en el body (`- [ ] **CA_01:** ...`). Ese MISMO código se usa como
+# primer argumento de check(). Sin coincidencia, la validación no cubre el
+# criterio.
+#
+# Regla de nombres (para evitar colisión con colores):
 #   - Colores: CLR_RED, CLR_GREEN, CLR_YELLOW, CLR_CYAN, CLR_BOLD, CLR_NC
-#   - Veredicto por check: RESULT (0 o 1), nunca reutilizar nombres de color
-#   - Contadores: PASS, FAIL, CONTRA (inmutables durante el check)
+#   - Veredicto por check: RESULT (0=no, 1=sí, 2=contradicción)
+#   - Contadores: PASS, FAIL, CONTRA
 # ============================================================================
 set -uo pipefail
 
@@ -27,11 +31,13 @@ else
   CLR_RED=''; CLR_GREEN=''; CLR_YELLOW=''; CLR_CYAN=''; CLR_BOLD=''; CLR_NC=''
 fi
 
+# check <CA_##> <título> <esperado> <obtenido> <verdict>
+#   verdict: 1=aprobó, 2=contradicción, 0=no aprobó
 check() {
-  local num="$1" title="$2" expected="$3" obtained="$4" verdict="$5"
+  local ca_code="$1" title="$2" expected="$3" obtained="$4" verdict="$5"
   echo ""
   echo "${CLR_CYAN}${CLR_BOLD}════════════════════════════════════════════════════════════════════${CLR_NC}"
-  echo "  CRITERIO $num — $title"
+  echo "  CRITERIO $ca_code — $title"
   echo "${CLR_CYAN}════════════════════════════════════════════════════════════════════${CLR_NC}"
   echo "  Esperado : $expected"
   echo "  Obtenido : $obtained"
@@ -43,9 +49,9 @@ check() {
 }
 
 # ── CRITERIOS ──────────────────────────────────────────────────────────────
-# Patrón por cada criterio:
+# Un check() por cada CA_## del issue, con su MISMO código. Patrón:
 #   V=$(calcular); RESULT=0; [ condición ] && RESULT=1
-#   check N "título" "esperado" "$V" "$RESULT"
+#   check "CA_01" "título idéntico al del issue" "esperado" "$V" "$RESULT"
 
 # ── SUMMARY ────────────────────────────────────────────────────────────────
 echo ""
@@ -57,11 +63,9 @@ echo "  Criterios NO aprobados   : $FAIL"
 echo "  Criterios contradictorios: $CONTRA"
 echo ""
 if [ "$FAIL" -eq 0 ] && [ "$CONTRA" -eq 0 ]; then
-  echo "  ${CLR_GREEN}${CLR_BOLD}🟢 VEREDICTO GLOBAL: APROBÓ — todos los criterios verdes.${CLR_NC}"
-  echo "     Commit autorizado."
+  echo "  ${CLR_GREEN}${CLR_BOLD}🟢 VEREDICTO GLOBAL: APROBÓ${CLR_NC}"
   exit 0
 else
-  echo "  ${CLR_RED}${CLR_BOLD}🔴 VEREDICTO GLOBAL: NO APROBÓ — $FAIL fallido(s), $CONTRA contradictorio(s).${CLR_NC}"
-  echo "     Commit bloqueado hasta corregir."
+  echo "  ${CLR_RED}${CLR_BOLD}🔴 VEREDICTO GLOBAL: NO APROBÓ${CLR_NC}"
   exit 1
 fi

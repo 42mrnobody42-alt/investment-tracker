@@ -127,6 +127,8 @@ export const ASSETS = {
 - **Alias obligatorios** para imports internos: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`.
 - **Commits** con formato `tipo(#N): descripción`. Referenciar el issue con `Closes #N` o `Refs #N`.
 
+- **Pre-commit** (Husky v9 + lint-staged): todo `git commit` pasa por `frontend/.husky/pre-commit` que ejecuta `lint-staged` (autofix por archivo) + `tsc -b` (validar tipos del proyecto completo). Bloquea commits con errores de lint **no autofixeables** o tipos rotos. Configurado en `frontend/.lintstagedrc.json` y validado por el grupo `RUN_HOOKS` del runner. Detalle en `docs/prompts/agente-frontend.md` §14.8.
+
 ## 6. Pruebas
 
 - **Runner unificado**: `frontend/tests/shellTest/Frontend-test-Dev.sh` centraliza ESLint, Stylelint, Prettier, TypeScript, Vitest, Playwright (smoke + a11y), Vite build y Storybook build. Resumen clasificado en `[W-DOC]`/`[W-NEW]`/`[E-DOC]`/`[E-NEW]`/`[S-NNN]`. Warnings/errores nuevos bloquean push/merge (no commit WIP). Detalle en [`pruebas.md`](./pruebas.md).

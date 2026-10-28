@@ -767,8 +767,6 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
 
 **Gate obligatorio antes de push/PR/merge**: `frontend/tests/shellTest/Frontend-test-Dev.sh` debe terminar en verde (exit 0) antes de hacer push, abrir PR a `developer` o mergear. Commit WIP como checkpoint local permitido con `ALLOW_NEW=1` (prefijo `[WIP]` en el mensaje), pero no autoriza push ni merge. Si la tarea añade un test nuevo (Vitest, Playwright, axe, i18n-check, assets-manifest, bundle-analyze, husky), el test DEBE registrarse en el runner en el mismo PR. Warnings y errores nuevos bloquean push/merge hasta documentarse en `approved-warnings.txt` o resolverse.
 
-
-
 - **Unitario**: Vitest 5.0.5 + Testing Library (@testing-library/react 16.3.3, jest-dom 7.0.1, user-event 14.6.8, dom 10.4.2). Configuración en `frontend/vitest.config.ts`. Setup en `frontend/tests/unit/setup.ts`.
 - **Entorno DOM**: jsdom 30.1.3.
 - **Cobertura mínima**: 80% en `Stmts`, `Branch`, `Funcs` y `Lines`, tanto **global** como **por archivo**. Threshold en modo `error` (falla el CI si no se cumple). Excepciones justificadas en ADR-0009 (`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`).
@@ -790,6 +788,48 @@ Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/prov
 - **Convenciones completas de testing**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](../tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md). Incluye reglas permanentes (framework, comandos, estructura, cobertura global y por archivo, exclusiones permanentes, líneas con exclusión justificada, convenciones de escritura, mocks, alineación con el backend).
 
 ---
+
+### 14.8 Husky + pre-commit (obligatorio)
+
+El proyecto usa **Husky v9** con `.husky/pre-commit` para bloquear commits rotos antes de que lleguen al repositorio. Configuración completa:
+
+**Estructura**
+
+- `frontend/.husky/pre-commit` — hook ejecutable (mode `100755`)
+- `frontend/.husky/_/` — bootstrap interno de Husky (ignorado por git via `.husky/_/.gitignore`)
+- `frontend/.lintstagedrc.json` — config de lint-staged
+- `core.hooksPath` = `frontend/.husky/_` (configurado por `scripts.prepare`)
+
+**Flujo del pre-commit** (ejecutado en cada `git commit`)
+
+1. `npx lint-staged` — corre sobre archivos staged:
+   - `*.{ts,tsx}` → `eslint --fix` + `prettier --write`
+   - `*.css` → `stylelint --fix` + `prettier --write`
+   - `*.{json,md,yml,yaml}` → `prettier --write`
+2. `npm run type-check` — valida tipos del proyecto completo (`tsc -b`)
+
+**Qué se bloquea vs qué se autofixea**
+
+| Situación                                 | Resultado                      |
+| ----------------------------------------- | ------------------------------ |
+| Error de ESLint no autofixeable en staged | ❌ Commit bloqueado (exit ≠ 0) |
+| Formato Prettier roto                     | ✅ Autofixea, commit permitido |
+| Error de tipos (`tsc -b` falla)           | ❌ Commit bloqueado            |
+| Estilo de CSS roto (autofixeable)         | ✅ Autofixea                   |
+
+**Relación con el runner (TS-015)**
+
+- El runner `Frontend-test-Dev.sh` con `RUN_HOOKS=1` valida la **estructura** de los 3 hooks (existencia, ejecutable, `bash -n`). No valida comportamiento — eso lo hace el pre-commit real al ejecutarse.
+- Pre-commit es **rápido** (<15 s) y cubre solo staged + types.
+- El runner es el **gate completo** (2-3 min) antes de push / PR / merge.
+- Ambos son **obligatorios**: pre-commit previene commits rotos; runner previene push/merge rotos.
+
+**Prohibiciones**
+
+- `git commit --no-verify` solo en emergencia documentada (mensaje de commit debe incluir `no-verify: <motivo>`).
+- No saltar el hook "porque tarda" — si tarda, es porque el código está mal.
+
+## 15. Convenciones de código
 
 ## 15. Convenciones de código
 

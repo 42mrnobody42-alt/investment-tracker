@@ -400,6 +400,14 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
     **Regla derivada**: todo test/gate nuevo creado en cualquier tarea futura DEBE añadirse al runner en el mismo PR. Un cambio que rompa el runner sin actualizarlo bloquea el push/merge.
 
+33. **Pre-commit hook (Husky + lint-staged) — obligatorio**.
+    El hook `frontend/.husky/pre-commit` corre en cada `git commit` y bloquea el commit si:
+    - `lint-staged` deja errores **no autofixeables** (ESLint / Stylelint) en archivos staged.
+    - `npm run type-check` (`tsc -b`) falla.
+
+    Está **prohibido** usar `git commit --no-verify` salvo emergencia documentada (el mensaje del commit debe incluir `no-verify: <motivo>`).
+
+    El auto-fix silencioso está permitido (Prettier, ESLint `--fix`, Stylelint `--fix`): solo bloquea lo que no se puede corregir automáticamente. Detalle completo en `docs/prompts/agente-frontend.md` §14.8 y `pruebas.md` §"Runner unificado".
 
 ## 📊 Gestión del Proyecto
 

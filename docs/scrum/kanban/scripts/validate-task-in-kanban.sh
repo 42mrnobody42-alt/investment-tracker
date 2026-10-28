@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# validate-ts014.sh v2 — Validación TS-014 (#619) con captura corregida
+# validate-task-in-kanban.sh — Validador de criterios de aceptación de tasks del kanban
 set -uo pipefail
 
 FRONTEND=/prog/datos/investment-tracker/frontend
