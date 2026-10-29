@@ -284,6 +284,42 @@ Valida la **estructura** de `.husky/` (no el comportamiento) de los 3 hooks:
 
 Ambos son **obligatorios**. Pre-commit previene commits rotos; runner previene push/merge rotos. Ver `agente-frontend.md` §14.8 y `prompt_inicial.md` regla 33.
 
+## Runner vs Validador — qué va dónde
+
+**Regla permanente**: el runner solo ejecuta verificaciones **autónomas** (sin input externo). Cualquier verificación que necesite **datos específicos de la tarea** (mensajes de commit, inputs de archivos concretos) va al **validador específico** de la tarea.
+
+| Verificación                                                                            | Tipo de input           | Dónde va                                       |
+| --------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------- |
+| Lint, tipos, tests unitarios, builds, servicios                                         | Ninguno                 | **Runner**                                     |
+| Existencia/estructura/permisos de hooks (`.husky/pre-commit`, `commit-msg`, `pre-push`) | Ninguno                 | **Runner** (`RUN_HOOKS`)                       |
+| Tests unitarios del `commitlint.config.js` (headerPattern, type-enum, defaultIgnores)   | Archivos test del repo  | **Runner** (grupo Vitest)                      |
+| Mensajes de commit reales (`feat(#620): x` → válido, `update stuff` → rechazado)        | Mensaje de prueba       | **Validador** (`validators/validate-tsNNN.sh`) |
+| Behavior tests con archivos temporales (ESLint rechaza, Prettier autofixea)             | Archivos creados ad-hoc | **Validador** (con `RUN_BEHAVIOR=1`)           |
+
+**Por qué**:
+
+- El runner corre **antes del commit**, cuando aún **no existe** el mensaje ni los archivos de prueba.
+- El validador corre **durante la validación de la tarea**, cuando **sí existen** los inputs específicos.
+- Si pusieras en el runner una verificación que necesita input externo, o fallaría siempre o no podría ejecutarse.
+
+**Ejemplo TS-017**:
+
+- Runner (`RUN_HOOKS=2/2`): valida que `.husky/commit-msg` existe, es ejecutable y `bash -n` OK.
+- Runner (Vitest, 26 tests): valida que `headerPattern` rechaza `update stuff`, `type-enum` no contiene `feature`, `defaultIgnores=true`.
+- Validador (CA_06..CA_13): valida **8 mensajes reales** contra el CLI (`echo "..." | commitlint`).
+
+### Tests del `commitlint.config.js`
+
+Ubicación: `frontend/tests/unit/configs/commitlint.test.ts`. 26 tests organizados en 3 bloques:
+
+1. **`headerPattern`** — 14 válidos + 8 inválidos (regex structure).
+2. **`type-enum`** — 3 tests (11 tipos exactos, `feature` no incluido, `hotfix` no incluido).
+3. **`defaultIgnores`** — 1 test (debe ser `true`).
+
+Se ejecutan en el grupo **Vitest** del runner (junto a los 55 tests base del proyecto → total **81 tests**).
+
+Si alguien modifica el `headerPattern`, `type-enum` o `defaultIgnores` sin actualizar los tests → **el runner falla** antes de llegar al commit.
+
 ## Stack de testing
 
 ## Stack de testing

@@ -829,7 +829,55 @@ El proyecto usa **Husky v9** con `.husky/pre-commit` para bloquear commits rotos
 - `git commit --no-verify` solo en emergencia documentada (mensaje de commit debe incluir `no-verify: <motivo>`).
 - No saltar el hook "porque tarda" — si tarda, es porque el código está mal.
 
-## 15. Convenciones de código
+### 14.9 commitlint + commit-msg (obligatorio)
+
+El proyecto usa **commitlint 21.2.4** con `.husky/commit-msg` para validar el formato de cada commit.
+
+**Configuración** (`frontend/commitlint.config.js`):
+
+- `extends: ['@commitlint/config-conventional']`
+- `defaultIgnores: true` — ignora `Merge pull request #N from ...`
+- `parserPreset.parserOpts.headerPattern: /^(\w+)(?:\(#[0-9]+\))?!?: (.+)$/`
+- `parserPreset.parserOpts.breakingHeaderPattern: /^(\w+)(?:\(#[0-9]+\))?!: (.+)$/`
+- `rules['type-enum']`: `feat | fix | docs | refactor | test | chore | style | perf | build | ci | revert`
+- `rules['subject-empty']: never`, `subject-full-stop: never`, `header-max-length: 100`
+
+**Hook** (`frontend/.husky/commit-msg`):
+
+```bash
+#!/usr/bin/env sh
+cd "$(git rev-parse --show-toplevel)/frontend" || exit 1
+
+npx commitlint --edit "$1"
+```
+
+**Tipos permitidos** (única fuente de verdad: `commitlint.config.js`):
+
+| Tipo       | Uso                                     |
+| ---------- | --------------------------------------- |
+| `feat`     | Nueva funcionalidad                     |
+| `fix`      | Corrección de bug                       |
+| `docs`     | Solo documentación                      |
+| `refactor` | Cambio de código sin cambio funcional   |
+| `test`     | Añadir/corregir tests                   |
+| `chore`    | Tareas de mantenimiento (deps, scripts) |
+| `style`    | Formato, espacios (no cambia lógica)    |
+| `perf`     | Mejora de rendimiento                   |
+| `build`    | Sistema de build o deps externas        |
+| `ci`       | Configuración de CI                     |
+| `revert`   | Revertir commit anterior                |
+
+**Dónde se valida la configuración**:
+
+- **Runner** (`RUN_HOOKS` + Vitest): el hook existe, es ejecutable, `bash -n` OK; los 26 tests de `commitlint.test.ts` validan `headerPattern`, `type-enum` y `defaultIgnores`.
+- **Validador específico de la tarea**: comportamiento real del CLI (`echo "..." | commitlint`) con mensajes válidos e inválidos.
+
+**Type declarations**: `commitlint.config.d.ts` existe porque `tsconfig.app.json` tiene `allowJs: false` y el config es `.js` ESM.
+
+**Prohibiciones**:
+
+- `git commit --no-verify` solo en emergencia documentada (mensaje debe incluir `no-verify: <motivo>`).
+- No usar tipos fuera de `type-enum` (ej. `feature`, `hotfix`, `wip`).
 
 ## 15. Convenciones de código
 

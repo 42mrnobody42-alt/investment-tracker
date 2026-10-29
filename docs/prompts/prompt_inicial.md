@@ -427,6 +427,20 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
     Cada `validators/validate-tsXXX.sh` se crea copiando `templates/VALIDATION-template.sh` y añadiendo un `check "CA_NN"` por cada criterio del issue. Los **behavior tests** (que crean archivos y ejecutan comandos reales) van detrás de un flag `RUN_BEHAVIOR=0|1` para permitir validación rápida vs completa.
 
+35. **Formato de commit (commitlint) — obligatorio**.
+    Todo commit DEBE cumplir el headerPattern validado por `commitlint`:
+
+    ```
+    ^(\w+)(?:\(#[0-9]+\))?!?: (.+)$
+    ```
+
+    - **Tipo**: `feat | fix | docs | refactor | test | chore | style | perf | build | ci | revert`
+    - **`(#N)`**: opcional (solo obligatorio cuando el commit resuelve/refiere a un issue)
+    - **`!`**: opcional (breaking change)
+    - **Descripción**: obligatoria, no vacía, sin punto final
+
+    El hook `.husky/commit-msg` bloquea el commit si no cumple. Configuración en `frontend/commitlint.config.js`. Detalle y ejemplos en `README.md` §"Reglas de commits".
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero

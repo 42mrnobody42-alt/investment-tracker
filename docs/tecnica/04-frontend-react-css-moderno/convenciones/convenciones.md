@@ -128,6 +128,7 @@ export const ASSETS = {
 - **Commits** con formato `tipo(#N): descripción`. Referenciar el issue con `Closes #N` o `Refs #N`.
 
 - **Pre-commit** (Husky v9 + lint-staged): todo `git commit` pasa por `frontend/.husky/pre-commit` que ejecuta `lint-staged` (autofix por archivo) + `tsc -b` (validar tipos del proyecto completo). Bloquea commits con errores de lint **no autofixeables** o tipos rotos. Configurado en `frontend/.lintstagedrc.json` y validado por el grupo `RUN_HOOKS` del runner. Detalle en `docs/prompts/agente-frontend.md` §14.8.
+- **Commitlint** (v21.2.4): todo commit pasa por `.husky/commit-msg` → `commitlint` con `headerPattern` `^(\w+)(?:\(#[0-9]+\))?!?: (.+)$`. Tipos: `feat | fix | docs | refactor | test | chore | style | perf | build | ci | revert`. `(#N)` y `!` opcionales. `Merge pull request` ignorados. Válidos: `feat(#620): x`, `fix!: x`, `chore: x`. Inválidos: `update stuff`, `feature(#1): x`, `feat(): x`. Configuración en `frontend/commitlint.config.js`. Detalle en `agente-frontend.md` §14.9.
 
 ## 6. Pruebas
 
