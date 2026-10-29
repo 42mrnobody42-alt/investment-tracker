@@ -1,23 +1,35 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.jdt.ls.lombokSupport.enabled": true,
-    "java.annotationProcessing.enabled": true,
-    "java.configuration.runtimes": [
-        {
-            "name": "JavaSE-21",
-            "path": "/usr/lib/jvm/java-21-openjdk-amd64",
-            "default": true
-        }
-    ],
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit"
-    },
-    "files.exclude": {
-        "**/.git": true,
-        "**/.DS_Store": true,
-        "**/target": true
-    },
-    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable"
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.jdt.ls.lombokSupport.enabled": true,
+  "java.annotationProcessing.enabled": true,
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-21",
+      "path": "/usr/lib/jvm/java-21-openjdk-amd64",
+      "default": true
+    }
+  ],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/target": true
+  },
+  "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable",
+
+  "diffEditor.renderSideBySide": false,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "diffEditor.wordWrap": "on",
+  "diffEditor.codeLens": true,
+  "diffEditor.diffAlgorithm": "advanced",
+  "scm.diffDecorations": "all",
+  "scm.diffDecorationsGutterWidth": 4,
+  "workbench.editor.decorations.colors": true,
+  "git.decorations.enabled": true,
+  "git.enableSmartCommit": false,
+  "git.autofetch": true
 }

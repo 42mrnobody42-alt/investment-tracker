@@ -1,16 +1,22 @@
 ## Contexto
-<Qué flujo cubre esta historia. 2-3 líneas.>
+
+<Por qué existe esta US.>
 
 ## Alcance
-- <Vista / comportamiento>
+
+- <puntos clave>
 
 ## Tareas
-- TS-XXX — <título> (<Nh>)
-- TS-XXX — <título> (<Nh>)
+
+- TS-XXX — <nombre> (Nh)
 
 ## Criterios de aceptación
-- [ ] <Criterio funcional>
-- [ ] <Criterio no funcional: i18n, a11y, responsive>
+
+Cada criterio DEBE tener un código único `**CA_##:**`.
+
+- [ ] **CA_01:** <criterio 1>
+- [ ] **CA_02:** <criterio 2>
 
 ## Dependencias
-<US-XXX, FT-XXX u otras.>
+
+<US previas / TS previas>

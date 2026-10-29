@@ -15,9 +15,14 @@
 
 ## Criterios de aceptación
 
-- [ ] <Criterio verificable 1>
-- [ ] <Criterio verificable 2>
-- [ ] <Criterio verificable 3>
+Cada criterio DEBE tener un código único `**CA_##:**` al inicio. El MISMO
+código se usa como primer argumento de `check()` en el validador
+(`/tmp/validate-capXX.sh`). Sin coincidencia código↔criterio, la validación
+no cubre el criterio.
+
+- [ ] **CA_01:** <criterio verificable 1>
+- [ ] **CA_02:** <criterio verificable 2>
+- [ ] **CA_03:** <criterio verificable 3>
 
 ## Dependencias
 

@@ -33,20 +33,20 @@ Antes de centralizar, los tests vivían dispersos en scripts npm individuales y 
 
 ### Grupos ejecutados (12)
 
-| # | Grupo | Comando | Threshold `MIN_SUCCESSES` |
-|---|---|---|---|
-| 1 | Auto-fix pre-run | Prettier → Stylelint → ESLint | exit codes 0/0/0 |
-| 2 | ESLint | `npm run lint` | 1 |
-| 3 | Stylelint | `npm run lint:css` | 1 |
-| 4 | Prettier | `npm run format:check` | 1 |
-| 5 | TypeScript | `npm run type-check` | 1 |
-| 6 | Vitest (unit) | `npm run test:run` | **55** (tests) |
-| 7 | Vite build | `npm run build` | 1 |
-| 8 | Storybook build | `npm run build-storybook` | 1 |
-| 9 | Servicios | `npm run storybook` (setsid) | setup + health check |
-| 10 | Playwright smoke | `npx playwright test tests/e2e/smoke.spec.ts` | **14** (2×7 proyectos) |
-| 11 | Playwright a11y | `npx playwright test tests/e2e/a11y.spec.ts` | **7** (1×7 proyectos) |
-| 12 | Storybook manager E2E | `npx playwright test --config playwright.storybook.config.ts` | **2** (solo desktop) |
+| #   | Grupo                 | Comando                                                       | Threshold `MIN_SUCCESSES` |
+| --- | --------------------- | ------------------------------------------------------------- | ------------------------- |
+| 1   | Auto-fi x pre-run     | Prettier → Stylelint → ESLint                                 | exit codes 0/0/0          |
+| 2   | ESLint                | `npm run lint`                                                | 1                         |
+| 3   | Stylelint             | `npm run lint:css`                                            | 1                         |
+| 4   | Prettier              | `npm run format:check`                                        | 1                         |
+| 5   | TypeScript            | `npm run type-check`                                          | 1                         |
+| 6   | Vitest (unit)         | `npm run test:run`                                            | **55** (tests)            |
+| 7   | Vite build            | `npm run build`                                               | 1                         |
+| 8   | Storybook build       | `npm run build-storybook`                                     | 1                         |
+| 9   | Servicios             | `npm run storybook` (setsid)                                  | setup + health check      |
+| 10  | Playwright smoke      | `npx playwright test tests/e2e/smoke.spec.ts`                 | **14** (2×7 proyectos)    |
+| 11  | Playwright a11y       | `npx playwright test tests/e2e/a11y.spec.ts`                  | **7** (1×7 proyectos)     |
+| 12  | Storybook manager E2E | `npx playwright test --config playwright.storybook.config.ts` | **2** (solo desktop)      |
 
 > Los thresholds son **exactos**: si un día se añade o quita un test, el runner falla intencionalmente hasta que se actualice `MIN_SUCCESSES`. Esto detecta cambios silenciosos en la suite.
 
@@ -54,40 +54,41 @@ Antes de centralizar, los tests vivían dispersos en scripts npm individuales y 
 
 **Padres** (saltan el grupo completo + sus hijos):
 
-| Variable | Salta |
-|---|---|
-| `RUN_AUTOFIX` | Auto-fix pre-run |
-| `RUN_LINT` | ESLint + Stylelint + Prettier |
-| `RUN_TYPES` | TypeScript |
-| `RUN_UNIT` | Vitest |
-| `RUN_BUILD` | Vite build + Storybook build |
-| `RUN_E2E` | Playwright smoke + a11y + Storybook manager |
-| `RUN_SERVICES` | Setup manual de Storybook dev |
-| `RUN_CLEANUP` | Cleanup al final (¡dejar en 1 salvo debug!) |
+| Variable       | Salta                                       |
+| -------------- | ------------------------------------------- |
+| `RUN_AUTOFIX`  | Auto-fix pre-run                            |
+| `RUN_HOOKS`    | Git hooks (.husky/ estructura)              |
+| `RUN_LINT`     | ESLint + Stylelint + Prettier               |
+| `RUN_TYPES`    | TypeScript                                  |
+| `RUN_UNIT`     | Vitest                                      |
+| `RUN_BUILD`    | Vite build + Storybook build                |
+| `RUN_E2E`      | Playwright smoke + a11y + Storybook manager |
+| `RUN_SERVICES` | Setup manual de Storybook dev               |
+| `RUN_CLEANUP`  | Cleanup al final (¡dejar en 1 salvo debug!) |
 
 **Hijos** (saltan solo ese grupo dentro del padre):
 
-| Variable | Salta |
-|---|---|
-| `RUN_ESLINT` | Solo ESLint |
-| `RUN_STYLELINT` | Solo Stylelint |
-| `RUN_PRETTIER` | Solo Prettier |
-| `RUN_TYPECHECK` | Solo TypeScript |
-| `RUN_VITEST` | Solo Vitest |
-| `RUN_VITE_BUILD` | Solo Vite build |
-| `RUN_STORYBOOK_BUILD` | Solo Storybook build |
-| `RUN_SMOKE` | Solo Playwright smoke |
-| `RUN_A11Y` | Solo Playwright a11y |
+| Variable                | Salta                      |
+| ----------------------- | -------------------------- |
+| `RUN_ESLINT`            | Solo ESLint                |
+| `RUN_STYLELINT`         | Solo Stylelint             |
+| `RUN_PRETTIER`          | Solo Prettier              |
+| `RUN_TYPECHECK`         | Solo TypeScript            |
+| `RUN_VITEST`            | Solo Vitest                |
+| `RUN_VITE_BUILD`        | Solo Vite build            |
+| `RUN_STORYBOOK_BUILD`   | Solo Storybook build       |
+| `RUN_SMOKE`             | Solo Playwright smoke      |
+| `RUN_A11Y`              | Solo Playwright a11y       |
 | `RUN_STORYBOOK_MANAGER` | Solo Storybook manager E2E |
 
 ### Modos especiales
 
-| Variable / flag | Valor | Efecto |
-|---|---|---|
-| `DEBUG` / `--debug` | `1` | Imprime output completo de cada grupo + logs `[DEBUG]`. |
-| `ALLOW_NEW` | `1` | **Modo WIP**: exit 0 aunque haya `[W-NEW]/[E-NEW]`. NO autoriza push/merge. |
-| `STORYBOOK_PORT` | número | Override puerto Storybook (default: leído de `package.json → scripts.storybook → -p <puerto>`). Fallback `3010`. |
-| `FRONTEND_PORT` | número | Override puerto Vite (default: leído de `vite.config.ts → server.port`). Fallback `3000`. |
+| Variable / flag     | Valor  | Efecto                                                                                                           |
+| ------------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| `DEBUG` / `--debug` | `1`    | Imprime output completo de cada grupo + logs `[DEBUG]`.                                                          |
+| `ALLOW_NEW`         | `1`    | **Modo WIP**: exit 0 aunque haya `[W-NEW]/[E-NEW]`. NO autoriza push/merge.                                      |
+| `STORYBOOK_PORT`    | número | Override puerto Storybook (default: leído de `package.json → scripts.storybook → -p <puerto>`). Fallback `3010`. |
+| `FRONTEND_PORT`     | número | Override puerto Vite (default: leído de `vite.config.ts → server.port`). Fallback `3000`.                        |
 
 ### Recipes comunes
 
@@ -162,11 +163,11 @@ RUN_SERVICES=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh
 
 ### Exit codes
 
-| Código | Situación |
-|---|---|
-| `0` | Todo verde (0 `[W-NEW]` y 0 `[E-NEW]`), o `ALLOW_NEW=1` con nuevos. |
-| `1` | Al menos 1 `[W-NEW]` o `[E-NEW]` sin `ALLOW_NEW=1`. |
-| `130` | Interrumpido por Ctrl+C / SIGTERM. |
+| Código | Situación                                                           |
+| ------ | ------------------------------------------------------------------- |
+| `0`    | Todo verde (0 `[W-NEW]` y 0 `[E-NEW]`), o `ALLOW_NEW=1` con nuevos. |
+| `1`    | Al menos 1 `[W-NEW]` o `[E-NEW]` sin `ALLOW_NEW=1`.                 |
+| `130`  | Interrumpido por Ctrl+C / SIGTERM.                                  |
 
 ### Logs
 
@@ -229,6 +230,61 @@ El setup manual de servicios (`RUN_SERVICES=1`) lanza procesos con `setsid` para
 - Si el proceso lanzado no muere con `SIGTERM`, `SIGKILL` **solo** si sigue siendo líder de su propio group.
 
 **Por qué `setsid`**: sin él, el proceso hijo queda en el process group del shell del usuario. Un `kill` mal dirigido (por puerto o por `pkill -P`) puede matar el árbol completo incluyendo la terminal del usuario. Con `setsid`, `kill -TERM -- "-<PGID>"` actúa solo sobre el subárbol del servicio.
+
+### Grupo "Servicios locales"
+
+`setup_services` levanta **ambos** servicios con `setsid` (desacoplado del TTY):
+
+| Servicio        | Puerto                       | Health check            | Necesario para                              |
+| --------------- | ---------------------------- | ----------------------- | ------------------------------------------- |
+| `frontend-dev`  | `:3000` (o `FRONTEND_PORT`)  | `http://localhost:3000` | Playwright smoke + a11y + Storybook manager |
+| `storybook-dev` | `:3010` (o `STORYBOOK_PORT`) | `http://localhost:3010` | Storybook manager E2E                       |
+
+**Verificación de puertos**:
+
+- **Antes** de levantar: `check_ports_occupied` — solo informa (no mata procesos ajenos).
+- **Después** del cleanup: `verify_ports_released_after_cleanup` — confirma que `:3000` y `:3010` quedaron libres. Si un puerto sigue ocupado, se informa pero **NO se mata** (podría ser un proceso del usuario).
+
+**Seguridad del cleanup**: solo se mata lo que el runner lanzó (`PIDS_LAUNCHED` con `setsid` verificado por process group). Nunca `pkill`, nunca `xargs kill`, nunca kill por puerto. `lsof -ti:port` no incluye la propia búsqueda (solo devuelve PIDs con el puerto abierto).
+
+### Grupo "Servicios locales"
+
+`setup_services` levanta **ambos** servicios con `setsid` (desacoplado del TTY):
+
+| Servicio        | Puerto                       | Health check            | Necesario para                              |
+| --------------- | ---------------------------- | ----------------------- | ------------------------------------------- |
+| `frontend-dev`  | `:3000` (o `FRONTEND_PORT`)  | `http://localhost:3000` | Playwright smoke + a11y + Storybook manager |
+| `storybook-dev` | `:3010` (o `STORYBOOK_PORT`) | `http://localhost:3010` | Storybook manager E2E                       |
+
+**Verificación de puertos**:
+
+- **Antes** de levantar: `check_ports_occupied` — solo informa (no mata procesos ajenos).
+- **Después** del cleanup: `verify_ports_released_after_cleanup` — confirma que `:3000` y `:3010` quedaron libres. Si un puerto sigue ocupado, se informa pero **NO se mata** (podría ser un proceso del usuario).
+
+**Seguridad del cleanup**: solo se mata lo que el runner lanzó (`PIDS_LAUNCHED` con `setsid` verificado por process group). Nunca `pkill`, nunca `xargs kill`, nunca kill por puerto. `lsof -ti:port` no incluye la propia búsqueda (solo devuelve PIDs con el puerto abierto).
+
+### Grupo `RUN_HOOKS` — validación de estructura de hooks
+
+Valida la **estructura** de `.husky/` (no el comportamiento) de los 3 hooks:
+
+- `pre-commit`, `commit-msg`, `pre-push`: existencia + ejecutable (`chmod +x`) + `bash -n` sin errores.
+- Rápido (<1 s): no ejecuta los hooks, solo verifica su estructura.
+- Desactivable con `RUN_HOOKS=0` (solo debug). Por defecto activo.
+- El **comportamiento real** del hook lo valida el propio `git commit` / `git push`, no el runner.
+
+### Complemento: pre-commit vs runner manual
+
+| Aspecto           | pre-commit                                    | runner manual                   |
+| ----------------- | --------------------------------------------- | ------------------------------- |
+| Cuándo se ejecuta | En cada `git commit`                          | Antes de push / PR / merge      |
+| Velocidad         | <15 s                                         | 2-3 min                         |
+| Scope             | `lint-staged` (solo staged) + `tsc -b` (todo) | 13 grupos completos             |
+| Bloquea           | Lint no autofixeable + tipos rotos            | Cualquier `[W-NEW]` / `[E-NEW]` |
+| Instancia         | Hook de git                                   | Comando manual / CI             |
+
+Ambos son **obligatorios**. Pre-commit previene commits rotos; runner previene push/merge rotos. Ver `agente-frontend.md` §14.8 y `prompt_inicial.md` regla 33.
+
+## Stack de testing
 
 ## Stack de testing
 

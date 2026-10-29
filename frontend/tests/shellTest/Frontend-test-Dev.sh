@@ -20,9 +20,11 @@ A11Y_MIN_SUCCESSES="${A11Y_MIN_SUCCESSES:-7}"
 VITE_BUILD_MIN_SUCCESSES="${VITE_BUILD_MIN_SUCCESSES:-1}"
 STORYBOOK_BUILD_MIN_SUCCESSES="${STORYBOOK_BUILD_MIN_SUCCESSES:-1}"
 STORYBOOK_MANAGER_MIN_SUCCESSES="${STORYBOOK_MANAGER_MIN_SUCCESSES:-2}"
+HOOKS_MIN_SUCCESSES="${HOOKS_MIN_SUCCESSES:-1}"
 
 # ── 2. ÁRBOL DE EJECUCIÓN ───────────────────────────────────────────────────
 RUN_AUTOFIX="${RUN_AUTOFIX:-1}"   # auto-fix antes de los checks (Prettier → Stylelint → ESLint)
+RUN_HOOKS="${RUN_HOOKS:-1}"   # valida estructura de .husky/ (existencia, ejecutable, bash -n)
 RUN_LINT="${RUN_LINT:-1}"
   RUN_ESLINT="${RUN_ESLINT:-1}"; RUN_STYLELINT="${RUN_STYLELINT:-1}"; RUN_PRETTIER="${RUN_PRETTIER:-1}"
 RUN_TYPES="${RUN_TYPES:-1}"
@@ -277,10 +279,19 @@ start_npm_service() {
 
 setup_services() {
   [[ "$RUN_SERVICES" == "1" ]] || { SKIPPED_LIST+=("SERVICES"); return 0; }
-  print_group_header "Servicios locales (setup manual)"
-  start_npm_service "storybook-dev" "npm run storybook" "http://localhost:${STORYBOOK_PORT}" "/tmp/storybook-dev.log" 90 \
-    && SUCCESS_LIST+=("Servicios|storybook-dev arriba (setup manual)") \
+  print_group_header "Servicios locales (frontend-dev + storybook-dev)"
+
+  # 1. Frontend dev (:3000) — necesario para SMOKE, A11Y y Storybook manager
+  #    (Playwright webServer lo reutiliza con reuseExistingServer: true)
+  start_npm_service "frontend-dev" "npm run dev" "http://localhost:${FRONTEND_PORT}" "/tmp/frontend-dev.log" 60 \
+    && SUCCESS_LIST+=("Servicios|frontend-dev arriba (:${FRONTEND_PORT})") \
     || return 1
+
+  # 2. Storybook dev (:3010) — necesario para Storybook manager E2E
+  start_npm_service "storybook-dev" "npm run storybook" "http://localhost:${STORYBOOK_PORT}" "/tmp/storybook-dev.log" 90 \
+    && SUCCESS_LIST+=("Servicios|storybook-dev arriba (:${STORYBOOK_PORT})") \
+    || return 1
+
   return 0
 }
 
@@ -399,6 +410,49 @@ run_autofix() {
 }
 
 
+run_hooks() {
+  [[ "$RUN_HOOKS" == "1" ]] || { SKIPPED_LIST+=("HOOKS"); return 0; }
+  print_group_header "Git hooks (.husky/)"
+  debug "validando estructura de hooks (existencia + ejecutable + bash -n)"
+
+  local hooks_dir="$FRONTEND_DIR/.husky"
+  local found=0 valid=0 invalid=0 missing=0
+  local hook_path
+
+  for hook in pre-commit commit-msg pre-push; do
+    hook_path="$hooks_dir/$hook"
+    if [ ! -f "$hook_path" ]; then
+      debug "hook $hook: no existe (aún no creado)"
+      missing=$((missing+1))
+      continue
+    fi
+    found=$((found+1))
+    if [ ! -x "$hook_path" ]; then
+      E_NEW_LIST+=("hooks|$hook no es ejecutable")
+      invalid=$((invalid+1))
+      continue
+    fi
+    if ! bash -n "$hook_path" 2>/dev/null; then
+      E_NEW_LIST+=("hooks|$hook tiene sintaxis bash inválida")
+      invalid=$((invalid+1))
+      continue
+    fi
+    valid=$((valid+1))
+    debug "hook $hook: OK (ejecutable + bash -n)"
+  done
+
+  local detail="$valid/$found válidos ($missing no creados, $invalid inválidos)"
+  if (( invalid == 0 )) && (( valid >= HOOKS_MIN_SUCCESSES )); then
+    SUCCESS_LIST+=("Git hooks|$detail")
+    printf "  ${GREEN}✅ Git hooks${NC} (%s)\n" "$detail"
+    printf "✅ Git hooks (%s)\n" "$detail" >> "$LOG_FILE"
+  else
+    printf "  ${RED}❌ Git hooks${NC} (%s)\n" "$detail"
+    printf "❌ Git hooks (%s)\n" "$detail" >> "$LOG_FILE"
+  fi
+  return 0
+}
+
 run_lint() {
   [[ "$RUN_LINT" == "1" ]] || { SKIPPED_LIST+=("LINT"); return 0; }
   [[ "$RUN_ESLINT" == "1" ]] && run_check "eslint" "ESLint" "npm run lint" "$ESLINT_MIN_SUCCESSES"
@@ -513,6 +567,7 @@ main() {
   debug "ALLOW_NEW=$ALLOW_NEW RUN_SERVICES=$RUN_SERVICES RUN_CLEANUP=$RUN_CLEANUP"
 
   run_autofix || true
+  run_hooks || true
   run_lint || true
   run_types || true
   run_unit || true
@@ -531,21 +586,64 @@ main() {
     if [[ "$ALLOW_NEW" == "1" ]]; then
       echo ""
       echo -e "${YELLOW}${BOLD}🚨 MODO WIP — $blocking nuevos sin documentar. NO PUSH. NO MERGE.${NC}"
+      printf "🚨 MODO WIP — %d nuevos sin documentar. NO PUSH. NO MERGE.\n" "$blocking" >> "$LOG_FILE"
       exit 0
     fi
     echo ""
     echo -e "${RED}${BOLD}🔴 COMMIT BLOQUEADO — $blocking nuevos sin documentar.${NC}"
+    printf "🔴 COMMIT BLOQUEADO — %d nuevos sin documentar.\n" "$blocking" >> "$LOG_FILE"
     exit 1
   fi
 
   echo ""
   echo -e "${GREEN}${BOLD}✅ TODO VERDE.${NC}"
+  printf "✅ TODO VERDE.\n" >> "$LOG_FILE"
   exit 0
+}
+
+verify_ports_released_after_cleanup() {
+  local port occ fail=0
+  for port in "${STORYBOOK_PORT:-3010}" "${FRONTEND_PORT:-3000}"; do
+    [ -z "$port" ] && continue
+    if lsof -ti:"$port" >/dev/null 2>&1; then
+      occ=$(lsof -ti:"$port" 2>/dev/null | tr '\n' ' ')
+      # Solo informar — NO se mata (podría ser un proceso del usuario)
+      echo "  ${YELLOW}⚠️  puerto $port aún ocupado tras cleanup: $occ${NC}"
+      echo "  ${YELLOW}   (no es del runner — mátalo manualmente si lo necesitas)${NC}"
+      fail=$((fail+1))
+    fi
+  done
+  if [ "$fail" -eq 0 ]; then
+    echo "  ${GREEN}✅ puertos ${STORYBOOK_PORT:-3010}/${FRONTEND_PORT:-3000} liberados${NC}"
+  fi
+  printf "post-cleanup ports: fail=%d\n" "$fail" >> "$LOG_FILE"
+  return 0
+}
+
+verify_ports_released_after_cleanup() {
+  local port occ fail=0
+  for port in "${STORYBOOK_PORT:-3010}" "${FRONTEND_PORT:-3000}"; do
+    [ -z "$port" ] && continue
+    if lsof -ti:"$port" >/dev/null 2>&1; then
+      occ=$(lsof -ti:"$port" 2>/dev/null | tr '\n' ' ')
+      # Solo informar — NO se mata (podría ser un proceso del usuario)
+      echo "  ${YELLOW}⚠️  puerto $port aún ocupado tras cleanup: $occ${NC}"
+      echo "  ${YELLOW}   (no es del runner — mátalo manualmente si lo necesitas)${NC}"
+      fail=$((fail+1))
+    fi
+  done
+  if [ "$fail" -eq 0 ]; then
+    echo "  ${GREEN}✅ puertos ${STORYBOOK_PORT:-3010}/${FRONTEND_PORT:-3000} liberados${NC}"
+  fi
+  printf "post-cleanup ports: fail=%d\n" "$fail" >> "$LOG_FILE"
+  return 0
 }
 
 cleanup_on_exit() {
   if [[ "$RUN_CLEANUP" == "1" ]]; then
     cleanup_services
+    verify_ports_released_after_cleanup
+    verify_ports_released_after_cleanup
   else
     echo ""
     echo "  ${YELLOW}⚠️  RUN_CLEANUP=0 — cleanup_services NO ejecutado${NC}"

@@ -400,6 +400,32 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
     **Regla derivada**: todo test/gate nuevo creado en cualquier tarea futura DEBE añadirse al runner en el mismo PR. Un cambio que rompa el runner sin actualizarlo bloquea el push/merge.
 
+33. **Pre-commit hook (Husky + lint-staged) — obligatorio**.
+    El hook `frontend/.husky/pre-commit` corre en cada `git commit` y bloquea el commit si:
+    - `lint-staged` deja errores **no autofixeables** (ESLint / Stylelint) en archivos staged.
+    - `npm run type-check` (`tsc -b`) falla.
+
+    Está **prohibido** usar `git commit --no-verify` salvo emergencia documentada (el mensaje del commit debe incluir `no-verify: <motivo>`).
+
+    El auto-fix silencioso está permitido (Prettier, ESLint `--fix`, Stylelint `--fix`): solo bloquea lo que no se puede corregir automáticamente. Detalle completo en `docs/prompts/agente-frontend.md` §14.8 y `pruebas.md` §"Runner unificado".
+
+34. **Validación de criterios de aceptación (obligatoria antes del commit)**.
+    Toda task se valida con el wrapper genérico:
+
+    ```
+    ./docs/scrum/kanban/scripts/validate-task-in-kanban.sh <issue-number>
+    ```
+
+    El wrapper:
+    - Lee el issue vía `gh api` y extrae el `TS-XXX` del título.
+    - Verifica que exista `docs/scrum/kanban/scripts/validators/validate-tsXXX.sh`.
+    - Extrae los `**CA_##:**` del body del issue.
+    - Verifica **cobertura 1:1** contra los `check "CA_##"` del validator.
+    - Ejecuta el validator y propaga el exit code.
+
+    **Regla derivada**: si el validador no cubre algún CA_## del issue, o si algún check falla, el wrapper retorna exit code ≠ 0 y el commit queda bloqueado.
+
+    Cada `validators/validate-tsXXX.sh` se crea copiando `templates/VALIDATION-template.sh` y añadiendo un `check "CA_NN"` por cada criterio del issue. Los **behavior tests** (que crean archivos y ejecutan comandos reales) van detrás de un flag `RUN_BEHAVIOR=0|1` para permitir validación rápida vs completa.
 
 ## 📊 Gestión del Proyecto
 
@@ -507,6 +533,15 @@ done
 > Regla: nunca dejar tareas huérfanas en Backlog mientras se trabaja activamente en ellas.
 
 Al terminar una TS / US / FT / CAP:
+
+**3.5. Validar criterios de aceptación (obligatorio, antes del commit)**
+
+```bash
+cd /prog/datos/investment-tracker
+./docs/scrum/kanban/scripts/validate-task-in-kanban.sh <N>
+```
+
+> El wrapper extrae los `**CA_##:**` del issue, verifica **cobertura 1:1** contra los `check "CA_##"` del validador específico (`docs/scrum/kanban/scripts/validators/validate-tsNNN.sh`) y ejecuta cada check. **Sin verde no hay commit.** Detalle completo en [`README.md` §106 → "Validación de criterios (CA_##)"](../../README.md#106-gestión-scrum-con-github-projects).
 
 **4. Commit con referencia al issue (Closes #N o Refs #N)**
 
