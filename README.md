@@ -2119,6 +2119,42 @@ gh api rate_limit --jq '"GraphQL: \(.resources.graphql.remaining)/\(.resources.g
 
 ### Reglas de commits
 
+**HeaderPattern (validado por `commitlint`):**
+
+```
+^(\w+)(?:\(#[0-9]+\))?!?: (.+)$
+```
+
+| Elemento        | Regla                                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| **tipo**        | Uno de: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`, `perf`, `build`, `ci`, `revert` |
+| **(\#N)**       | Opcional. Obligatorio si el commit resuelve/refiere a un issue                                       |
+| **!**           | Opcional. Indica breaking change                                                                     |
+| **descripción** | Obligatoria, no vacía, sin punto final, máx. 100 caracteres en el header                             |
+
+**Ejemplos válidos:**
+
+```
+feat(#620): agregar runner unificado
+fix(#123)!: romper compatibilidad de la API pública
+chore: bumpear dependencias
+docs(#42): documentar el flujo de validación
+feat!: breaking change sin issue asociado
+```
+
+**Ejemplos inválidos:**
+
+```
+update stuff                  ← sin tipo
+feature(#1): agregar          ← "feature" no es tipo válido (usar "feat")
+feat(): agregar               ← paréntesis vacío
+feat(#1): agregar.            ← descripción con punto final
+```
+
+**Merge commits** (`Merge pull request #N from ...`) se ignoran automáticamente (por `defaultIgnores: true`).
+
+**Validación automática:** el hook `.husky/commit-msg` invoca `commitlint` en cada `git commit`. Sin formato válido → el commit se bloquea. Configuración en `frontend/commitlint.config.js`.
+
 - Formato: `tipo(#N): descripción` — feat, fix, docs, refactor, test, chore.
 - Siempre referenciar el issue padre con `Closes #N` o `Refs #N`.
 - Nunca commitear directo a `lastest` (protegida).
