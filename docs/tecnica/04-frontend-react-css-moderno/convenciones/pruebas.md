@@ -57,6 +57,7 @@ Antes de centralizar, los tests vivían dispersos en scripts npm individuales y 
 | Variable       | Salta                                       |
 | -------------- | ------------------------------------------- |
 | `RUN_AUTOFIX`  | Auto-fix pre-run                            |
+| `RUN_HOOKS`    | Git hooks (.husky/ estructura)              |
 | `RUN_LINT`     | ESLint + Stylelint + Prettier               |
 | `RUN_TYPES`    | TypeScript                                  |
 | `RUN_UNIT`     | Vitest                                      |
@@ -229,6 +230,38 @@ El setup manual de servicios (`RUN_SERVICES=1`) lanza procesos con `setsid` para
 - Si el proceso lanzado no muere con `SIGTERM`, `SIGKILL` **solo** si sigue siendo líder de su propio group.
 
 **Por qué `setsid`**: sin él, el proceso hijo queda en el process group del shell del usuario. Un `kill` mal dirigido (por puerto o por `pkill -P`) puede matar el árbol completo incluyendo la terminal del usuario. Con `setsid`, `kill -TERM -- "-<PGID>"` actúa solo sobre el subárbol del servicio.
+
+### Grupo "Servicios locales"
+
+`setup_services` levanta **ambos** servicios con `setsid` (desacoplado del TTY):
+
+| Servicio        | Puerto                       | Health check            | Necesario para                              |
+| --------------- | ---------------------------- | ----------------------- | ------------------------------------------- |
+| `frontend-dev`  | `:3000` (o `FRONTEND_PORT`)  | `http://localhost:3000` | Playwright smoke + a11y + Storybook manager |
+| `storybook-dev` | `:3010` (o `STORYBOOK_PORT`) | `http://localhost:3010` | Storybook manager E2E                       |
+
+**Verificación de puertos**:
+
+- **Antes** de levantar: `check_ports_occupied` — solo informa (no mata procesos ajenos).
+- **Después** del cleanup: `verify_ports_released_after_cleanup` — confirma que `:3000` y `:3010` quedaron libres. Si un puerto sigue ocupado, se informa pero **NO se mata** (podría ser un proceso del usuario).
+
+**Seguridad del cleanup**: solo se mata lo que el runner lanzó (`PIDS_LAUNCHED` con `setsid` verificado por process group). Nunca `pkill`, nunca `xargs kill`, nunca kill por puerto. `lsof -ti:port` no incluye la propia búsqueda (solo devuelve PIDs con el puerto abierto).
+
+### Grupo "Servicios locales"
+
+`setup_services` levanta **ambos** servicios con `setsid` (desacoplado del TTY):
+
+| Servicio        | Puerto                       | Health check            | Necesario para                              |
+| --------------- | ---------------------------- | ----------------------- | ------------------------------------------- |
+| `frontend-dev`  | `:3000` (o `FRONTEND_PORT`)  | `http://localhost:3000` | Playwright smoke + a11y + Storybook manager |
+| `storybook-dev` | `:3010` (o `STORYBOOK_PORT`) | `http://localhost:3010` | Storybook manager E2E                       |
+
+**Verificación de puertos**:
+
+- **Antes** de levantar: `check_ports_occupied` — solo informa (no mata procesos ajenos).
+- **Después** del cleanup: `verify_ports_released_after_cleanup` — confirma que `:3000` y `:3010` quedaron libres. Si un puerto sigue ocupado, se informa pero **NO se mata** (podría ser un proceso del usuario).
+
+**Seguridad del cleanup**: solo se mata lo que el runner lanzó (`PIDS_LAUNCHED` con `setsid` verificado por process group). Nunca `pkill`, nunca `xargs kill`, nunca kill por puerto. `lsof -ti:port` no incluye la propia búsqueda (solo devuelve PIDs con el puerto abierto).
 
 ### Grupo `RUN_HOOKS` — validación de estructura de hooks
 

@@ -279,10 +279,19 @@ start_npm_service() {
 
 setup_services() {
   [[ "$RUN_SERVICES" == "1" ]] || { SKIPPED_LIST+=("SERVICES"); return 0; }
-  print_group_header "Servicios locales (setup manual)"
-  start_npm_service "storybook-dev" "npm run storybook" "http://localhost:${STORYBOOK_PORT}" "/tmp/storybook-dev.log" 90 \
-    && SUCCESS_LIST+=("Servicios|storybook-dev arriba (setup manual)") \
+  print_group_header "Servicios locales (frontend-dev + storybook-dev)"
+
+  # 1. Frontend dev (:3000) — necesario para SMOKE, A11Y y Storybook manager
+  #    (Playwright webServer lo reutiliza con reuseExistingServer: true)
+  start_npm_service "frontend-dev" "npm run dev" "http://localhost:${FRONTEND_PORT}" "/tmp/frontend-dev.log" 60 \
+    && SUCCESS_LIST+=("Servicios|frontend-dev arriba (:${FRONTEND_PORT})") \
     || return 1
+
+  # 2. Storybook dev (:3010) — necesario para Storybook manager E2E
+  start_npm_service "storybook-dev" "npm run storybook" "http://localhost:${STORYBOOK_PORT}" "/tmp/storybook-dev.log" 90 \
+    && SUCCESS_LIST+=("Servicios|storybook-dev arriba (:${STORYBOOK_PORT})") \
+    || return 1
+
   return 0
 }
 
@@ -592,9 +601,49 @@ main() {
   exit 0
 }
 
+verify_ports_released_after_cleanup() {
+  local port occ fail=0
+  for port in "${STORYBOOK_PORT:-3010}" "${FRONTEND_PORT:-3000}"; do
+    [ -z "$port" ] && continue
+    if lsof -ti:"$port" >/dev/null 2>&1; then
+      occ=$(lsof -ti:"$port" 2>/dev/null | tr '\n' ' ')
+      # Solo informar — NO se mata (podría ser un proceso del usuario)
+      echo "  ${YELLOW}⚠️  puerto $port aún ocupado tras cleanup: $occ${NC}"
+      echo "  ${YELLOW}   (no es del runner — mátalo manualmente si lo necesitas)${NC}"
+      fail=$((fail+1))
+    fi
+  done
+  if [ "$fail" -eq 0 ]; then
+    echo "  ${GREEN}✅ puertos ${STORYBOOK_PORT:-3010}/${FRONTEND_PORT:-3000} liberados${NC}"
+  fi
+  printf "post-cleanup ports: fail=%d\n" "$fail" >> "$LOG_FILE"
+  return 0
+}
+
+verify_ports_released_after_cleanup() {
+  local port occ fail=0
+  for port in "${STORYBOOK_PORT:-3010}" "${FRONTEND_PORT:-3000}"; do
+    [ -z "$port" ] && continue
+    if lsof -ti:"$port" >/dev/null 2>&1; then
+      occ=$(lsof -ti:"$port" 2>/dev/null | tr '\n' ' ')
+      # Solo informar — NO se mata (podría ser un proceso del usuario)
+      echo "  ${YELLOW}⚠️  puerto $port aún ocupado tras cleanup: $occ${NC}"
+      echo "  ${YELLOW}   (no es del runner — mátalo manualmente si lo necesitas)${NC}"
+      fail=$((fail+1))
+    fi
+  done
+  if [ "$fail" -eq 0 ]; then
+    echo "  ${GREEN}✅ puertos ${STORYBOOK_PORT:-3010}/${FRONTEND_PORT:-3000} liberados${NC}"
+  fi
+  printf "post-cleanup ports: fail=%d\n" "$fail" >> "$LOG_FILE"
+  return 0
+}
+
 cleanup_on_exit() {
   if [[ "$RUN_CLEANUP" == "1" ]]; then
     cleanup_services
+    verify_ports_released_after_cleanup
+    verify_ports_released_after_cleanup
   else
     echo ""
     echo "  ${YELLOW}⚠️  RUN_CLEANUP=0 — cleanup_services NO ejecutado${NC}"

@@ -1,128 +1,165 @@
 #!/usr/bin/env bash
-# validate-task-in-kanban.sh — Validador de criterios de aceptación de tasks del kanban
+# ============================================================================
+# validate-task-in-kanban.sh — Validador genérico de criterios de aceptación
+# ============================================================================
+# Uso: ./validate-task-in-kanban.sh <issue-number>
+#
+# Flujo:
+#   1. Lee el issue vía gh api → extrae TS-XXX del título.
+#   2. Verifica que exista scripts/validators/validate-tsXXX.sh.
+#   3. Extrae todos los **CA_##:** del body del issue.
+#   4. Extrae todos los check "CA_##" del validator específico.
+#   5. Compara cobertura (todos los CA_## del issue deben estar en el validador).
+#   6. Ejecuta el validator específico heredando ISSUE_NUM y TS_CODE.
+#
+# Salida no-cero si falta cobertura o si algún CA_## falla.
+# ============================================================================
 set -uo pipefail
 
-FRONTEND=/prog/datos/investment-tracker/frontend
-DOCS=/prog/datos/investment-tracker/docs
-README=/prog/datos/investment-tracker/README.md
-ADR=$DOCS/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md
-PRUEBAS=$DOCS/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md
-AGENTE=$DOCS/prompts/agente-frontend.md
+ISSUE="${1:?Uso: $0 <issue-number>}"
+REPO="/prog/datos/investment-tracker"
+KANBAN="$REPO/docs/scrum/kanban"
+VALIDATORS_DIR="$KANBAN/scripts/validators"
 
-PASS=0; FAIL=0; CONTRA=0
-
-check() {
-  local num="$1" title="$2" esperado="$3" obtenido="$4" verdict="$5"
-  echo ""
-  echo "══════════════════════════════════════════════════════════════════"
-  echo "  CRITERIO $num — $title"
-  echo "══════════════════════════════════════════════════════════════════"
-  echo "  Esperado : $esperado"
-  echo "  Obtenido : $obtenido"
-  case "$verdict" in
-    1) echo "  Resultado: ✅ APROBÓ";               PASS=$((PASS+1)) ;;
-    2) echo "  Resultado: ⚠️  CONTRADICCIÓN";       CONTRA=$((CONTRA+1)) ;;
-    *) echo "  Resultado: ❌ NO APROBÓ";           FAIL=$((FAIL+1)) ;;
-  esac
-}
-
-cd "$FRONTEND"
-
-# 1
-V=$(jq -r '."devDependencies"."@axe-core/playwright" // "no instalado"' package.json)
-[ "$V" = "4.14.0" ] && R=1 || R=0
-check 1 "@axe-core/playwright pineado (--save-exact)" "4.14.0" "$V" "$R"
-
-# 2
-V=$(grep -c "export async function runA11y" tests/e2e/helpers/a11y.ts 2>/dev/null)
-V=${V:-0}
-[ "$V" -eq 1 ] && R=1 || R=0
-check 2 "helper runA11y() en tests/e2e/helpers/a11y.ts" "1" "$V" "$R"
-
-# 3
-if [ -f tests/e2e/fixtures/mock-view.html ]; then V="existe"; else V="no existe"; fi
-[ "$V" = "existe" ] && R=1 || R=0
-check 3 "mockup accesible mock-view.html" "existe" "$V" "$R"
-
-# 4
-V=$(npx playwright test tests/e2e/a11y.spec.ts 2>&1 | grep -E "^\s+[0-9]+ passed" | grep -oE "[0-9]+ passed" | head -1)
-[ "$V" = "7 passed" ] && R=1 || R=0
-check 4 "test a11y.spec.ts verde en los 7 proyectos" "7 passed" "${V:-no detectado}" "$R"
-
-# 5
-V=$(grep -c "reducedMotion: 'reduce'" tests/e2e/a11y.spec.ts 2>/dev/null)
-V=${V:-0}
-[ "$V" -eq 1 ] && R=1 || R=0
-check 5 "prefers-reduced-motion: reduce emulado en a11y.spec.ts" "1" "$V" "$R"
-
-# 6
-V=$(grep -c "wcag22aa" tests/e2e/helpers/a11y.ts 2>/dev/null)
-V=${V:-0}
-[ "$V" -eq 1 ] && R=1 || R=0
-check 6 "tags WCAG 2.2 AA incluyen 'wcag22aa'" "1" "$V" "$R"
-
-# 7 — CORREGIDO: sin `|| echo 0`, captura segura
-V=$(grep -c "exclude:" tests/e2e/a11y.spec.ts 2>/dev/null)
-V=${V:-0}
-[ "$V" -eq 0 ] && R=1 || R=0
-check 7 "sin exclusiones iniciales ('exclude:' no aparece en spec)" "0" "$V" "$R"
-
-# 8
-V=$(grep -c "testInfo.attach" tests/e2e/helpers/a11y.ts 2>/dev/null)
-V=${V:-0}
-[ "$V" -eq 2 ] && R=1 || R=0
-check 8 "adjunta 2 reportes (HTML + JSON) vía testInfo.attach" "2" "$V" "$R"
-
-# 9 — CORREGIDO: buscar "Beneficio" y "Riesgo" por separado (no en la misma línea)
-B=$(grep -cE '\*\*Beneficio\*\*' "$PRUEBAS" 2>/dev/null)
-B=${B:-0}
-RI=$(grep -cE '\*\*Riesgo\*\*' "$PRUEBAS" 2>/dev/null)
-RI=${RI:-0}
-[ "$B" -ge 1 ] && [ "$RI" -ge 1 ] && R=1 || R=0
-check 9 "pruebas.md documenta beneficio + riesgo de reduced-motion" "beneficio>=1, riesgo>=1" "beneficio=$B, riesgo=$RI" "$R"
-
-# 10
-V1=$(grep -c "### E2E a11y (Playwright + axe)" "$PRUEBAS" 2>/dev/null); V1=${V1:-0}
-V2=$(grep -c "runA11y()" "$AGENTE" 2>/dev/null); V2=${V2:-0}
-V3=$(grep -c "TS-138 (#743)" "$README" 2>/dev/null); V3=${V3:-0}
-[ "$V1" -ge 1 ] && [ "$V2" -ge 1 ] && [ "$V3" -ge 1 ] && R=1 || R=0
-check 10 "pruebas.md + agente-frontend.md + README con TS-138" "todos >=1" "pruebas=$V1, agente=$V2, README=$V3" "$R"
-
-# 11
-V1=$(grep -c "+ Playwright" "$ADR" 2>/dev/null); V1=${V1:-0}
-V2=$(grep -c "TS-014 (#619)" "$ADR" 2>/dev/null); V2=${V2:-0}
-V3=$(grep -c "TS-138 (#743)" "$ADR" 2>/dev/null); V3=${V3:-0}
-V4=$(grep -c "US-041 (#605)" "$ADR" 2>/dev/null); V4=${V4:-0}
-V5=$(grep -c "Añadir test a11y" "$ADR" 2>/dev/null); V5=${V5:-0}
-[ "$V1" -ge 1 ] && [ "$V2" -ge 1 ] && [ "$V3" -ge 1 ] && [ "$V4" -ge 1 ] && [ "$V5" -ge 1 ] && R=1 || R=0
-check 11 "ADR-0009 actualizado (PW, TS-014, TS-138, US-041, gatillo)" "todos >=1" "PW=$V1, TS014=$V2, TS138=$V3, US041=$V4, gatillo=$V5" "$R"
-
-# 12 — CORREGIDO: capturar la línea "Tests  N passed" específicamente
-V=$(npx vitest run 2>&1 | sed -E 's/\x1b\[[0-9;]*m//g' | grep -E "^ *Tests +[0-9]+ passed" | grep -oE "[0-9]+ passed" | head -1)
-[ "$V" = "55 passed" ] && R=1 || R=0
-check 12 "regresión Vitest (55 tests)" "55 passed" "${V:-no detectado}" "$R"
-
-# 13
-npx eslint tests/e2e/ >/dev/null 2>&1; L=$?
-npx prettier --check "tests/e2e/**/*.ts" "tests/e2e/fixtures/mock-view.html" >/dev/null 2>&1; P=$?
-npm run type-check >/dev/null 2>&1; T=$?
-[ "$L" -eq 0 ] && [ "$P" -eq 0 ] && [ "$T" -eq 0 ] && R=1 || R=0
-check 13 "regresión ESLint + Prettier + TypeScript" "todos exit 0" "eslint=$L, prettier=$P, ts=$T" "$R"
-
-echo ""
-echo "══════════════════════════════════════════════════════════════════"
-echo "  RESUMEN GLOBAL — TS-014 (#619)"
-echo "══════════════════════════════════════════════════════════════════"
-echo "  Criterios aprobados      : $PASS"
-echo "  Criterios NO aprobados   : $FAIL"
-echo "  Criterios contradictorios: $CONTRA"
-echo ""
-if [ "$FAIL" -eq 0 ] && [ "$CONTRA" -eq 0 ]; then
-  echo "  🟢 VEREDICTO GLOBAL: APROBÓ — todos los criterios verdes."
-  echo "     Commit autorizado."
-  exit 0
+if [[ -t 1 ]]; then
+  CR=$'\033[0;31m'; CG=$'\033[0;32m'; CY=$'\033[1;33m'
+  CC=$'\033[0;36m'; CB=$'\033[1m'; CN=$'\033[0m'
 else
-  echo "  🔴 VEREDICTO GLOBAL: NO APROBÓ — $FAIL fallido(s), $CONTRA contradictorio(s)."
-  echo "     Commit bloqueado hasta corregir."
+  CR=''; CG=''; CY=''; CC=''; CB=''; CN=''
+fi
+
+# ── 1. Fetch issue ──────────────────────────────────────────────────────────
+echo ""
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+echo "  Validando issue #$ISSUE"
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+
+TITLE=$(gh api "repos/42mrnobody42-alt/investment-tracker/issues/$ISSUE" --jq '.title' 2>/dev/null)
+BODY=$(gh api "repos/42mrnobody42-alt/investment-tracker/issues/$ISSUE" --jq '.body' 2>/dev/null)
+
+if [ -z "$TITLE" ]; then
+  echo "${CR}❌ No se pudo leer el issue #$ISSUE${CN}"
   exit 1
 fi
+
+echo "  Título: $TITLE"
+
+# ── 2. Extract TS-XXX from title ────────────────────────────────────────────
+TS_CODE=$(echo "$TITLE" | grep -oE "TS-[0-9]+" | head -1)
+if [ -z "$TS_CODE" ]; then
+  echo "${CR}❌ No se encontró TS-XXX en el título del issue #$ISSUE${CN}"
+  exit 1
+fi
+
+TS_NUM=$(echo "$TS_CODE" | sed 's/TS-0*//')
+TS_NUM_PADDED=$(printf '%03d' "$TS_NUM")
+VALIDATOR="$VALIDATORS_DIR/validate-ts$TS_NUM_PADDED.sh"
+
+echo "  TS: $TS_CODE"
+echo "  Validator esperado: $VALIDATOR"
+
+if [ ! -f "$VALIDATOR" ]; then
+  echo ""
+  echo "${CR}❌ No existe validador específico:${CN}"
+  echo "   $VALIDATOR"
+  echo ""
+  echo "   Para crear uno nuevo, copiar desde:"
+  echo "   $KANBAN/templates/VALIDATION-template.sh"
+  echo "   y guardarlo como: $VALIDATOR"
+  exit 1
+fi
+
+# ── 3. Extract CAs from issue body ──────────────────────────────────────────
+CA_ISSUE=$(echo "$BODY" | grep -oE '\*\*CA_[0-9]+:\*\*' | sed 's/\*\*//g; s/://g' | sort -u)
+if [ -z "$CA_ISSUE" ]; then
+  echo "${CR}❌ El issue no tiene criterios CA_## en el body${CN}"
+  exit 1
+fi
+
+# ── 4. Extract CAs from validator ───────────────────────────────────────────
+CA_VALIDATOR=$(grep -oE 'check "CA_[0-9]+"' "$VALIDATOR" 2>/dev/null | sed 's/check "//; s/"//g' | sort -u)
+
+# ── 5. Coverage check ───────────────────────────────────────────────────────
+CA_ISSUE_FILE=$(mktemp)
+CA_VAL_FILE=$(mktemp)
+echo "$CA_ISSUE" > "$CA_ISSUE_FILE"
+[ -n "$CA_VALIDATOR" ] && echo "$CA_VALIDATOR" > "$CA_VAL_FILE" || : > "$CA_VAL_FILE"
+
+MISSING=$(comm -23 "$CA_ISSUE_FILE" "$CA_VAL_FILE" | tr '\n' ' ' | sed 's/ $//')
+EXTRA=$(comm -13 "$CA_ISSUE_FILE" "$CA_VAL_FILE" | tr '\n' ' ' | sed 's/ $//')
+TOTAL_ISSUE=$(wc -l < "$CA_ISSUE_FILE" | tr -d ' ')
+TOTAL_VAL=$(wc -l < "$CA_VAL_FILE" | tr -d ' ')
+
+echo ""
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+echo "  Cobertura de criterios"
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+echo "  Issue:     $TOTAL_ISSUE CAs ($CA_ISSUE | tr '\n' ' ' | sed 's/ $//')"
+echo "  Validator: $TOTAL_VAL checks"
+
+if [ -n "$MISSING" ]; then
+  echo ""
+  echo "${CR}❌ FALTAN en el validador: $MISSING${CN}"
+  echo "   El validator NO cubre todos los criterios del issue."
+  rm -f "$CA_ISSUE_FILE" "$CA_VAL_FILE"
+  exit 1
+fi
+
+if [ -n "$EXTRA" ]; then
+  echo ""
+  echo "${CY}⚠️ EXTRA en el validador (no están en el issue): $EXTRA${CN}"
+fi
+
+echo ""
+echo "  ${CG}✅ Cobertura completa${CN}"
+
+rm -f "$CA_ISSUE_FILE" "$CA_VAL_FILE"
+
+# ── 5.5. Preparar log (truncar + header) ────────────────────────────
+LOG_DIR="$REPO/logs/Kanban"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/Validacion-criterios-aceptacion-$TS_CODE.log"
+: > "$LOG_FILE"
+export LOG_FILE
+
+# Header del log (solo al log, NO a consola)
+{
+  echo "================================================================"
+  echo " Validación $TS_CODE (#$ISSUE) — $TITLE"
+  echo " Fecha  : $(date '+%Y-%m-%dT%H:%M:%S')"
+  echo " Rama   : $(git -C "$REPO" branch --show-current)"
+  echo " Commit : $(git -C "$REPO" rev-parse --short HEAD)"
+  echo "================================================================"
+  echo ""
+} >> "$LOG_FILE"
+
+# ── 6. Run validator (heredando ISSUE_NUM y TS_CODE) ────────────────────────
+echo ""
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+echo "  Ejecutando validator específico"
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+
+export ISSUE_NUM="$ISSUE"
+export TS_CODE="$TS_CODE"
+bash "$VALIDATOR"
+EXIT=$?
+
+echo ""
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+if [ "$EXIT" -eq 0 ]; then
+  echo "  ${CG}${CB}🟢 WRAPPER VERDE — issue #$ISSUE ($TS_CODE) cubierto y verde${CN}"
+else
+  echo "  ${CR}${CB}🔴 WRAPPER ROJO — issue #$ISSUE ($TS_CODE) tiene criterios fallidos${CN}"
+fi
+echo "${CB}════════════════════════════════════════════════════════════════════${CN}"
+
+
+# Footer del log (solo al log, NO a consola)
+{
+  echo ""
+  echo "================================================================"
+  echo " WRAPPER — $TS_CODE (#$ISSUE) — Exit: $EXIT"
+  echo "================================================================"
+} >> "$LOG_FILE"
+
+exit "$EXIT"

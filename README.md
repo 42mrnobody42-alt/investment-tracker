@@ -1874,7 +1874,9 @@ impacto real y gatillos de revisión) se documentan en:
           - `kanban-move.sh` - Mueve un issue entre estados del tablero
           - `kanban-comment.sh` - Comenta SHA + cambios en el issue
           - `retry-links.sh` - Re-vincula sub-issues huérfanos
-          - `validate-task-in-kanban.sh` - Valida criterios CA_## de una task (existencia, ejecutable, bash -n)
+          - `validate-task-in-kanban.sh` - Wrapper genérico: valida CA_## de un issue contra su validator específico
+          - **`validators/`** - Un validador específico por task
+            - `validate-ts016.sh` - Validación CA_01..CA_17 de TS-016 (Husky + pre-commit)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
     - **`tecnica/`** - Documentación técnica por capítulo del README
@@ -2030,15 +2032,17 @@ done
 
 ### Scripts disponibles
 
-| Script                | Función                                 | Uso                                                |
-| --------------------- | --------------------------------------- | -------------------------------------------------- |
-| `create-cap01.sh`     | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
-| `delete-cap01.sh`     | Elimina CAP-01 + FT/US/TS (idempotente) | `./scripts/delete-cap01.sh`                        |
-| `regen-kanban-ids.sh` | Regenera `kanban-ids.env` desde GitHub  | `./scripts/regen-kanban-ids.sh`                    |
-| `clear-project.sh`    | Vacía el Project sin borrar issues      | `./scripts/clear-project.sh`                       |
-| `kanban-move.sh`      | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
-| `kanban-comment.sh`   | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> [template]` |
-| `retry-links.sh`      | Re-vincula sub-issues huérfanos         | `./scripts/retry-links.sh`                         |
+| Script                           | Función                                                               | Uso                                                |
+| -------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------- |
+| `create-cap01.sh`                | Crea toda la jerarquía CAP-01 en GitHub                               | `./scripts/create-cap01.sh`                        |
+| `delete-cap01.sh`                | Elimina CAP-01 + FT/US/TS (idempotente)                               | `./scripts/delete-cap01.sh`                        |
+| `regen-kanban-ids.sh`            | Regenera `kanban-ids.env` desde GitHub                                | `./scripts/regen-kanban-ids.sh`                    |
+| `clear-project.sh`               | Vacía el Project sin borrar issues                                    | `./scripts/clear-project.sh`                       |
+| `kanban-move.sh`                 | Mueve un issue entre estados                                          | `./scripts/kanban-move.sh <N> progress`            |
+| `kanban-comment.sh`              | Comenta SHA + cambios en el issue                                     | `./scripts/kanban-comment.sh <N> <sha> [template]` |
+| `validate-task-in-kanban.sh <N>` | Valida los `CA_##` de un issue contra su validator específico         | `./scripts/validate-task-in-kanban.sh 621`         |
+| `validators/validate-tsNNN.sh`   | Validador específico por task (creado desde `VALIDATION-template.sh`) | (invocado por el wrapper)                          |
+| `retry-links.sh`                 | Re-vincula sub-issues huérfanos                                       | `./scripts/retry-links.sh`                         |
 
 ### Plantillas obligatorias
 
@@ -2053,6 +2057,38 @@ Todo CAP/FT/US/TS se crea siguiendo la plantilla correspondiente en
 | TS    | `TS-template.md`  | Contexto, Entregable, Criterios, Estimación (≤4h), US padre |
 
 Un issue no se cierra (`Done`) hasta que TODOS los checkboxes de
+`## Criterios de aceptación` estén marcados.
+
+### Validación de criterios (CA_##)
+
+Cada criterio de aceptación de una task lleva un código único `**CA_##:**` al
+inicio. La validación sigue un flujo de 2 capas:
+
+1. **Wrapper genérico** — `docs/scrum/kanban/scripts/validate-task-in-kanban.sh <issue-number>`
+   - Lee el issue vía `gh api` y extrae el `TS-XXX` del título.
+   - Verifica que exista `scripts/validators/validate-tsNNN.sh`.
+   - Extrae los `**CA_##:**` del body del issue y los `check "CA_##"` del validator.
+   - Comprueba **cobertura 1:1** (falla si el validator no cubre algún CA_## del issue).
+   - Ejecuta el validator y propaga el exit code.
+2. **Validator específico** — `docs/scrum/kanban/scripts/validators/validate-tsNNN.sh`
+   - Creado copiando `templates/VALIDATION-template.sh`.
+   - Un `check "CA_NN"` por cada criterio del issue, con su lógica concreta.
+   - Los **behavior tests** (que crean archivos, ejecutan comandos y limpian) van detrás de `RUN_BEHAVIOR=0|1` para permitir validación rápida vs completa.
+
+**Ejemplo de uso:**
+
+```bash
+# Validación rápida (sin behavior tests)
+RUN_BEHAVIOR=0 ./docs/scrum/kanban/scripts/validate-task-in-kanban.sh 621
+
+# Validación completa (con behavior tests: ESLint rechaza, Prettier autofixea, tsc rechaza...)
+RUN_BEHAVIOR=1 ./docs/scrum/kanban/scripts/validate-task-in-kanban.sh 621
+```
+
+El wrapper retorna **exit 0** solo si hay cobertura completa **y** todos los `CA_##` pasan. Sin esta validación verde, el commit queda bloqueado. Detalle completo en `prompt_inicial.md` regla 34.
+
+---
+
 `## Criterios de aceptación` estén marcados.
 
 ### Verificación previa obligatoria (rate limit)
