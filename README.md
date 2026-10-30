@@ -2003,6 +2003,18 @@ y se vincula como **sub-issue** del nivel inmediatamente superior.
 
 ### Flujo de trabajo
 
+**Hooks de git (safety nets automáticos):**
+
+| Hook         | Comando                              | Bloquea si                                 |
+| ------------ | ------------------------------------ | ------------------------------------------ |
+| `pre-commit` | `lint-staged` + `tsc -b`             | Lint no autofixeable o tipos rotos         |
+| `commit-msg` | `commitlint --edit "$1"`             | Formato de commit inválido                 |
+| `pre-push`   | `RUN_AUTOFIX=0 Frontend-test-Dev.sh` | Cualquier `[W-NEW]` o `[E-NEW]` del runner |
+
+**El pre-push es el gate final**: si el runner completo (14 grupos, ~2-3 min) no está verde, el push a `origin` se rechaza. Esto se ejecuta en **cada `git push`**.
+
+Para saltarlo en emergencia documentada: `git push --no-verify` (el mensaje del commit relacionado debe incluir `no-verify: <motivo>`).
+
 | Paso | Acción                       | Comando                                            |
 | ---- | ---------------------------- | -------------------------------------------------- |
 | 1    | Consultar tablero            | `gh project item-list 2 --owner 42mrnobody42-alt`  |
