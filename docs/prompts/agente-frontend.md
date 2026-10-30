@@ -879,6 +879,53 @@ npx commitlint --edit "$1"
 - `git commit --no-verify` solo en emergencia documentada (mensaje debe incluir `no-verify: <motivo>`).
 - No usar tipos fuera de `type-enum` (ej. `feature`, `hotfix`, `wip`).
 
+### 14.10 Husky + pre-push (obligatorio)
+
+El hook `pre-push` es el **gate final** antes de que el código llegue a `origin`. Ejecuta el runner unificado completo.
+
+**Hook** (`frontend/.husky/pre-push`):
+
+```bash
+#!/usr/bin/env sh
+cd "$(git rev-parse --show-toplevel)/frontend" || exit 1
+
+echo ""
+echo "════════════════════════════════════════════════════════════════════"
+echo "  pre-push: ejecutando runner completo (~2-3 min)…"
+echo "════════════════════════════════════════════════════════════════════"
+echo ""
+
+RUN_AUTOFIX=0 bash tests/shellTest/Frontend-test-Dev.sh
+```
+
+**Flujo**:
+
+1. Imprime mensaje inicial al usuario ("~2-3 min").
+2. Ejecuta `RUN_AUTOFIX=0 bash tests/shellTest/Frontend-test-Dev.sh`.
+3. Si el runner sale verde (exit 0) → push permitido.
+4. Si el runner falla (exit ≠ 0) → push rechazado.
+
+**Por qué `RUN_AUTOFIX=0`**: el autofix ya corrió en pre-commit. Re-ejecutarlo en pre-push sería doble trabajo inútil y puede ocultar problemas reales (autofix silencioso en pre-push no avisa).
+
+**Tiempo esperado**: ~2-3 min (runner completo: 14 grupos).
+
+**Qué cubre**: ESLint, Stylelint, Prettier, TypeScript, Vitest (81 tests), Vite build, Storybook build, Servicios (frontend-dev + storybook-dev), Playwright smoke (14), Playwright a11y (7), Storybook manager E2E (2), Auto-fix (skip por `RUN_AUTOFIX=0`), Hooks (RUN_HOOKS 3/3).
+
+**Puertos**: al terminar, `verify_ports_released_after_cleanup` valida que `:3000` y `:3010` quedan libres. Si no, avisa (pero no mata procesos ajenos).
+
+**Relación con el resto de la cadena**:
+
+| Hook         | Velocidad | Scope                    | Bloquea si                         |
+| ------------ | --------- | ------------------------ | ---------------------------------- |
+| `pre-commit` | <15 s     | `lint-staged` + `tsc -b` | Lint no autofixeable / tipos rotos |
+| `commit-msg` | <2 s      | `commitlint`             | Formato de commit inválido         |
+| `pre-push`   | ~2-3 min  | Runner completo          | Cualquier `[W-NEW]` / `[E-NEW]`    |
+
+**Prohibiciones**:
+
+- `git push --no-verify` solo en emergencia documentada (mensaje de commit relacionado debe incluir `no-verify: <motivo>`).
+- No modificar el hook para skipear el runner "porque tarda". Si tarda, es porque el código tiene problemas.
+
 ## 15. Convenciones de código
 
 - TypeScript estricto. Sin any (usar unknown y narrowing).

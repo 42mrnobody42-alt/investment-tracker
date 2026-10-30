@@ -320,6 +320,52 @@ Se ejecutan en el grupo **Vitest** del runner (junto a los 55 tests base del pro
 
 Si alguien modifica el `headerPattern`, `type-enum` o `defaultIgnores` sin actualizar los tests → **el runner falla** antes de llegar al commit.
 
+## Pre-push hook — runner completo
+
+El hook `frontend/.husky/pre-push` ejecuta el runner completo con `RUN_AUTOFIX=0` antes de cada `git push`. Es el safety net final.
+
+**Comando ejecutado**:
+
+```bash
+RUN_AUTOFIX=0 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+```
+
+**Cubre los 14 grupos del runner** (ver §"Runner unificado"):
+
+1. ~~Auto-fix pre-run~~ (skip por `RUN_AUTOFIX=0`)
+2. Git hooks (`RUN_HOOKS` 3/3)
+3. ESLint
+4. Stylelint
+5. Prettier
+6. TypeScript
+7. Vitest (81 tests)
+8. Vite build
+9. Storybook build
+10. Servicios (frontend-dev + storybook-dev)
+11. Playwright smoke (14)
+12. Playwright a11y (7)
+13. Storybook manager E2E (2)
+
+**Comportamiento**:
+
+- Si el runner sale verde (exit 0) → **push permitido**.
+- Si el runner falla (exit ≠ 0) → **push rechazado** (verás el resumen del runner con `[W-NEW]` o `[E-NEW]`).
+- **Tiempo esperado**: ~2-3 min.
+- **Puertos**: al terminar, `verify_ports_released_after_cleanup` valida `:3000` y `:3010` libres.
+
+**Por qué `RUN_AUTOFIX=0`**: el autofix ya corrió en `pre-commit`. Re-ejecutarlo en `pre-push` sería doble trabajo inútil y podría ocultar problemas reales (un autofix silencioso en pre-push no avisa al usuario de que su código tenía formato roto).
+
+**Prohibiciones**:
+
+- `git push --no-verify` solo en emergencia documentada (el mensaje de commit relacionado debe incluir `no-verify: <motivo>`).
+- No skipear el hook "porque tarda". Si tarda, es porque el código tiene problemas.
+
+**Relación con el runner manual**:
+
+- **Runner manual** (ejecutado a mano): `bash frontend/tests/shellTest/Frontend-test-Dev.sh` → usa `RUN_AUTOFIX=1` por defecto (autofix).
+- **Pre-push hook**: `RUN_AUTOFIX=0` → sin autofix.
+- Ambos deben estar verdes antes de push/PR/merge (Regla 32 + Regla 36).
+
 ## Stack de testing
 
 ## Stack de testing

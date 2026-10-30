@@ -441,6 +441,21 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
     El hook `.husky/commit-msg` bloquea el commit si no cumple. Configuración en `frontend/commitlint.config.js`. Detalle y ejemplos en `README.md` §"Reglas de commits".
 
+36. **Pre-push hook (runner completo) — obligatorio**.
+    Todo `git push` DEBE pasar por `frontend/.husky/pre-push`, que ejecuta el runner unificado con `RUN_AUTOFIX=0`:
+
+    ```bash
+    RUN_AUTOFIX=0 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+    ```
+
+    **Gate final antes de `origin`**: si el runner no sale en verde (exit ≠ 0), el push se rechaza. Esto cubre los 14 grupos: Auto-fix, Hooks, ESLint, Stylelint, Prettier, TypeScript, Vitest (81 tests), Vite build, Storybook build, Servicios, Playwright smoke (14), Playwright a11y (7), Storybook manager (2).
+
+    - **Tiempo esperado**: ~2-3 min.
+    - **`RUN_AUTOFIX=0`**: el autofix ya corrió en pre-commit, no se re-ejecuta.
+    - **`git push --no-verify`** solo en emergencia documentada (mensaje de commit relacionado debe incluir `no-verify: <motivo>`).
+
+    Detalle en `docs/prompts/agente-frontend.md` §14.10 y `pruebas.md` §Runner vs Validador.
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero

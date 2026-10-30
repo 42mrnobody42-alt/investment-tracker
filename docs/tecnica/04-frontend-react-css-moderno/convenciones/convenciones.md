@@ -129,6 +129,7 @@ export const ASSETS = {
 
 - **Pre-commit** (Husky v9 + lint-staged): todo `git commit` pasa por `frontend/.husky/pre-commit` que ejecuta `lint-staged` (autofix por archivo) + `tsc -b` (validar tipos del proyecto completo). Bloquea commits con errores de lint **no autofixeables** o tipos rotos. Configurado en `frontend/.lintstagedrc.json` y validado por el grupo `RUN_HOOKS` del runner. Detalle en `docs/prompts/agente-frontend.md` §14.8.
 - **Commitlint** (v21.2.4): todo commit pasa por `.husky/commit-msg` → `commitlint` con `headerPattern` `^(\w+)(?:\(#[0-9]+\))?!?: (.+)$`. Tipos: `feat | fix | docs | refactor | test | chore | style | perf | build | ci | revert`. `(#N)` y `!` opcionales. `Merge pull request` ignorados. Válidos: `feat(#620): x`, `fix!: x`, `chore: x`. Inválidos: `update stuff`, `feature(#1): x`, `feat(): x`. Configuración en `frontend/commitlint.config.js`. Detalle en `agente-frontend.md` §14.9.
+- **Pre-push** (Husky v9): todo `git push` pasa por `.husky/pre-push` que ejecuta el runner completo con `RUN_AUTOFIX=0` (`Frontend-test-Dev.sh`, 14 grupos, ~2-3 min). Si el runner no sale verde → push rechazado. Es el gate final antes de `origin`. Detalle en `agente-frontend.md` §14.10.
 
 ## 6. Pruebas
 
