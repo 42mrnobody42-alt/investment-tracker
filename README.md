@@ -167,6 +167,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
   - [Arquitectura del Frontend](#arquitectura-del-frontend)
+  - [Variables de entorno (`.env`)](#variables-de-entorno-env)
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
   - [Deudas Técnicas (ADR)](#deudas-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
@@ -1279,6 +1280,22 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 - Assets corporativos mutables en runtime (`public/assets/` + `manifest.json` + `useAsset()`).
 - Accesibilidad WCAG 2.2 AA verificada con `axe-core` en CI: helper `runA11y()` sobre mockup base en los 7 proyectos (TS-014); aplicación a todas las vistas reales en **TS-138 (#743)**.
 - Sin `any`, sin colores hardcodeados, sin secretos en el bundle.
+
+#### Variables de entorno (`.env`)
+
+El frontend usa **un único archivo** `frontend/.env` (commiteado) para todas las variables `VITE_*`. **No existen archivos por ambiente** (`.env.development`, `.env.qa`, `.env.production`): Vite carga el mismo `.env` en `npm run dev`, `npm run build` y cualquier `npm run <script>`.
+
+| Variable        | Valor                                 | Propósito                                                                             |
+| :-------------- | :------------------------------------ | :------------------------------------------------------------------------------------ |
+| `VITE_API_URL`  | `/api`                                | **Contrato fijo con el backend**. Si el backend cambia de prefijo, se actualiza aquí. |
+| `VITE_APP_ENV`  | `development` \| `qa` \| `production` | Entorno actual (informativo, para mostrar en UI)                                      |
+| `VITE_APP_NAME` | `Investment Tracker Pro`              | Nombre mostrado en la UI                                                              |
+
+**Reglas**:
+
+1. **Solo `.env` se commitea**. El `.gitignore` raíz bloquea `.env` globalmente pero exceptúa `frontend/.env`.
+2. **`VITE_API_URL=/api`** es contrato fijo con el backend (`backend/src/main/resources/application.yml`). No cambia entre entornos.
+3. **Tipos TS**: `src/vite-env.d.ts` extiende `ImportMetaEnv` para autocompletar `import.meta.env.VITE_*` (ver TS-021).
 
 ### Stack Tecnológico del Frontend
 

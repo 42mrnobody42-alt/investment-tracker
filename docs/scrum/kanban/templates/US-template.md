@@ -1,10 +1,18 @@
+## Resumen ejecutivo
+
+<En 1-2 frases: qué problema resuelve esta US y cuál es el resultado observable.
+Va antes del Contexto porque es lo primero que se lee.
+
+Ejemplo vivo de referencia: US-006 (#570) es el primer issue con este formato.>
+
 ## Contexto
 
-<Por qué existe esta US.>
+<Por qué existe esta US. 2-4 líneas con hallazgos reales (no hipótesis).>
 
 ## Alcance
 
-- <puntos clave>
+- <punto 1>
+- <punto 2>
 
 ## Tareas
 

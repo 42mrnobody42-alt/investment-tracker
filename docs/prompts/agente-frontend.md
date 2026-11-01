@@ -926,6 +926,27 @@ RUN_AUTOFIX=0 bash tests/shellTest/Frontend-test-Dev.sh
 - `git push --no-verify` solo en emergencia documentada (mensaje de commit relacionado debe incluir `no-verify: <motivo>`).
 - No modificar el hook para skipear el runner "porque tarda". Si tarda, es porque el código tiene problemas.
 
+### 14.11 Variables de entorno (`frontend/.env`)
+
+El proyecto usa **un único** `frontend/.env` (commiteado). Vite lo carga automáticamente en `npm run dev`, `npm run build` y cualquier `npm run <script>` — **sin archivos por ambiente**.
+
+**Reglas obligatorias**:
+
+1. **Solo `.env`** vive en el repo. Está prohibido crear `.env.development`, `.env.qa`, `.env.production` (los entornos comparten el mismo `.env`).
+2. **`VITE_API_URL=/api`** es el contrato fijo con el backend (`backend/src/main/resources/application.yml`). Si cambia el prefijo del backend, se actualiza aquí.
+3. **Sin secretos** en el `.env`. Cualquier valor sensible va en el backend (vía `application.yml` + AES-256-GCM).
+4. **Tipos TS**: `src/vite-env.d.ts` extiende `ImportMetaEnv` (ver TS-021). No se accede a `import.meta.env.VITE_*` sin pasar por el tipo.
+
+**Cómo verificar en dev**:
+
+```bash
+# En la consola del navegador (localhost:3000)
+console.log(import.meta.env.VITE_APP_ENV);  // "development"
+console.log(import.meta.env.VITE_API_URL);  // "/api"
+```
+
+**Dónde vive la regla**: `prompt_inicial.md` regla 37 + `README.md` §Frontend → "Variables de entorno".
+
 ## 15. Convenciones de código
 
 - TypeScript estricto. Sin any (usar unknown y narrowing).

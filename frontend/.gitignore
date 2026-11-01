@@ -38,3 +38,8 @@ playwright-report/
 blob-report/
 playwright/.cache/
 test-results/
+
+
+# Env: frontend/.env es el único archivo env commiteado (Vite lo carga en dev/build)
+# Los archivos .env.development, .env.qa, .env.production no se usan en este proyecto.
+!.env
