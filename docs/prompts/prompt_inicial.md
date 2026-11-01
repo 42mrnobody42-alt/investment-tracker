@@ -464,6 +464,11 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
     - `VITE_APP_ENV` — `development | qa | production` (informativo).
     - `VITE_APP_NAME` — `Investment Tracker Pro`.
 
+    **Tipado TS**: `src/vite-env.d.ts` extiende `ImportMetaEnv` con
+    `VITE_API_URL: string`, `VITE_APP_ENV: 'development' | 'qa' | 'production'`,
+    `VITE_APP_NAME: string`. `tsc` rechaza valores fuera del union. `npm run type-check`
+    (`tsc -b`) valida el tipado. Ver `agente-frontend.md` §14.11.
+
     El `.gitignore` raíz bloquea `.env` globalmente y exceptúa `frontend/.env`. Detalle en `README.md` §Frontend → "Variables de entorno" y `agente-frontend.md` §"Frontend".
 
     **Proxy de desarrollo (`/api` → `:7700`)**: `frontend/vite.config.ts` enruta
