@@ -1,3 +1,5 @@
+> Versión: 1.0.0
+
 # Quiero crear una aplicación web que tenga los siguientes componentes:
 
 Usar contenedores docker para los servicios postgresql para la DB, tomcat para el servicio web.

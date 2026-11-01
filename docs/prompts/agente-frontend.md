@@ -1,7 +1,7 @@
 # agente-frontend.md
 
 > Guía oficial de arquitectura y desarrollo frontend.
-> Versión: 1.4.0
+> Versión: 1.4.1
 > Stack base: React 19 + TypeScript 6 + Vite 8, CSS moderno (CSS Modules + Custom Properties + Container Queries), Storybook, i18next.
 > Público objetivo: Desarrolladores frontend senior, tech leads y agentes automatizados de generación de código.
 > Documento hermano del backend, la base de datos y el README del proyecto. Ver sección 0 y 22.
