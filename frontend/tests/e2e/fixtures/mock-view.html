@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mock View — Auditoría a11y base</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        color: #1a1a1a;
+        background: #ffffff;
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px;
+        line-height: 1.5;
+      }
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        padding: 8px;
+        background: #1a1a1a;
+        color: #ffffff;
+      }
+      .skip-link:focus {
+        left: 24px;
+        top: 24px;
+      }
+      header {
+        border-bottom: 1px solid #d1d5db;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+      }
+      nav ul {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        gap: 16px;
+      }
+      nav a {
+        color: #0066cc;
+        text-decoration: underline;
+      }
+      main {
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+      }
+      h2 {
+        font-size: 1.5rem;
+        line-height: 1.2;
+        margin-top: 32px;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #d1d5db;
+      }
+      form {
+        display: grid;
+        gap: 16px;
+        max-width: 400px;
+        margin-top: 16px;
+      }
+      label {
+        font-weight: 600;
+      }
+      input {
+        padding: 8px;
+        font-size: 1rem;
+        border: 1px solid #6b7280;
+        border-radius: 4px;
+      }
+      button {
+        padding: 10px 16px;
+        font-size: 1rem;
+        color: #ffffff;
+        background: #005f6b;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #004d56;
+      }
+      footer {
+        border-top: 1px solid #d1d5db;
+        padding-top: 16px;
+        color: #4b5563;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+    <header role="banner">
+      <nav aria-label="Navegación principal">
+        <ul>
+          <li><a href="#main">Inicio</a></li>
+          <li><a href="#form">Contacto</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" role="main">
+      <h1>Mock view para auditoría a11y</h1>
+      <p>
+        Esta página simula la estructura de una vista real (header, main, contenido, formulario,
+        imágenes y enlaces) para validar el helper <code>runA11y()</code> mientras las vistas reales
+        de US-024/025 no existen.
+      </p>
+      <h2>Contenido</h2>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      <img
+        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='120'><rect width='320' height='120' fill='%23e5e7eb'/><text x='160' y='65' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%231a1a1a'>Imagen de ejemplo</text></svg>"
+        alt="Placeholder gris con el texto 'Imagen de ejemplo'"
+        width="320"
+        height="120"
+      />
+      <h2 id="form">Contacto</h2>
+      <form aria-labelledby="form">
+        <div>
+          <label for="name">Nombre</label>
+          <input id="name" name="name" type="text" autocomplete="name" />
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" />
+        </div>
+        <button type="button">Enviar</button>
+      </form>
+    </main>
+    <footer role="contentinfo">
+      <p>© Mock view — uso interno para tests a11y.</p>
+    </footer>
+  </body>
+</html>

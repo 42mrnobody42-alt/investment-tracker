@@ -1,0 +1,24 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# approved-warnings.txt — Registro de warnings/errores documentados
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Formato por entrada (bloques separados por [ID]):
+#   [ID]      — identificador único (W-DOC-NNN / E-DOC-NNN)
+#   category  — warning | error
+#   group     — nombre del check en el runner (eslint, typescript, storybook-build, etc.)
+#   ref       — ruta del documento + ID interno (ej. warnings-storybook.md → W-001)
+#   message   — texto legible para el resumen (sin regex)
+#   pattern   — regex ERE (compatible con grep -E) que matchea el mensaje del output
+#
+# Cualquier warning/error del output que NO matchee ninguna entrada del mismo
+# group → se clasifica como NUEVO y bloquea push/merge hasta documentarse.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+[W-DOC-001]
+category = warning
+group    = storybook-build
+ref      = docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md → W-001
+message  = "Skipping docgen for preview.tsx (no incluido en tsconfig.node)"
+pattern  = Skipping docgen for
+

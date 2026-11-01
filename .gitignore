@@ -21,7 +21,7 @@ backend/org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 # =============================================
 # IDE - VS Code
 # =============================================
-.vscode/
+.vscode/*
 !.vscode/settings.json
 .idea/
 *.iml
@@ -84,3 +84,5 @@ docs/scrum/kanban/.kanban-config.env
 # Scripts locales (no versionados)
 # =============================================
 .pasarCambiosALastest.sh
+# Excepción: frontend/.env es el único env commiteado del proyecto
+!frontend/.env

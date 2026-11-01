@@ -1,3 +1,5 @@
+> Versión: 1.0.0
+
 # Quiero crear una aplicación web que tenga los siguientes componentes:
 
 Usar contenedores docker para los servicios postgresql para la DB, tomcat para el servicio web.
@@ -54,9 +56,9 @@ Si la IA detecta una contradicción, debe señalarla, proponer la corrección y 
 
 - **Backend**: Java LTS 21 (Spring Boot 3.3.0)
 - **Base de datos**: PostgreSQL 16
-- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1
+- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.4
 - **Node.js (build frontend)**: 24.21.0 (LTS activa)
-- **Lint frontend**: ESLint 9.39.5 (EOL, ver ADR `docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`) + `eslint-plugin-jsx-a11y` + `eslint-plugin-import` + `eslint-plugin-simple-import-sort`
+- **Lint frontend**: ESLint 9.39.5 (EOL, ver ADR `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md`) + `eslint-plugin-jsx-a11y` + `eslint-plugin-import` + `eslint-plugin-simple-import-sort`
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier`
 - **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 (ver ADR-0002)
 - **Strict mode TS**: `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`
@@ -368,6 +370,118 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
     `docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`
     (política en ADR-0004). Aplica a las 3 capas (frontend, backend, database).
 
+31. **Validación obligatoria antes del commit de la ISSUE**.
+    Antes de cualquier commit DEBES ejecutar las validaciones de los criterios de aceptación del ISSUE del tablero. Sin esa validación, el commit se considera incompleto.
+
+    **Estándar obligatorio de validaciones**:
+
+    - **Todas las validaciones en una sola ejecución.** Puedes usar plantillas o archivos temporales para textos o mensajes grandes; no se aceptan validaciones dispersas en múltiples mensajes.
+    - **Cada validación debidamente identificada y separada**, con su resultado impreso en pantalla.
+    - **Comparar explícitamente el valor esperado contra el obtenido.** No basta con imprimir el resultado; debe declararse la comparación (`esperado: X — obtenido: Y`).
+    - **Al final, un resumen de la comparación** con veredicto explícito para cada validación: `aprobó` / `no aprobó` / `contradicción`, seguido de un veredicto global (`aprobó` / `no aprobó`).
+
+    La validación se ejecuta contra el código real, no contra supuestos. Si falta contexto (endpoint, DTO, campo, versión, diseño), se solicita antes de avanzar (regla 24).
+
+32. **Runner unificado de tests del frontend (obligatorio)**.
+    Todo cambio en código frontend DEBE ejecutar `frontend/tests/shellTest/Frontend-test-Dev.sh` y aprobar con exit 0 ANTES de:
+    - Hacer **push** a origin.
+    - Abrir un **PR** a `developer`.
+    - Hacer **merge** a `developer`, `lastest` o `qa`.
+    - Marcar el issue como `Done`.
+
+    **Commits locales (checkpoint)**: se permite commit WIP como punto de control en la rama local con `ALLOW_NEW=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh`. Este modo permite que haya warnings/errores NUEVOS sin bloquear el commit, pero **NO autoriza push ni merge**. El mensaje de commit debe incluir `[WIP]` en el prefijo.
+
+    El runner ejecuta todos los gates del frontend (ESLint, Stylelint, Prettier, TypeScript, Vitest, Playwright smoke, Playwright a11y, Vite build, Storybook build), agrupa resultados y emite un resumen clasificado:
+    - `[W-DOC-NNN]` warnings documentados (mapean 1:1 a `approved-warnings.txt` → doc de referencia).
+    - `[W-NEW-NNN]` warnings nuevos (bloquean push/merge hasta documentarse o resolverse).
+    - `[E-DOC-NNN]` errores documentados.
+    - `[E-NEW-NNN]` errores nuevos (bloquean push/merge).
+    - `[S-NNN]` éxitos.
+
+    **Registro de aprobados**: `frontend/tests/shellTest/approved-warnings.txt` (formato bloque `[W-DOC-NNN]` con `category/group/ref/message/pattern`). Cada entrada documenta el mensaje literal y su `pattern` (regex ERE). Cualquier warning/error del output que no matchee → se clasifica como NUEVO.
+
+    **Regla derivada**: todo test/gate nuevo creado en cualquier tarea futura DEBE añadirse al runner en el mismo PR. Un cambio que rompa el runner sin actualizarlo bloquea el push/merge.
+
+33. **Pre-commit hook (Husky + lint-staged) — obligatorio**.
+    El hook `frontend/.husky/pre-commit` corre en cada `git commit` y bloquea el commit si:
+    - `lint-staged` deja errores **no autofixeables** (ESLint / Stylelint) en archivos staged.
+    - `npm run type-check` (`tsc -b`) falla.
+
+    Está **prohibido** usar `git commit --no-verify` salvo emergencia documentada (el mensaje del commit debe incluir `no-verify: <motivo>`).
+
+    El auto-fix silencioso está permitido (Prettier, ESLint `--fix`, Stylelint `--fix`): solo bloquea lo que no se puede corregir automáticamente. Detalle completo en `docs/prompts/agente-frontend.md` §14.8 y `pruebas.md` §"Runner unificado".
+
+34. **Validación de criterios de aceptación (obligatoria antes del commit)**.
+    Toda task se valida con el wrapper genérico:
+
+    ```
+    ./docs/scrum/kanban/scripts/validate-task-in-kanban.sh <issue-number>
+    ```
+
+    El wrapper:
+    - Lee el issue vía `gh api` y extrae el `TS-XXX` del título.
+    - Verifica que exista `docs/scrum/kanban/scripts/validators/validate-tsXXX.sh`.
+    - Extrae los `**CA_##:**` del body del issue.
+    - Verifica **cobertura 1:1** contra los `check "CA_##"` del validator.
+    - Ejecuta el validator y propaga el exit code.
+
+    **Regla derivada**: si el validador no cubre algún CA_## del issue, o si algún check falla, el wrapper retorna exit code ≠ 0 y el commit queda bloqueado.
+
+    Cada `validators/validate-tsXXX.sh` se crea copiando `templates/VALIDATION-template.sh` y añadiendo un `check "CA_NN"` por cada criterio del issue. Los **behavior tests** (que crean archivos y ejecutan comandos reales) van detrás de un flag `RUN_BEHAVIOR=0|1` para permitir validación rápida vs completa.
+
+35. **Formato de commit (commitlint) — obligatorio**.
+    Todo commit DEBE cumplir el headerPattern validado por `commitlint`:
+
+    ```
+    ^(\w+)(?:\(#[0-9]+\))?!?: (.+)$
+    ```
+
+    - **Tipo**: `feat | fix | docs | refactor | test | chore | style | perf | build | ci | revert`
+    - **`(#N)`**: opcional (solo obligatorio cuando el commit resuelve/refiere a un issue)
+    - **`!`**: opcional (breaking change)
+    - **Descripción**: obligatoria, no vacía, sin punto final
+
+    El hook `.husky/commit-msg` bloquea el commit si no cumple. Configuración en `frontend/commitlint.config.js`. Detalle y ejemplos en `README.md` §"Reglas de commits".
+
+36. **Pre-push hook (runner completo) — obligatorio**.
+    Todo `git push` DEBE pasar por `frontend/.husky/pre-push`, que ejecuta el runner unificado con `RUN_AUTOFIX=0`:
+
+    ```bash
+    RUN_AUTOFIX=0 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+    ```
+
+    **Gate final antes de `origin`**: si el runner no sale en verde (exit ≠ 0), el push se rechaza. Esto cubre los 14 grupos: Auto-fix, Hooks, ESLint, Stylelint, Prettier, TypeScript, Vitest (81 tests), Vite build, Storybook build, Servicios, Playwright smoke (14), Playwright a11y (7), Storybook manager (2).
+
+    - **Tiempo esperado**: ~2-3 min.
+    - **`RUN_AUTOFIX=0`**: el autofix ya corrió en pre-commit, no se re-ejecuta.
+    - **`git push --no-verify`** solo en emergencia documentada (mensaje de commit relacionado debe incluir `no-verify: <motivo>`).
+
+    Detalle en `docs/prompts/agente-frontend.md` §14.10 y `pruebas.md` §Runner vs Validador.
+
+37. **Archivo `.env` del frontend (único, commiteado)**.
+    El frontend usa **un único archivo** `frontend/.env` (commiteado) para las variables `VITE_*`. **Está prohibido** crear `.env.development`, `.env.qa` o `.env.production`: los entornos comparten el mismo `.env` (Vite carga el mismo archivo en `npm run dev`, `npm run build`, etc.).
+
+    Variables obligatorias:
+    - `VITE_API_URL=/api` — **contrato fijo con el backend**. Si el backend cambia de prefijo (`application.yml`), se actualiza el `.env`.
+    - `VITE_APP_ENV` — `development | qa | production` (informativo).
+    - `VITE_APP_NAME` — `Investment Tracker Pro`.
+
+    **Tipado TS**: `src/vite-env.d.ts` extiende `ImportMetaEnv` con
+    `VITE_API_URL: string`, `VITE_APP_ENV: 'development' | 'qa' | 'production'`,
+    `VITE_APP_NAME: string`. `tsc` rechaza valores fuera del union. `npm run type-check`
+    (`tsc -b`) valida el tipado. Ver `agente-frontend.md` §14.11.
+
+    El `.gitignore` raíz bloquea `.env` globalmente y exceptúa `frontend/.env`. Detalle en `README.md` §Frontend → "Variables de entorno" y `agente-frontend.md` §"Frontend".
+
+    **Proxy de desarrollo (`/api` → `:7700`)**: `frontend/vite.config.ts` enruta
+    `/api/*` al backend en dev vía `server.proxy` (`target: 'http://localhost:7700'`,
+    `changeOrigin: true`). **Sin rewrite**: `/api/foo` → `http://localhost:7700/api/foo`
+    (contrato fijo). `vite build` ignora `server` → el proxy **no viaja a producción**.
+    El `target` **debe** coincidir con `backend/src/main/resources/application.yml → server.port`.
+    Storybook (`:3010`) no hereda este proxy. Detalle en `README.md` §Frontend → "Proxy en desarrollo"
+    y `docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md`.
+    Guía completa: `docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md`.
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero
@@ -474,6 +588,15 @@ done
 > Regla: nunca dejar tareas huérfanas en Backlog mientras se trabaja activamente en ellas.
 
 Al terminar una TS / US / FT / CAP:
+
+**3.5. Validar criterios de aceptación (obligatorio, antes del commit)**
+
+```bash
+cd /prog/datos/investment-tracker
+./docs/scrum/kanban/scripts/validate-task-in-kanban.sh <N>
+```
+
+> El wrapper extrae los `**CA_##:**` del issue, verifica **cobertura 1:1** contra los `check "CA_##"` del validador específico (`docs/scrum/kanban/scripts/validators/validate-tsNNN.sh`) y ejecuta cada check. **Sin verde no hay commit.** Detalle completo en [`README.md` §106 → "Validación de criterios (CA_##)"](../../README.md#106-gestión-scrum-con-github-projects).
 
 **4. Commit con referencia al issue (Closes #N o Refs #N)**
 

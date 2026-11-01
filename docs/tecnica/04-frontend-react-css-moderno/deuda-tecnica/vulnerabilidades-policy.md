@@ -1,6 +1,6 @@
 # ADR-0004 — Política de vulnerabilidades aceptadas en el frontend
 
-- **Estado**: Aceptada
+- **Estado**: 🟡 Pendiente
 - **Fecha**: 2026-10-03
 - **Capa**: Frontend (dev tooling / supply chain)
 - **Decisores**: Equipo Investment Tracker

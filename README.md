@@ -2,7 +2,7 @@
 
 - Version = `00`
 - Release = `001`
-- Hotfix = `009`
+- Hotfix = `014`
 
 ## Fecha: 2026-09-26
 
@@ -102,6 +102,14 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
      - `docs/tecnica/04-frontend-react-css-moderno/…` (se puebla con CAP-01)
    - La migración física de los archivos existentes se hará cuando la documentación actual deje de dar abasto.
 
+6. **`frontend/tests/shellTest/Frontend-test-Dev.sh`**
+   - Runner unificado de tests del frontend. Gate **obligatorio** antes de commit, PR y cierre de issue: ejecuta ESLint, Stylelint, Prettier, TypeScript, Vitest, Playwright (smoke + a11y), Vite build y Storybook build; emite resumen clasificado `[E-NNN]/[W-NNN]/[S-NNN]`. Regla completa en `prompt_inicial.md` (regla 32). Detalle en `pruebas.md`.
+   - Ruta: `frontend/tests/shellTest/Frontend-test-Dev.sh`.
+
+7. **`docs/scrum/kanban/templates/`**
+   - Plantillas obligatorias para crear CAP / FT / US / TS con la estructura mínima exigida (Contexto, Alcance/Entregable, Criterios de aceptación con códigos `CA_##`, Dependencias, Estimación). Ningún issue se crea sin seguir su plantilla. Además incluye `VALIDATION-template.sh`, base para los shells de validación de criterios de cada task.
+   - Ruta: `docs/scrum/kanban/templates/`.
+
 **Regla de solicitud de archivos**: cuando un agente (humano o IA) necesite contexto que no está en los documentos anteriores, DEBE solicitar los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras. El procedimiento detallado vive en `docs/prompts/agente-frontend.md` sección 21 y en `docs/prompts/prompt_inicial.md` (Reglas generales para la IA, reglas 24-28).
 
 **Consistencia**: cualquier cambio en endpoints, DTOs, roles, códigos de error o convenciones de frontend debe reflejarse en el mismo PR en este README, en `prompt_inicial.md` y/o en el agente correspondiente.
@@ -159,12 +167,24 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
   - [Arquitectura del Frontend](#arquitectura-del-frontend)
+  - [Variables de entorno (`.env`)](#variables-de-entorno-env)
+  - [Proxy en desarrollo (`/api` → `:7700`)](#proxy-en-desarrollo-api--7700)
+    - [Tipado con `vite-env.d.ts`](#tipado-con-vite-envdts)
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
-  - [Decisiones Técnicas (ADR)](#decisiones-técnicas-adr)
+  - [Deudas Técnicas (ADR)](#deudas-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
     - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
     - [ADR-0003 — Modelo híbrido de assets: public/ + src/assets/](#adr-0003--modelo-híbrido-de-assets-public--srcassets)
+    - [ADR-0004 — Política de vulnerabilidades aceptadas](#adr-0004--política-de-vulnerabilidades-aceptadas)
+    - [ADR-0005 — Decorador withTheme pendiente](#adr-0005--decorador-withtheme-pendiente)
+    - [ADR-0006 — Decorador withI18n pendiente](#adr-0006--decorador-withi18n-pendiente)
+    - [ADR-0007 — Decorador withRouter pendiente](#adr-0007--decorador-withrouter-pendiente)
+    - [ADR-0008 — Mixins base de estilos (focus-ring, container, truncate)](#adr-0008--mixins-base-de-estilos-focus-ring-container-truncate)
+    - [ADR-0009 — Exclusión temporal de App.tsx en cobertura de tests](#adr-0009--exclusión-temporal-de-apptsx-en-cobertura-de-tests)
   - [Convenciones del Frontend](#convenciones-del-frontend)
+
+  - [Pruebas Frontend](#pruebas-frontend)
+    - [Listado de pruebas](#listado-de-pruebas)
   - [Componentes del Frontend](#componentes-del-frontend)
     - [Atoms](#atoms-del-frontend)
       - [Button](#button-atoms)
@@ -244,7 +264,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 │   PL/pgSQL + UUID + 54 monedas│   │   http://localhost:5050       │
 └──────────────────────────────┘    └──────────────────────────────┘
 
-> **Stack del frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 + Node.js 24.21.0 (build).
+> **Stack del frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.4 + Node.js 24.21.0 (build).
 > Detalle completo en la [sección 4](#4-frontend---react-y-css-moderno).
 ```
 
@@ -1248,43 +1268,116 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 
 **Principios rectores** (detalle completo en `docs/prompts/agente-frontend.md`):
 
+- **Design tokens de la identidad corporativa** centralizados en `frontend/src/styles/branding/` (creados en TS-144):
+  - `paleta-colores-corporativa.css` — colores (`--color-*`, `--btn-*`). Temas **light**, **dark** y **high-contrast** vía `[data-theme]`. Aprobada en TS-009 con accesibilidad WCAG 2.2 AA validada.
+  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing. Importa `../fuentes/fuentes.css` (declara `@font-face` de Inter y JetBrains Mono).
+  - `layout.css` — grid, spacing (`--space-*`), breakpoints, z-index.
+  - `estilos-componentes.css` — radius, shadows, cards, tables, alerts.
+  - `motion.css` — duraciones, easings y stagger. Incluye los easings compuestos de péndulo (`--ease-pendulum`, `--ease-pendulum-damped`, con amplitud parametrizable vía `--pendulum-amplitude`) y el retardo de barrido de página (`--pasar-pagina`, con 4 direcciones: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
+  - **Preview visual**: [paleta-colores-corporativa.html](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html).
 - Separación por orientación: `views/horizontal/` (PC, tablet apaisada, Smart TV)
   y `views/vertical/` (móvil, tablet retrato). Sin mezclas.
 - Design System propio en `src/components/{atoms,molecules,organisms,layout}/`.
 - Vistas autenticadas siempre dentro de `AppShell` (TopBar + Sidebar plegable + Workspace).
 - i18n obligatorio (es/en) sin textos hardcodeados.
 - Assets corporativos mutables en runtime (`public/assets/` + `manifest.json` + `useAsset()`).
-- Accesibilidad WCAG 2.2 AA verificada con `axe-core` en CI.
+- Accesibilidad WCAG 2.2 AA verificada con `axe-core` en CI: helper `runA11y()` sobre mockup base en los 7 proyectos (TS-014); aplicación a todas las vistas reales en **TS-138 (#743)**.
 - Sin `any`, sin colores hardcodeados, sin secretos en el bundle.
+
+#### Variables de entorno (`.env`)
+
+El frontend usa **un único archivo** `frontend/.env` (commiteado) para todas las variables `VITE_*`. **No existen archivos por ambiente** (`.env.development`, `.env.qa`, `.env.production`): Vite carga el mismo `.env` en `npm run dev`, `npm run build` y cualquier `npm run <script>`.
+
+| Variable        | Valor                                 | Propósito                                                                             |
+| :-------------- | :------------------------------------ | :------------------------------------------------------------------------------------ |
+| `VITE_API_URL`  | `/api`                                | **Contrato fijo con el backend**. Si el backend cambia de prefijo, se actualiza aquí. |
+| `VITE_APP_ENV`  | `development` \| `qa` \| `production` | Entorno actual (informativo, para mostrar en UI)                                      |
+| `VITE_APP_NAME` | `Investment Tracker Pro`              | Nombre mostrado en la UI                                                              |
+
+**Reglas**:
+
+1. **Solo `.env` se commitea**. El `.gitignore` raíz bloquea `.env` globalmente pero exceptúa `frontend/.env`.
+2. **`VITE_API_URL=/api`** es contrato fijo con el backend (`backend/src/main/resources/application.yml`). No cambia entre entornos.
+3. **Tipos TS**: `src/vite-env.d.ts` extiende `ImportMetaEnv` para autocompletar `import.meta.env.VITE_*` (ver TS-021).
+
+#### Proxy en desarrollo (`/api` → `:7700`)
+
+##### Tipado con `vite-env.d.ts`
+
+`frontend/src/vite-env.d.ts` extiende `ImportMetaEnv` para dar autocompletado y chequeo de tipos a las variables `VITE_*`. `tsc` rechaza valores fuera del union `'development' | 'qa' | 'production'` en `VITE_APP_ENV`.
+
+```ts
+// frontend/src/vite-env.d.ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string;
+  readonly VITE_APP_ENV: "development" | "qa" | "production";
+  readonly VITE_APP_NAME: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+Ejemplo: `import.meta.env.VITE_APP_ENV = 'staging'` falla el type-check (error `TS2322`). `npm run type-check` (`tsc -b`) valida el tipado completo.
+
+En `npm run dev`, Vite enruta `/api/*` al backend (`http://localhost:7700`) usando
+`server.proxy`. Sin rewrite: `/api/foo` → `http://localhost:7700/api/foo` (contrato fijo).
+`vite build` ignora la clave `server` → el proxy **no viaja a producción**.
+
+- 📄 **Guía completa**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md)
+- 📊 **Diagramas** (gerencial + técnico): [`docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md`](docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md)
+
+**Sincronización de puerto**: el `target` (`http://localhost:7700`) **debe** coincidir con
+`backend/src/main/resources/application.yml → server.port`. Si el backend cambia de puerto,
+actualizar `vite.config.ts` y `proxy-developer.md` en el mismo PR.
+
+**Storybook (`:3010`)** no hereda este proxy (no lee `vite.config.ts`).
 
 ### Stack Tecnológico del Frontend
 
-| Componente        | Versión                     | Notas                                                                      |
-| ----------------- | --------------------------- | -------------------------------------------------------------------------- |
-| React             | 19.2.8                      | Versión estable activa                                                     |
-| React DOM         | 19.2.8                      | Sincronizado con React                                                     |
-| TypeScript        | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`               |
-| Vite              | 8.3.1                       | Bundler y dev server (puerto 3000, `strictPort: true`)                     |
-| Node.js (build)   | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                |
-| ESLint            | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                    |
-| Prettier          | 3.9.9                       | Formateo (`.prettierrc.json`)                                              |
-| Stylelint         | 17.15.0                     | Lint CSS / CSS Modules (`.stylelintrc.json`)                               |
-| ESLint plugins    | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh` |
-| Stylelint configs | ver `frontend/package.json` | `stylelint-config-standard`, `css-modules`, `recess-order`                 |
+| Componente           | Versión                     | Notas                                                                                                           |
+| -------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| React                | 19.2.8                      | Versión estable activa                                                                                          |
+| React DOM            | 19.2.8                      | Sincronizado con React                                                                                          |
+| TypeScript           | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`                                                    |
+| Vite                 | 8.3.4                       | Bundler y dev server (puerto 3000, `strictPort: true`)                                                          |
+| Node.js (build)      | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                                                     |
+| ESLint               | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                                                         |
+| Prettier             | 3.9.9                       | Formateo (`.prettierrc.json`)                                                                                   |
+| Stylelint            | 17.15.0                     | Lint CSS / CSS Modules (`.stylelintrc.json`)                                                                    |
+| ESLint plugins       | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh`                                      |
+| Stylelint configs    | ver `frontend/package.json` | `stylelint-config-standard`, `css-modules`, `recess-order`                                                      |
+| Vitest               | 5.0.5                       | Unitarias + integración (jsdom, coverage v8, thresholds 80%)                                                    |
+| Testing Library      | 16.3.3 (react)              | `@testing-library/react` + `jest-dom` 7.0.1 + `user-event` 14.6.8 + `dom` 10.4.2                                |
+| Playwright           | 1.64.1                      | E2E en 7 proyectos (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`) |
+| @axe-core/playwright | 4.14.0                      | Auditoría a11y WCAG 2.2 AA en E2E                                                                               |
 
 **Pineo de versiones**: `frontend/.npmrc` con `save-exact=true`. Ninguna
 dependencia usa `^` ni `~` en `package.json`.
 
-### Decisiones Técnicas (ADR)
+### Deudas Técnicas (ADR)
 
 Los Architecture Decision Records del frontend viven en
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/).
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/).
 
-| ADR                                                                                              | Título                                                            | Estado      | Fecha      |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------- | ---------- |
-| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)              | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | ✅ Aceptada | 2026-09-26 |
-| [ADR-0002](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md) | Alcance de Stylelint: colores y separación de scripts             | ✅ Aceptada | 2026-09-26 |
-| [ADR-0003](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md) | Modelo híbrido de assets: public/ + src/assets/                   | ✅ Aceptada | 2026-10-02 |
+> **Nota sobre ADRs**: en este proyecto los ADRs registran **deudas técnicas pendientes**.
+> Al resolverse, el ADR se **elimina** y la documentación migra al archivo correspondiente.
+> No hay ADRs "aceptados" permanentes.
+
+| ADR                                                                                                     | Título                                                            | Estado       | Fecha      | Se resuelve en |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------ | ---------- | -------------- |
+| [ADR-0001](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md)                    | Fijar ESLint 9.39.5 por incompatibilidad de plugins con ESLint 10 | 🟡 Pendiente | 2026-09-26 | TS-142 (#760)  |
+| [ADR-0002](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/stylelint-scope-y-colores.md)       | Alcance de Stylelint: colores y separación de scripts             | 🟡 Pendiente | 2026-09-26 | TS-022 (#627)  |
+| [ADR-0003](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)       | Modelo híbrido de assets: public/ + src/assets/                   | 🟡 Pendiente | 2026-10-02 | TS-031 (#636)  |
+| [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md)         | Política de vulnerabilidades aceptadas                            | 🟡 Pendiente | 2026-10-03 | TS-143 (#761)  |
+| [ADR-0005](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-theme-pendiente.md)  | Decorador `withTheme` pendiente de ThemeProvider                  | 🟡 Pendiente | 2026-10-03 | TS-024 (#629)  |
+| [ADR-0006](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md)   | Decorador `withI18n` pendiente de i18next                         | 🟡 Pendiente | 2026-10-03 | TS-026 (#631)  |
+| [ADR-0007](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md) | Decorador `withRouter` pendiente de React Router                  | 🟡 Pendiente | 2026-10-03 | TS-070 (#675)  |
+| [ADR-0008](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md)          | Mixins base de estilos (focus-ring, container, truncate)          | 🟡 Pendiente | 2026-10-11 | TS-145 (#766)  |
+| [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md)     | Exclusión temporal de `App.tsx` en cobertura de tests             | 🟡 Pendiente | 2026-10-17 | TS-146 (#769)  |
 
 <a id="adr-0001--eslint-9395-eol"></a>
 
@@ -1296,7 +1389,7 @@ Los Architecture Decision Records del frontend viven en
 que instaló Vite 8 por defecto.
 
 📄 **ADR completo**:
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/eslint-9-eol.md)
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/eslint-9-eol.md)
 
 <a id="adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts"></a>
 
@@ -1310,7 +1403,7 @@ Dos decisiones documentadas en ADR-0002:
 2. **Scripts `lint:css` separados de `lint`** hasta que Husky + lint-staged (TS-016) unifiquen por archivo.
 
 📄 **ADR completo**:
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/stylelint-scope-y-colores.md)
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/stylelint-scope-y-colores.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/stylelint-scope-y-colores.md)
 
 #### ADR-0003 — Modelo híbrido de assets: `public/` + `src/assets/`
 
@@ -1319,7 +1412,83 @@ Dos decisiones documentadas en ADR-0002:
 **Decisión**: Branding/contenido configurable va a `public/assets/` (URL estable, editable post-deploy); iconos técnicos y assets acoplados al código van a `src/assets/` (import de bundler, hash + tree-shaking). Ver ADR-0003 para el criterio completo.
 
 📄 **ADR completo**:
-[`docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/arquitectura/assets-hibrido-public-src.md)
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)
+
+#### ADR-0004 — Política de vulnerabilidades aceptadas
+
+> 🔒 **Política de seguridad para dependencias del frontend**
+
+**Decisión**: Registrar cada vulnerabilidad aceptada conscientemente y prohibir `npm audit fix --force` y `npm audit fix --legacy-peer-deps` como mecanismos automáticos. Deuda activa: VULN-001.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md)
+
+<a id="adr-0005--decorador-withtheme-pendiente"></a>
+
+#### ADR-0005 — Decorador `withTheme` pendiente
+
+> 🟡 **Deuda diferida — se resuelve en TS-024 (#629)**
+
+**Decisión**: Diferir el decorador `withTheme` de Storybook hasta que el `ThemeProvider` exista. Se conectará en TS-024.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-theme-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-theme-pendiente.md)
+
+<a id="adr-0006--decorador-withi18n-pendiente"></a>
+
+#### ADR-0006 — Decorador `withI18n` pendiente
+
+> 🟡 **Deuda diferida — se resuelve en TS-026 (#631)**
+
+**Decisión**: Diferir el decorador `withI18n` de Storybook hasta que `i18next` esté configurado. Se conectará en TS-026.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-i18n-pendiente.md)
+
+<a id="adr-0007--decorador-withrouter-pendiente"></a>
+
+#### ADR-0007 — Decorador `withRouter` pendiente
+
+> 🟡 **Deuda diferida — se resuelve en TS-070 (#675)**
+
+**Decisión**: Diferir el decorador `withRouter` de Storybook hasta que React Router esté configurado. Se conectará en TS-070.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/decorador-with-router-pendiente.md)
+
+<a id="adr-0008--mixins-base-de-estilos-focus-ring-container-truncate"></a>
+
+#### ADR-0008 — Mixins base de estilos (`focus-ring`, `container`, `truncate`)
+
+> 🟡 **Deuda pendiente — se resuelve en TS-145 (#766)**
+
+**Decisión**: Diferir la creación de los 3 mixins base (`focus-ring`, `container`, `truncate`) hasta TS-145. Mientras no existan, US-007, US-010, US-011, US-013 y US-014 quedan bloqueadas.
+
+**Importancia**: sin `focus-ring` cada componente reinventa el foco visible (riesgo WCAG); sin `container` los breakpoints se duplican en cada componente; sin `truncate` las tablas se rompen con textos largos.
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/mixins-base-pendientes.md)
+
+<a id="adr-0009--exclusión-temporal-de-apptsx-en-cobertura-de-tests"></a>
+
+#### ADR-0009 — Exclusión temporal de `App.tsx` en cobertura de tests y a11y
+
+> 🟡 **Deuda temporal — se resuelve en TS-146 (#769), sub-issue de US-024. Incluye: reemplazar `App.tsx`, eliminar exclusiones de cobertura (Vitest y a11y), añadir test unitario y test a11y del nuevo código.**
+
+**Capa**: Frontend (React + TypeScript + Vite + Vitest + Playwright).
+
+**Decisión**: Excluir `src/app/App.tsx` (starter demo de Vite) del cómputo de cobertura de Vitest y de los tests a11y (Playwright + axe) mientras siga siendo código de demo. Al reemplazarse por la composición real de la InitPage horizontal (US-024), se eliminan ambas exclusiones, se añaden tests unitario y a11y, y se resuelve este ADR.
+
+**Motivo**: testear `App.tsx` hoy implica escribir tests que se borran cuando el archivo desaparezca. Coste sin retorno.
+
+**Nota a11y (TS-014 #619)**: la exclusión también aplica a los tests de accesibilidad. TS-014 valida el helper `runA11y()` contra un **mockup HTML** (`tests/e2e/fixtures/mock-view.html`), no contra `App.tsx`. TS-138 (#743) aplica el helper a las vistas reales de US-024/025 y posteriores.
+
+**Relacionado**: US-004 (#568), TS-012 (#617), TS-014 (#619), TS-138 (#743), US-024 (#588), US-025 (#589), US-041 (#605), TS-146 (#769), ADR-0002.
+
+**Convenciones completas de testing**: [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
+
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md)
 
 ### Convenciones del Frontend
 
@@ -1327,7 +1496,82 @@ Las convenciones generales de código (nombres, exports, orden interno, ejemplos
 
 📄 [`docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/convenciones.md)
 
+📄 **Convenciones de testing**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md) — reglas permanentes de Vitest, Testing Library, cobertura global y por archivo, exclusiones permanentes, convenciones de escritura y mocks.
+
+📄 **Guía operativa de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md) — autodocs, decoradores, build estático y fuentes self-hosted.
+
+📄 **Warnings aceptados de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
+
+📄 **Proxy en desarrollo**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md) — `server.proxy /api` → `:7700`, sin rewrite, solo dev, sincronización de puerto con `application.yml`. Diagramas: [`proxy-api-dev.md`](docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md) (gerencial + técnico).
+
 Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
+
+### Pruebas Frontend
+
+> **Testing:** el runner unificado `frontend/tests/shellTest/Frontend-test-Dev.sh` es el gate obligatorio antes de push, PR y merge (commit WIP permitido con `ALLOW_NEW=1`). Warnings/errores nuevos bloquean push/merge hasta documentarse en `approved-warnings.txt`. Regla completa en [`prompt_inicial.md`](docs/prompts/prompt_inicial.md) (regla 32). Detalle en [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
+
+#### Opciones del runner (`Frontend-test-Dev.sh`)
+
+El runner acepta overrides por variables de entorno. Uso típico:
+
+| Variable              | Ejemplo                   | Efecto                                                                            |
+| --------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| `RUN_AUTOFIX=0`       | `RUN_AUTOFIX=0 ...`       | Salta el auto-fix pre-run                                                         |
+| `RUN_LINT=0`          | `RUN_LINT=0 ...`          | Salta ESLint + Stylelint + Prettier                                               |
+| `RUN_TYPES=0`         | `RUN_TYPES=0 ...`         | Salta TypeScript                                                                  |
+| `RUN_UNIT=0`          | `RUN_UNIT=0 ...`          | Salta Vitest                                                                      |
+| `RUN_BUILD=0`         | `RUN_BUILD=0 ...`         | Salta Vite build + Storybook build                                                |
+| `RUN_E2E=0`           | `RUN_E2E=0 ...`           | Salta Playwright smoke + a11y + Storybook manager                                 |
+| `RUN_SERVICES=0`      | `RUN_SERVICES=0 ...`      | No levanta Storybook dev manualmente (Playwright webServer lo gestiona)           |
+| `RUN_CLEANUP=0`       | `RUN_CLEANUP=0 ...`       | No ejecuta cleanup al final (debug)                                               |
+| `RUN_ESLINT=0`        | `RUN_ESLINT=0 ...`        | Salta solo ESLint dentro de `RUN_LINT`                                            |
+| `RUN_SMOKE=0`         | `RUN_SMOKE=0 ...`         | Salta solo Playwright smoke dentro de `RUN_E2E`                                   |
+| `RUN_A11Y=0`          | `RUN_A11Y=0 ...`          | Salta solo Playwright a11y dentro de `RUN_E2E`                                    |
+| `ALLOW_NEW=1`         | `ALLOW_NEW=1 ...`         | **Modo WIP**: exit 0 aunque haya warnings/errores nuevos. NO autoriza push/merge. |
+| `DEBUG=1` / `--debug` | `DEBUG=1 ...`             | Output completo de cada grupo                                                     |
+| `STORYBOOK_PORT=<n>`  | `STORYBOOK_PORT=3010 ...` | Override puerto Storybook (default: leído de `package.json`)                      |
+| `FRONTEND_PORT=<n>`   | `FRONTEND_PORT=3000 ...`  | Override puerto Vite (default: leído de `vite.config.ts`)                         |
+
+**Recipes comunes**:
+
+```bash
+# Todo
+bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo unit
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_BUILD=0 RUN_E2E=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# Solo E2E
+RUN_AUTOFIX=0 RUN_LINT=0 RUN_TYPES=0 RUN_UNIT=0 RUN_BUILD=0 RUN_SERVICES=0 \
+  bash frontend/tests/shellTest/Frontend-test-Dev.sh
+
+# WIP (checkpoint local, no push)
+ALLOW_NEW=1 bash frontend/tests/shellTest/Frontend-test-Dev.sh
+```
+
+Detalle completo, thresholds y árbol de grupos: [`pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md) §Runner unificado.
+
+- **Unitarias e integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. **55 tests**. Cobertura mínima 80% global y por archivo (modo `error`). Configuración: `frontend/vitest.config.ts`. Setup: `frontend/tests/unit/setup.ts`.
+- **E2E**: Playwright 1.64.1 con **7 proyectos** (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`). Configuración: `frontend/playwright.config.ts`. Smoke tests: `frontend/tests/e2e/smoke.spec.ts`. Helpers: `frontend/tests/e2e/helpers/`. Traces `on-first-retry` + screenshots `only-on-failure`.
+  - **Pendiente TS-122 (#727)**: el smoke test del health endpoint (`GET /api/test/health`) usa mock vía `page.route`. Será reemplazado por una llamada real cuando se implemente el servicio de consumo (`system.service.ts`). A medida que se publiquen endpoints (ver §"Tabla de Endpoints publicados"), se añadirán más smoke tests al mismo archivo.
+- **a11y**: `@axe-core/playwright@4.14.0` + helper `runA11y()` (`frontend/tests/e2e/helpers/a11y.ts`). Test base sobre `frontend/tests/e2e/fixtures/mock-view.html` en los 7 proyectos (TS-014). Aplicación a todas las vistas reales: **TS-138 (#743)**. Falla con reporte HTML adjunto por `testInfo.attach`.
+- **Exclusión temporal de cobertura**: `src/app/App.tsx` (starter demo de Vite) está excluido del cómputo de Vitest. Ver [ADR-0009](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/exclusiones-cobertura-tests.md). Se resolverá en **TS-146 (#769)** (sub-issue de US-024), que reemplazará `App.tsx` por la composición real de la InitPage.
+- **Convenciones completas**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/pruebas.md).
+
+#### Listado de pruebas
+
+**Unitarias (Vitest)** — 55 tests en 3 archivos:
+
+- `tests/unit/components/atoms/Button.test.tsx` — 18 tests (render, variantes, tamaños, estados, a11y, click handlers).
+- `tests/unit/components/atoms/DesignTokens.test.tsx` — 34 tests (Colors, Typography, Spacing, Radius, Shadows, Layout, Motion, Dark, HighContrast).
+- `tests/unit/shared/constants/assets.test.ts` — 3 tests (estructura del objeto `ASSETS`).
+
+**E2E (Playwright)** — 2 tests × 7 proyectos = 14 ejecuciones:
+
+- `tests/e2e/smoke.spec.ts:5` — `frontend home responde 200 y renderiza` — Valida que la home responde 200, el `<body>` es visible y el título no está vacío. Se ejecuta en los 7 proyectos.
+- `tests/e2e/smoke.spec.ts:11` — `health endpoint (mock) — TODO: reemplazar por llamada real en TS-122 (#727)` — Mock de `GET /api/test/health` vía `page.route`. Se reemplazará por llamada real cuando se implemente `system.service.ts` (TS-122 #727).
+- `tests/e2e/a11y.spec.ts:12` — `A11y base — WCAG 2.2 AA › mock-view pasa la auditoría de axe` — Escanea `mock-view.html` con `runA11y()` (tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`), `prefers-reduced-motion: reduce` emulado. Se ejecuta en los 7 proyectos (TS-014).
 
 <a id="componentes-del-frontend"></a>
 
@@ -1352,8 +1596,10 @@ Documentación por componente, organizada por nivel del Design System.
 - **Uso**: `import { Button } from '@components/atoms/Button';` → `<Button>Enviar</Button>`
 - **Convenciones aplicadas**: named export, CSS Module con clases camelCase, props tipadas en archivo separado, barrel export.
 
-📄 **Documentación completa**:
-[`docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md`](docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/button.md)
+📄 **ADR completo**:
+[`docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md`](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/assets-hibrido-public-src.md)
+
+<a id="adr-0004--política-de-vulnerabilidades-aceptadas"></a>
 
 <a id="seguridad-del-frontend"></a>
 
@@ -1370,7 +1616,7 @@ impacto real y gatillos de revisión) se documentan en:
 
 📄 [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md)
 
-**Política completa**: [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
+**Política completa**: [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md).
 
 > 🚫 **NO ejecutar** `npm audit fix --force` ni `npm audit fix --legacy-peer-deps`.
 > El fix sugerido por npm suele ser un downgrade mayor que rompe el stack.
@@ -1609,6 +1855,9 @@ impacto real y gatillos de revisión) se documentan en:
       - **`surefire-reports/`** - Reportes de pruebas
       - **`test-classes/`** - Clases de pruebas compiladas
   - **`frontend/`** - SPA React 19 + TypeScript 6 + Vite 8 (base de CAP-01)
+    - **`.husky/`** - Hooks de git (Husky v9)
+      - `pre-commit` - lint-staged + type-check (TS-016)
+    - `.lintstagedrc.json` - Config de lint-staged (autofix por archivo) (TS-016)
     - `.npmrc` - `save-exact=true` (pineo de versiones)
     - `.nvmrc` - Node.js 24.21.0
     - `.prettierrc.json` - Formato Prettier
@@ -1622,6 +1871,21 @@ impacto real y gatillos de revisión) se documentan en:
     - `tsconfig.node.json` - Config TS del tooling
     - `tsconfig.paths.json` - Alias de imports (@app, @components, @views, @shared, @i18n, @styles)
     - `vite.config.ts` - Vite (puerto 3000, strictPort, resolve.tsconfigPaths nativo)
+    - `vitest.config.ts` - Vitest (jsdom, coverage v8, thresholds 80%, ver ADR-0009)
+    - `playwright.config.ts` - Playwright (7 proyectos E2E, webServer, traces, screenshots)
+    - `playwright.storybook.config.ts` - Playwright config para E2E del manager de Storybook (TS-015)
+    - **`tests/`** - Pruebas (TS-012):
+      - `unit/setup.ts` - Setup global (jest-dom + mocks de jsdom)
+      - `unit/components/atoms/` - Tests unitarios de átomos
+      - `unit/shared/constants/` - Tests unitarios de shared
+      - `e2e/smoke.spec.ts` - Smoke tests E2E (frontend + health mock) (TS-013)
+      - `e2e/a11y.spec.ts` - Auditoría a11y con axe-core WCAG 2.2 AA (TS-014)
+      - `e2e/helpers/` - Fixtures, navegación y `runA11y()` para E2E (TS-013 / TS-014)
+      - `e2e/fixtures/` - Mockup accesible `mock-view.html` para a11y (TS-014)
+      - `e2e/storybook-manager.spec.ts` - E2E del manager de Storybook + render de stories (TS-015)
+      - **`shellTest/`** - Runner unificado de tests (TS-015)
+        - `Frontend-test-Dev.sh` - Runner unificado (auto-fix + 11 gates + clasificación W/E)
+        - `approved-warnings.txt` - Registro de warnings/errores documentados
     - **`public/`** - Assets de branding (URL estable, editable post-deploy)
       - `assets/images/starter/` - Imágenes del starter (hero)
       - `favicon.svg`, `icons.svg` - Iconos de app
@@ -1632,7 +1896,11 @@ impacto real y gatillos de revisión) se documentan en:
       - **`views/`** - Vistas por orientación (horizontal, vertical)
       - **`shared/`** - Transversales (hooks, utils, constants, types, services)
       - **`i18n/`** - Internacionalización (es, en)
-      - **`styles/`** - Estilos globales (index.css, app/app.css)
+      - **`styles/`** - Estilos globales
+        - `index.css` - Entry point (importa todos los branding)
+        - `app/` - Estilos del starter/demo (`app.css`)
+        - `branding/` - Design tokens de la identidad corporativa (TS-144): `paleta-colores-corporativa.css`, `tipografia.css`, `layout.css`, `estilos-componentes.css`, `motion.css`
+        - `fuentes/` - Fuentes self-hosted (TS-011): `fuentes.css` + `.woff2` (Inter + JetBrains Mono), importadas por `branding/tipografia.css`
       - **`assets/`** - Iconos técnicos e imágenes acopladas (import de bundler)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
@@ -1651,6 +1919,7 @@ impacto real y gatillos de revisión) se documentan en:
           - `FT-template.md` - Plantilla de Feature
           - `US-template.md` - Plantilla de User Story
           - `TS-template.md` - Plantilla de Task
+          - `VALIDATION-template.sh` - Plantilla de shell de validación de criterios CA_##
         - **`capabilities/`** - `CAP-XX.md` — plan maestro de la capability
         - **`features/`** - `FT-XXX.md` — plan por feature
         - **`user-stories/`** - `US-XXX.md` — plan por user story
@@ -1663,6 +1932,9 @@ impacto real y gatillos de revisión) se documentan en:
           - `kanban-move.sh` - Mueve un issue entre estados del tablero
           - `kanban-comment.sh` - Comenta SHA + cambios en el issue
           - `retry-links.sh` - Re-vincula sub-issues huérfanos
+          - `validate-task-in-kanban.sh` - Wrapper genérico: valida CA_## de un issue contra su validator específico
+          - **`validators/`** - Un validador específico por task
+            - `validate-ts016.sh` - Validación CA_01..CA_17 de TS-016 (Husky + pre-commit)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
     - **`tecnica/`** - Documentación técnica por capítulo del README
@@ -1683,17 +1955,27 @@ impacto real y gatillos de revisión) se documentan en:
         - `codigos-de-error/`
         - `pruebas/`
       - **`04-frontend-react-css-moderno/`** - Cap. 4: Frontend React + CSS
-        - **`arquitectura/`** - ADRs
+        - **`deuda-tecnica/`** - ADRs
           - `eslint-9-eol.md` (ADR-0001)
           - `stylelint-scope-y-colores.md` (ADR-0002)
           - `assets-hibrido-public-src.md` (ADR-0003)
           - `vulnerabilidades-policy.md` (ADR-0004)
+          - `decorador-with-theme-pendiente.md` (ADR-0005)
+          - `decorador-with-i18n-pendiente.md` (ADR-0006)
+          - `decorador-with-router-pendiente.md` (ADR-0007)
+          - `mixins-base-pendientes.md` (ADR-0008)
+          - `exclusiones-cobertura-tests.md` (ADR-0009)
         - **`convenciones/`**
           - `convenciones.md` - Convenciones de código del frontend
           - `storybook.md` - Guía de Storybook (creado en TS-008)
+          - `pruebas.md` - Convenciones de testing (creado en TS-012)
+          - `warnings-storybook.md` - Warnings aceptados de Storybook (creado en TS-009)
+          - `proxy-developer.md` - Proxy `/api` en dev (creado en TS-020)
         - **`componentes/`**
           - **`atoms/`**
             - `button.md` - Documentación del componente Button (ejemplo TS-007)
+          - **`branding/`**
+            - `paleta-colores-corporativa.html` - Preview visual de la paleta corporativa
         - **`seguridad/`**
           - `cvss-deuda-seguridad.md` - Vulnerabilidades aceptadas
         - `design-system/` (pendiente)
@@ -1702,6 +1984,9 @@ impacto real y gatillos de revisión) se documentan en:
         - `testing/` (pendiente)
         - `deploy/` (pendiente)
         - `diagramas-de-secuencias/` (pendiente)
+        - **`diagramas/`** - Diagramas de secuencia (creado en TS-020)
+          - **`secuencia/`**
+            - `proxy-api-dev.md` - Proxy `/api` en dev (gerencial + técnico)
   - **`backups/`** - Copias de seguridad de la base de datos
     - `investment_tracker_20260710_121428.sql` - Backup de BD
 
@@ -1713,16 +1998,21 @@ impacto real y gatillos de revisión) se documentan en:
 
 - **Backend**: Java LTS 21 (Spring Boot 3.x)
 - **Base de datos**: PostgreSQL 16
-- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.1 (ver ADR `eslint-9-eol.md`)
+- **Frontend**: React 19.2.8 + TypeScript 6.0.2 + Vite 8.3.4 (ver ADR `eslint-9-eol.md`)
 - **Node.js (build frontend)**: 24.21.0 (LTS activa) — fijado en `frontend/.nvmrc`
 - **Lint frontend**: ESLint 9.39.5 (EOL) + `eslint-plugin-jsx-a11y` 6.10.2 + `eslint-plugin-import` 2.32.0 + `eslint-plugin-simple-import-sort` 14.0.0
 - **Formato frontend**: Prettier 3.9.9 + `eslint-config-prettier` 10.1.8
 - **Lint CSS frontend**: Stylelint 17.15.0 + `stylelint-config-standard` 40.0.0 + `stylelint-config-css-modules` 4.6.0 + `stylelint-config-recess-order` 7.8.0 + `stylelint-order` 8.1.1 (ver [ADR-0002](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts))
+- **Testing frontend**:
+  - **Unitarias/integración**: Vitest 5.0.5 + Testing Library (`@testing-library/react` 16.3.3, `jest-dom` 7.0.1, `user-event` 14.6.8, `dom` 10.4.2) + `jsdom` 30.1.3. Cobertura mínima 80% global y por archivo. 55 tests.
+  - **E2E a11y**: `@axe-core/playwright` 4.14.0 + helper `runA11y()` en `frontend/tests/e2e/helpers/a11y.ts`. Test base sobre mockup accesible (`tests/e2e/fixtures/mock-view.html`) en los 7 proyectos. Aplicación a vistas reales: TS-138 (#743).
+  - **Stack completo** (unitarias, integración, E2E con 7 proyectos de Playwright, cobertura 80%, exclusiones, convenciones): ver [Pruebas Frontend](#pruebas-frontend).
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
-- **Storybook frontend**: 10.6.1 (puerto dev `3010`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
-- **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/arquitectura/vulnerabilidades-policy.md).
+- **Design tokens del frontend**: `frontend/src/styles/branding/` — `paleta-colores-corporativa.css` (colores light+dark+high-contrast), `tipografia.css`, `layout.css`, `estilos-componentes.css`, `motion.css`. Paleta aprobada en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada.
+- **Storybook frontend**: 10.6.1 (puerto dev `3010`), autodocs global, 3 decoradores activos (`withPadding`, `withBackground`, `withViewport`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
+- **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md).
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)
 - **Seguridad**: HTTPS + JWT + Refresh Token
 - **Contenedores**: Docker + Docker Compose
@@ -1775,13 +2065,25 @@ y se vincula como **sub-issue** del nivel inmediatamente superior.
 
 ### Flujo de trabajo
 
+**Hooks de git (safety nets automáticos):**
+
+| Hook         | Comando                              | Bloquea si                                 |
+| ------------ | ------------------------------------ | ------------------------------------------ |
+| `pre-commit` | `lint-staged` + `tsc -b`             | Lint no autofixeable o tipos rotos         |
+| `commit-msg` | `commitlint --edit "$1"`             | Formato de commit inválido                 |
+| `pre-push`   | `RUN_AUTOFIX=0 Frontend-test-Dev.sh` | Cualquier `[W-NEW]` o `[E-NEW]` del runner |
+
+**El pre-push es el gate final**: si el runner completo (14 grupos, ~2-3 min) no está verde, el push a `origin` se rechaza. Esto se ejecuta en **cada `git push`**.
+
+Para saltarlo en emergencia documentada: `git push --no-verify` (el mensaje del commit relacionado debe incluir `no-verify: <motivo>`).
+
 | Paso | Acción                       | Comando                                            |
 | ---- | ---------------------------- | -------------------------------------------------- |
 | 1    | Consultar tablero            | `gh project item-list 2 --owner 42mrnobody42-alt`  |
 | 2    | Crear rama desde `developer` | `git checkout -b feature/<ID>-<slug>`              |
 | 3    | Mover issue a `In progress`  | `./scripts/kanban-move.sh <N> progress`            |
 | 4    | Commit con `Closes #N`       | `git commit -m "feat(#N): ... Closes #N"`          |
-| 5    | Comentar SHA en el issue     | `./scripts/kanban-comment.sh <N> <sha> "<título>"` |
+| 5    | Comentar SHA en el issue     | `./scripts/kanban-comment.sh <N> <sha> [template]` |
 | 6    | Mover a `In review`          | `./scripts/kanban-move.sh <N> review`              |
 | 7    | Abrir PR a `developer`       | `gh pr create --base developer`                    |
 | 8    | Mover a `Done` (post-merge)  | `./scripts/kanban-move.sh <N> done`                |
@@ -1804,15 +2106,17 @@ done
 
 ### Scripts disponibles
 
-| Script                | Función                                 | Uso                                                |
-| --------------------- | --------------------------------------- | -------------------------------------------------- |
-| `create-cap01.sh`     | Crea toda la jerarquía CAP-01 en GitHub | `./scripts/create-cap01.sh`                        |
-| `delete-cap01.sh`     | Elimina CAP-01 + FT/US/TS (idempotente) | `./scripts/delete-cap01.sh`                        |
-| `regen-kanban-ids.sh` | Regenera `kanban-ids.env` desde GitHub  | `./scripts/regen-kanban-ids.sh`                    |
-| `clear-project.sh`    | Vacía el Project sin borrar issues      | `./scripts/clear-project.sh`                       |
-| `kanban-move.sh`      | Mueve un issue entre estados            | `./scripts/kanban-move.sh <N> progress`            |
-| `kanban-comment.sh`   | Comenta SHA + cambios en el issue       | `./scripts/kanban-comment.sh <N> <sha> "<titulo>"` |
-| `retry-links.sh`      | Re-vincula sub-issues huérfanos         | `./scripts/retry-links.sh`                         |
+| Script                           | Función                                                               | Uso                                                |
+| -------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------- |
+| `create-cap01.sh`                | Crea toda la jerarquía CAP-01 en GitHub                               | `./scripts/create-cap01.sh`                        |
+| `delete-cap01.sh`                | Elimina CAP-01 + FT/US/TS (idempotente)                               | `./scripts/delete-cap01.sh`                        |
+| `regen-kanban-ids.sh`            | Regenera `kanban-ids.env` desde GitHub                                | `./scripts/regen-kanban-ids.sh`                    |
+| `clear-project.sh`               | Vacía el Project sin borrar issues                                    | `./scripts/clear-project.sh`                       |
+| `kanban-move.sh`                 | Mueve un issue entre estados                                          | `./scripts/kanban-move.sh <N> progress`            |
+| `kanban-comment.sh`              | Comenta SHA + cambios en el issue                                     | `./scripts/kanban-comment.sh <N> <sha> [template]` |
+| `validate-task-in-kanban.sh <N>` | Valida los `CA_##` de un issue contra su validator específico         | `./scripts/validate-task-in-kanban.sh 621`         |
+| `validators/validate-tsNNN.sh`   | Validador específico por task (creado desde `VALIDATION-template.sh`) | (invocado por el wrapper)                          |
+| `retry-links.sh`                 | Re-vincula sub-issues huérfanos                                       | `./scripts/retry-links.sh`                         |
 
 ### Plantillas obligatorias
 
@@ -1827,6 +2131,38 @@ Todo CAP/FT/US/TS se crea siguiendo la plantilla correspondiente en
 | TS    | `TS-template.md`  | Contexto, Entregable, Criterios, Estimación (≤4h), US padre |
 
 Un issue no se cierra (`Done`) hasta que TODOS los checkboxes de
+`## Criterios de aceptación` estén marcados.
+
+### Validación de criterios (CA_##)
+
+Cada criterio de aceptación de una task lleva un código único `**CA_##:**` al
+inicio. La validación sigue un flujo de 2 capas:
+
+1. **Wrapper genérico** — `docs/scrum/kanban/scripts/validate-task-in-kanban.sh <issue-number>`
+   - Lee el issue vía `gh api` y extrae el `TS-XXX` del título.
+   - Verifica que exista `scripts/validators/validate-tsNNN.sh`.
+   - Extrae los `**CA_##:**` del body del issue y los `check "CA_##"` del validator.
+   - Comprueba **cobertura 1:1** (falla si el validator no cubre algún CA_## del issue).
+   - Ejecuta el validator y propaga el exit code.
+2. **Validator específico** — `docs/scrum/kanban/scripts/validators/validate-tsNNN.sh`
+   - Creado copiando `templates/VALIDATION-template.sh`.
+   - Un `check "CA_NN"` por cada criterio del issue, con su lógica concreta.
+   - Los **behavior tests** (que crean archivos, ejecutan comandos y limpian) van detrás de `RUN_BEHAVIOR=0|1` para permitir validación rápida vs completa.
+
+**Ejemplo de uso:**
+
+```bash
+# Validación rápida (sin behavior tests)
+RUN_BEHAVIOR=0 ./docs/scrum/kanban/scripts/validate-task-in-kanban.sh 621
+
+# Validación completa (con behavior tests: ESLint rechaza, Prettier autofixea, tsc rechaza...)
+RUN_BEHAVIOR=1 ./docs/scrum/kanban/scripts/validate-task-in-kanban.sh 621
+```
+
+El wrapper retorna **exit 0** solo si hay cobertura completa **y** todos los `CA_##` pasan. Sin esta validación verde, el commit queda bloqueado. Detalle completo en `prompt_inicial.md` regla 34.
+
+---
+
 `## Criterios de aceptación` estén marcados.
 
 ### Verificación previa obligatoria (rate limit)
@@ -1856,6 +2192,42 @@ gh api rate_limit --jq '"GraphQL: \(.resources.graphql.remaining)/\(.resources.g
 5. **Nunca** re-ejecutar `create-cap01.sh` completo si ya hay issues creados: duplicaría.
 
 ### Reglas de commits
+
+**HeaderPattern (validado por `commitlint`):**
+
+```
+^(\w+)(?:\(#[0-9]+\))?!?: (.+)$
+```
+
+| Elemento        | Regla                                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| **tipo**        | Uno de: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`, `perf`, `build`, `ci`, `revert` |
+| **(\#N)**       | Opcional. Obligatorio si el commit resuelve/refiere a un issue                                       |
+| **!**           | Opcional. Indica breaking change                                                                     |
+| **descripción** | Obligatoria, no vacía, sin punto final, máx. 100 caracteres en el header                             |
+
+**Ejemplos válidos:**
+
+```
+feat(#620): agregar runner unificado
+fix(#123)!: romper compatibilidad de la API pública
+chore: bumpear dependencias
+docs(#42): documentar el flujo de validación
+feat!: breaking change sin issue asociado
+```
+
+**Ejemplos inválidos:**
+
+```
+update stuff                  ← sin tipo
+feature(#1): agregar          ← "feature" no es tipo válido (usar "feat")
+feat(): agregar               ← paréntesis vacío
+feat(#1): agregar.            ← descripción con punto final
+```
+
+**Merge commits** (`Merge pull request #N from ...`) se ignoran automáticamente (por `defaultIgnores: true`).
+
+**Validación automática:** el hook `.husky/commit-msg` invoca `commitlint` en cada `git commit`. Sin formato válido → el commit se bloquea. Configuración en `frontend/commitlint.config.js`.
 
 - Formato: `tipo(#N): descripción` — feat, fix, docs, refactor, test, chore.
 - Siempre referenciar el issue padre con `Closes #N` o `Refs #N`.

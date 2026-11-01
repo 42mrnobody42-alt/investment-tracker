@@ -7,9 +7,9 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 1;
-  color: #fff;
+  color: var(--btn-primary-fg);
   cursor: pointer;
-  background-color: #aa3bff;
+  background-color: var(--btn-primary-bg);
   border: 1px solid transparent;
   border-radius: 6px;
   transition:
@@ -24,40 +24,40 @@
 }
 
 .primary {
-  color: #fff;
-  background-color: #aa3bff;
+  color: var(--btn-primary-fg);
+  background-color: var(--btn-primary-bg);
 }
 
 .primary:hover:not(:disabled) {
-  background-color: #9330e0;
+  background-color: var(--btn-primary-bg-hover);
 }
 
 .secondary {
-  color: #aa3bff;
+  color: var(--btn-secondary-fg);
   background-color: transparent;
-  border-color: #aa3bff;
+  border-color: var(--btn-secondary-border);
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: rgb(170 59 255 / 10%);
+  background-color: color-mix(in srgb, var(--btn-secondary-fg) 15%, transparent);
 }
 
 .ghost {
-  color: #6b6375;
+  color: var(--btn-ghost-fg);
   background-color: transparent;
 }
 
 .ghost:hover:not(:disabled) {
-  background-color: rgb(0 0 0 / 5%);
+  background-color: color-mix(in srgb, var(--color-text) 5%, transparent);
 }
 
 .danger {
-  color: #fff;
-  background-color: #dc2626;
+  color: var(--btn-danger-fg);
+  background-color: var(--btn-danger-bg);
 }
 
 .danger:hover:not(:disabled) {
-  background-color: #b91c1c;
+  background-color: var(--btn-danger-bg-hover);
 }
 
 .sm {

@@ -31,5 +31,5 @@
     "forceConsistentCasingInFileNames": true,
     "erasableSyntaxOnly": true
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }

@@ -1,0 +1,626 @@
+/**
+ * Estilos del catálogo DesignTokens.
+ * Solo define presentación del catálogo: la estructura de cada token vive en el .tsx.
+ */
+
+.root {
+  padding: var(--space-5);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.section {
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sectionTitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.card {
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.swatch {
+  height: 48px;
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.bar {
+  height: 12px;
+  margin-bottom: var(--space-2);
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.radiusBox {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-3);
+  background: var(--color-primary);
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.value {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+}
+
+.spacingRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.spacingLabel {
+  width: 180px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.spacingValue {
+  font-size: var(--font-size-xs);
+}
+
+/* ----- Shadows demo ----- */
+.shadowStage {
+  padding: var(--space-6);
+  background: color-mix(in srgb, var(--color-text) 10%, var(--color-bg));
+  border-radius: var(--radius-md);
+}
+
+.shadowGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-6);
+}
+
+.shadowCard {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+}
+
+.shadowTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.shadowBody {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* ----- Layout demos ----- */
+.gutterRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.gutterLabel {
+  min-width: 180px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.gutterGrid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--grid-gutter);
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.gutterCell {
+  height: 28px;
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.containerRow {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.containerLabel {
+  min-width: 200px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.containerTrack {
+  flex: 1;
+  height: 20px;
+  overflow: hidden;
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.containerBar {
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.containerValue {
+  min-width: 90px;
+  font-size: var(--font-size-xs);
+  text-align: right;
+}
+
+.zIndexLayout {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.zStack {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+
+.zBox {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 60px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-inverse);
+  background: var(--color-primary);
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.zTable {
+  width: 100%;
+  font-size: var(--font-size-sm);
+  border-collapse: collapse;
+}
+
+.zTable th,
+.zTable td {
+  padding: var(--space-2);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.zTable th {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.zTable code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+/* ----- Motion demos ----- */
+.replayButton {
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+}
+
+.motionRow {
+  display: grid;
+  grid-template-columns: 180px 1fr 100px;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.motionLabel {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.motionTrack {
+  position: relative;
+  height: 24px;
+  overflow: hidden;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.motionWrapper {
+  position: absolute;
+  inset: 0;
+  animation-name: slide-right;
+  animation-duration: var(--duration-normal);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.motionBall {
+  width: 24px;
+  height: 24px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+}
+
+.motionValue {
+  font-size: var(--font-size-xs);
+  text-align: right;
+}
+
+/* ----- Easing demo ----- */
+.easingRow {
+  display: grid;
+  grid-template-columns: 160px 60px 1fr 100px;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.easingLabel {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.easingCurve {
+  width: 60px;
+  height: 60px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.easingCurvePath {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.easingTrack {
+  position: relative;
+  height: 24px;
+  overflow: hidden;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.easingWrapper {
+  position: absolute;
+  inset: 0;
+  animation-name: slide-right;
+  animation-duration: var(--duration-slower);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.easingValue {
+  font-size: var(--font-size-xs);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.staggerDots {
+  display: flex;
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.staggerDot {
+  width: 20px;
+  height: 20px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation-name: fade-in-up;
+  animation-duration: var(--duration-slow);
+  animation-fill-mode: both;
+}
+
+@keyframes slide-right {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(100% - 24px));
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ----- Easings: intro ----- */
+.easingIntro {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-muted);
+}
+
+/* ----- Easings: péndulos ----- */
+.pendulumRow {
+  display: grid;
+  grid-template-columns: 160px 60px 1fr 120px;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.pendulumSvg {
+  width: 60px;
+  height: 60px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.pendulumPath {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.pendulumTrack {
+  position: relative;
+  height: 24px;
+  overflow: hidden;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.pendulumBall {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin-left: -12px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation-name: pendulum;
+  animation-duration: var(--duration-slower);
+  animation-timing-function: var(--ease-in-out);
+  animation-fill-mode: both;
+}
+
+.pendulumBallDamped {
+  animation-name: pendulum-damped;
+  animation-duration: calc(var(--duration-slower) * 2);
+}
+
+/* Amplitud configurable via --pendulum-amplitude (default 120px). */
+@keyframes pendulum {
+  0% {
+    transform: translateX(calc(var(--pendulum-amplitude) * -1));
+  }
+
+  25% {
+    transform: translateX(var(--pendulum-amplitude));
+  }
+
+  50% {
+    transform: translateX(calc(var(--pendulum-amplitude) * -1));
+  }
+
+  75% {
+    transform: translateX(var(--pendulum-amplitude));
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Amplitud inicial = --pendulum-amplitude; decae 80%, 55%, 30%, 12.5% y 0. */
+@keyframes pendulum-damped {
+  0% {
+    transform: translateX(calc(var(--pendulum-amplitude) * -1));
+  }
+
+  20% {
+    transform: translateX(calc(var(--pendulum-amplitude) * 0.8));
+  }
+
+  40% {
+    transform: translateX(calc(var(--pendulum-amplitude) * -0.55));
+  }
+
+  60% {
+    transform: translateX(calc(var(--pendulum-amplitude) * 0.3));
+  }
+
+  80% {
+    transform: translateX(calc(var(--pendulum-amplitude) * -0.125));
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* ----- Stagger: barrido de página (diagonal) ----- */
+.sweepIntro {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-muted);
+}
+
+.sweepGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.sweepCell {
+  height: 36px;
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+  animation-duration: var(--duration-slow);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+/* ----- Stagger: barrido de página (4 direcciones) ----- */
+.sweepCellTlBr {
+  animation-name: sweep-tl-br;
+}
+
+.sweepCellTrBl {
+  animation-name: sweep-tr-bl;
+}
+
+.sweepCellBlTr {
+  animation-name: sweep-bl-tr;
+}
+
+.sweepCellBrTl {
+  animation-name: sweep-br-tl;
+}
+
+@keyframes sweep-tl-br {
+  from {
+    opacity: 0;
+    transform: translate3d(-24px, -24px, 0) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes sweep-tr-bl {
+  from {
+    opacity: 0;
+    transform: translate3d(24px, -24px, 0) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes sweep-bl-tr {
+  from {
+    opacity: 0;
+    transform: translate3d(-24px, 24px, 0) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes sweep-br-tl {
+  from {
+    opacity: 0;
+    transform: translate3d(24px, 24px, 0) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.sweepInfoGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.sweepInfoItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sweepInfoLabel {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.sweepInfoValue {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sweepBlock {
+  margin-bottom: var(--space-4);
+}
+
+.sweepDirectionLabel {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.amplitudeNote {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-muted);
+}
