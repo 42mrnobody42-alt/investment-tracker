@@ -169,6 +169,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
   - [Arquitectura del Frontend](#arquitectura-del-frontend)
   - [Variables de entorno (`.env`)](#variables-de-entorno-env)
   - [Proxy en desarrollo (`/api` → `:7700`)](#proxy-en-desarrollo-api--7700)
+    - [Tipado con `vite-env.d.ts`](#tipado-con-vite-envdts)
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
   - [Deudas Técnicas (ADR)](#deudas-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
@@ -1300,6 +1301,27 @@ El frontend usa **un único archivo** `frontend/.env` (commiteado) para todas la
 3. **Tipos TS**: `src/vite-env.d.ts` extiende `ImportMetaEnv` para autocompletar `import.meta.env.VITE_*` (ver TS-021).
 
 #### Proxy en desarrollo (`/api` → `:7700`)
+
+##### Tipado con `vite-env.d.ts`
+
+`frontend/src/vite-env.d.ts` extiende `ImportMetaEnv` para dar autocompletado y chequeo de tipos a las variables `VITE_*`. `tsc` rechaza valores fuera del union `'development' | 'qa' | 'production'` en `VITE_APP_ENV`.
+
+```ts
+// frontend/src/vite-env.d.ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string;
+  readonly VITE_APP_ENV: "development" | "qa" | "production";
+  readonly VITE_APP_NAME: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+Ejemplo: `import.meta.env.VITE_APP_ENV = 'staging'` falla el type-check (error `TS2322`). `npm run type-check` (`tsc -b`) valida el tipado completo.
 
 En `npm run dev`, Vite enruta `/api/*` al backend (`http://localhost:7700`) usando
 `server.proxy`. Sin rewrite: `/api/foo` → `http://localhost:7700/api/foo` (contrato fijo).

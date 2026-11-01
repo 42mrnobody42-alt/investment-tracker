@@ -947,6 +947,34 @@ console.log(import.meta.env.VITE_API_URL);  // "/api"
 
 **Dónde vive la regla**: `prompt_inicial.md` regla 37 + `README.md` §Frontend → "Variables de entorno".
 
+**Tipado TS (`src/vite-env.d.ts`)** — creado en TS-021 (#626):
+
+Patrón obligatorio:
+
+```ts
+// frontend/src/vite-env.d.ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string;
+  readonly VITE_APP_ENV: "development" | "qa" | "production";
+  readonly VITE_APP_NAME: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+Reglas:
+
+1. **Sin `export {}`** — el archivo debe ser un `.d.ts` global. Con `export {}` los `interface` quedan module-scoped y se rompen los tipos de `import.meta.env`.
+2. **Union estricto** en `VITE_APP_ENV`: solo `'development' | 'qa' | 'production'`. Agregar un valor nuevo requiere editar este archivo y `frontend/.env` a la vez.
+3. **`npm run type-check` (`tsc -b`) es el gate**: si el `.d.ts` no compila, el type-check falla y bloquea el push.
+4. **`vite build`** no incluye el `.d.ts` en el bundle: es solo tipos, no runtime.
+
+Relacionado: [`proxy-developer.md`](../tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md) (proxy `/api` → `:7700`).
+
 ### 14.12 Proxy de desarrollo `/api` (`vite.config.ts`)
 
 El frontend en dev (`:3000`) consume `/api/*` contra el backend (`:7700`) **a través
