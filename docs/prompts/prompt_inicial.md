@@ -466,6 +466,15 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
     El `.gitignore` raíz bloquea `.env` globalmente y exceptúa `frontend/.env`. Detalle en `README.md` §Frontend → "Variables de entorno" y `agente-frontend.md` §"Frontend".
 
+    **Proxy de desarrollo (`/api` → `:7700`)**: `frontend/vite.config.ts` enruta
+    `/api/*` al backend en dev vía `server.proxy` (`target: 'http://localhost:7700'`,
+    `changeOrigin: true`). **Sin rewrite**: `/api/foo` → `http://localhost:7700/api/foo`
+    (contrato fijo). `vite build` ignora `server` → el proxy **no viaja a producción**.
+    El `target` **debe** coincidir con `backend/src/main/resources/application.yml → server.port`.
+    Storybook (`:3010`) no hereda este proxy. Detalle en `README.md` §Frontend → "Proxy en desarrollo"
+    y `docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md`.
+    Guía completa: `docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md`.
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero

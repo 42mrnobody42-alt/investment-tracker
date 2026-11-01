@@ -947,6 +947,48 @@ console.log(import.meta.env.VITE_API_URL);  // "/api"
 
 **Dónde vive la regla**: `prompt_inicial.md` regla 37 + `README.md` §Frontend → "Variables de entorno".
 
+### 14.12 Proxy de desarrollo `/api` (`vite.config.ts`)
+
+El frontend en dev (`:3000`) consume `/api/*` contra el backend (`:7700`) **a través
+de `server.proxy` de Vite**. El código React **nunca** hardcodea el puerto ni el host
+del backend.
+
+**Patrón obligatorio** (`frontend/vite.config.ts`):
+
+```ts
+server: {
+  port: 3000,
+  strictPort: true,
+  // Proxy /api → backend en dev (server.proxy es ignorado por `vite build` por diseño).
+  // El puerto debe coincidir con backend/src/main/resources/application.yml → server.port (7700).
+  // Sin rewrite: /api/foo → http://localhost:7700/api/foo (contrato fijo con el backend).
+  proxy: {
+    '/api': {
+      target: 'http://localhost:7700',
+      changeOrigin: true,
+    },
+  },
+},
+```
+
+**Reglas**:
+
+1. **Sin `rewrite`**: el contrato `/api/*` es fijo entre dev, backend y nginx.
+2. **`changeOrigin: true`**: reescribe el header `Host` al del target (`:7700`).
+3. **Solo dev**: `vite build` ignora `server` → el proxy **no viaja a producción**
+   (producción usa nginx reverse proxy).
+4. **Sincronización de puerto**: `target` ↔ `application.yml → server.port`. Si el backend
+   cambia de puerto, actualizar `vite.config.ts`, el comentario y este doc en el mismo PR.
+5. **Storybook (`:3010`)** no hereda el proxy. Los stories deben mockear `/api/*` o
+   llamar al backend explícitamente.
+6. **Código React**: usar `fetch('/api/...')` o `import.meta.env.VITE_API_URL`
+   (contrato `/api` en `frontend/.env`). Nunca `http://localhost:7700/...`.
+
+**Diagramas**: ver `docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md`
+(gerencial + técnico). Creado en TS-020 (#625).
+
+**Guía completa**: ver `docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md`.
+
 ## 15. Convenciones de código
 
 - TypeScript estricto. Sin any (usar unknown y narrowing).

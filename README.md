@@ -168,6 +168,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
 - [4. Frontend - React y CSS moderno](#4-frontend---react-y-css-moderno)
   - [Arquitectura del Frontend](#arquitectura-del-frontend)
   - [Variables de entorno (`.env`)](#variables-de-entorno-env)
+  - [Proxy en desarrollo (`/api` → `:7700`)](#proxy-en-desarrollo-api--7700)
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
   - [Deudas Técnicas (ADR)](#deudas-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
@@ -180,6 +181,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
     - [ADR-0008 — Mixins base de estilos (focus-ring, container, truncate)](#adr-0008--mixins-base-de-estilos-focus-ring-container-truncate)
     - [ADR-0009 — Exclusión temporal de App.tsx en cobertura de tests](#adr-0009--exclusión-temporal-de-apptsx-en-cobertura-de-tests)
   - [Convenciones del Frontend](#convenciones-del-frontend)
+
   - [Pruebas Frontend](#pruebas-frontend)
     - [Listado de pruebas](#listado-de-pruebas)
   - [Componentes del Frontend](#componentes-del-frontend)
@@ -1297,6 +1299,21 @@ El frontend usa **un único archivo** `frontend/.env` (commiteado) para todas la
 2. **`VITE_API_URL=/api`** es contrato fijo con el backend (`backend/src/main/resources/application.yml`). No cambia entre entornos.
 3. **Tipos TS**: `src/vite-env.d.ts` extiende `ImportMetaEnv` para autocompletar `import.meta.env.VITE_*` (ver TS-021).
 
+#### Proxy en desarrollo (`/api` → `:7700`)
+
+En `npm run dev`, Vite enruta `/api/*` al backend (`http://localhost:7700`) usando
+`server.proxy`. Sin rewrite: `/api/foo` → `http://localhost:7700/api/foo` (contrato fijo).
+`vite build` ignora la clave `server` → el proxy **no viaja a producción**.
+
+- 📄 **Guía completa**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md)
+- 📊 **Diagramas** (gerencial + técnico): [`docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md`](docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md)
+
+**Sincronización de puerto**: el `target` (`http://localhost:7700`) **debe** coincidir con
+`backend/src/main/resources/application.yml → server.port`. Si el backend cambia de puerto,
+actualizar `vite.config.ts` y `proxy-developer.md` en el mismo PR.
+
+**Storybook (`:3010`)** no hereda este proxy (no lee `vite.config.ts`).
+
 ### Stack Tecnológico del Frontend
 
 | Componente           | Versión                     | Notas                                                                                                           |
@@ -1462,6 +1479,8 @@ Las convenciones generales de código (nombres, exports, orden interno, ejemplos
 📄 **Guía operativa de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md) — autodocs, decoradores, build estático y fuentes self-hosted.
 
 📄 **Warnings aceptados de Storybook**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/warnings-storybook.md) — `Skipping docgen` y `ariaLabel` son informativos y están aceptados.
+
+📄 **Proxy en desarrollo**: [`docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md) — `server.proxy /api` → `:7700`, sin rewrite, solo dev, sincronización de puerto con `application.yml`. Diagramas: [`proxy-api-dev.md`](docs/tecnica/04-frontend-react-css-moderno/diagramas/secuencia/proxy-api-dev.md) (gerencial + técnico).
 
 Reglas completas y detalladas en [`docs/prompts/agente-frontend.md`](docs/prompts/agente-frontend.md) §15.
 
@@ -1929,6 +1948,7 @@ impacto real y gatillos de revisión) se documentan en:
           - `storybook.md` - Guía de Storybook (creado en TS-008)
           - `pruebas.md` - Convenciones de testing (creado en TS-012)
           - `warnings-storybook.md` - Warnings aceptados de Storybook (creado en TS-009)
+          - `proxy-developer.md` - Proxy `/api` en dev (creado en TS-020)
         - **`componentes/`**
           - **`atoms/`**
             - `button.md` - Documentación del componente Button (ejemplo TS-007)
@@ -1942,6 +1962,9 @@ impacto real y gatillos de revisión) se documentan en:
         - `testing/` (pendiente)
         - `deploy/` (pendiente)
         - `diagramas-de-secuencias/` (pendiente)
+        - **`diagramas/`** - Diagramas de secuencia (creado en TS-020)
+          - **`secuencia/`**
+            - `proxy-api-dev.md` - Proxy `/api` en dev (gerencial + técnico)
   - **`backups/`** - Copias de seguridad de la base de datos
     - `investment_tracker_20260710_121428.sql` - Backup de BD
 

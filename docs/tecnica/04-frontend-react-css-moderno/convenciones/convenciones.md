@@ -174,3 +174,22 @@ Los ADRs del frontend viven en [`../deuda-tecnica/`](../deuda-tecnica/). Registr
 - Alias: [`frontend/tsconfig.paths.json`](../../../../frontend/tsconfig.paths.json).
 - ADRs: `docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/`.
 - Convenciones de testing: [`pruebas.md`](./pruebas.md).
+
+## Proxy de desarrollo `/api`
+
+El proxy `/api` de Vite (dev-only) está documentado en:
+
+📄 **[`proxy-developer.md`](proxy-developer.md)** — configuración exacta de
+`server.proxy`, sin rewrite, sincronización de puerto con `application.yml`,
+verificación con `fetch('/api/test/health')` y nota sobre Storybook.
+
+📊 **Diagramas** (gerencial + técnico): [`../diagramas/secuencia/proxy-api-dev.md`](../diagramas/secuencia/proxy-api-dev.md).
+
+**Reglas resumen** (detalle completo en `proxy-developer.md`):
+
+1. `server.proxy['/api']` → `target: 'http://localhost:7700'`, `changeOrigin: true`.
+2. **Sin `rewrite`**: `/api/foo` → `http://localhost:7700/api/foo`.
+3. **Solo dev**: `vite build` ignora `server` → no viaja a producción.
+4. `target` sincronizado con `backend/src/main/resources/application.yml → server.port`.
+5. Storybook (`:3010`) no hereda el proxy.
+6. Código React: `fetch('/api/...')` o `import.meta.env.VITE_API_URL`. Nunca `http://localhost:7700/...`.
