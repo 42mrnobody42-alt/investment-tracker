@@ -456,6 +456,16 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 
     Detalle en `docs/prompts/agente-frontend.md` §14.10 y `pruebas.md` §Runner vs Validador.
 
+37. **Archivo `.env` del frontend (único, commiteado)**.
+    El frontend usa **un único archivo** `frontend/.env` (commiteado) para las variables `VITE_*`. **Está prohibido** crear `.env.development`, `.env.qa` o `.env.production`: los entornos comparten el mismo `.env` (Vite carga el mismo archivo en `npm run dev`, `npm run build`, etc.).
+
+    Variables obligatorias:
+    - `VITE_API_URL=/api` — **contrato fijo con el backend**. Si el backend cambia de prefijo (`application.yml`), se actualiza el `.env`.
+    - `VITE_APP_ENV` — `development | qa | production` (informativo).
+    - `VITE_APP_NAME` — `Investment Tracker Pro`.
+
+    El `.gitignore` raíz bloquea `.env` globalmente y exceptúa `frontend/.env`. Detalle en `README.md` §Frontend → "Variables de entorno" y `agente-frontend.md` §"Frontend".
+
 ## 📊 Gestión del Proyecto
 
 ### Tablero

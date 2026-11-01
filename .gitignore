@@ -84,3 +84,5 @@ docs/scrum/kanban/.kanban-config.env
 # Scripts locales (no versionados)
 # =============================================
 .pasarCambiosALastest.sh
+# Excepción: frontend/.env es el único env commiteado del proyecto
+!frontend/.env
