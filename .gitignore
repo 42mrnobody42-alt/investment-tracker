@@ -86,3 +86,6 @@ docs/scrum/kanban/.kanban-config.env
 .pasarCambiosALastest.sh
 # Excepción: frontend/.env es el único env commiteado del proyecto
 !frontend/.env
+
+# Kanban local (IDs regenerables con regen-kanban-ids.sh, no versionar)
+docs/scrum/kanban/kanban-ids.env

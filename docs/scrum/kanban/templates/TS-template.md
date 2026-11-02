@@ -185,6 +185,12 @@ de secuencia" con link al nuevo doc.
 
 <N>h
 
+## Dependencias
+
+- **US padre**: (referencia, la sección del final ya la incluye)
+- **TS previas**: <TS-XXX, TS-YYY o "Ninguna">
+- **Hitos**: <si depende de infraestructura externa>
+
 ## US padre
 
 US-XXX (#N)
