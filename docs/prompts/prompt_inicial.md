@@ -461,6 +461,41 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
 37. **Archivo `.env` del frontend (único, commiteado)**.
     El frontend usa **un único archivo** `frontend/.env` (commiteado) para las variables `VITE_*`. **Está prohibido** crear `.env.development`, `.env.qa` o `.env.production`: los entornos comparten el mismo `.env` (Vite carga el mismo archivo en `npm run dev`, `npm run build`, etc.).
 
+38. **Diagramas Mermaid en documentación (obligatorio)**.
+    Todo diagrama Mermaid que se agregue a un documento `.md` del proyecto
+    (README, docs/prompts, docs/tecnica, docs/scrum, etc.) DEBE insertarse
+    usando la plantilla:
+
+    ```
+    docs/plantillasParaDocumentar/agregar-diagrama-mermaid-en-documento.sh
+    ```
+
+    **Procedimiento obligatorio**:
+
+    1. Agregar una **etiqueta de marcador** en el documento destino, en la
+       línea donde debe ir el diagrama. Ejemplo: `{pon aqui tu diagrama secuencia figma}`.
+    2. Copiar la plantilla a `/tmp/<nombre>.sh`.
+    3. Rellenar las variables de configuración: `ARCHIVO`, `ETIQUETA` (o
+       `LINEA` como override), `TIPO` (`sequence` | `flowchart`), `CONTENIDO`.
+    4. Ejecutar el shell temporal.
+    5. Verificar el resultado con `sed -n 'N,Mp'` (NUNCA `cat` completo del
+       archivo: llena la memoria).
+    6. Borrar el shell temporal ANTES del commit.
+
+    **Reglas**:
+
+    - La etiqueta **desaparece** al insertar el bloque.
+    - Si la etiqueta aparece **2+ veces** en el archivo, la plantilla aborta
+      con error. Usar `--linea N` como override (NUNCA adivinar la línea).
+    - Si la etiqueta **no aparece**, la plantilla aborta con error indicando
+      el nombre completo del archivo. Verificar que la etiqueta esté escrita
+      exactamente igual (incluyendo llaves, espacios y tildes).
+    - En `flowchart LR`, la plantilla envuelve en comillas los labels con
+      `{}`, `*`, `/` o espacios (Mermaid rompe con esos caracteres sin comillas).
+    - **NUNCA** se commitea el shell temporal. Solo se commitea el `.md`
+      modificado.
+    - Documentación de la plantilla: `docs/plantillasParaDocumentar/README.md`.
+
     Variables obligatorias:
     - `VITE_API_URL=/api` — **contrato fijo con el backend**. Si el backend cambia de prefijo (`application.yml`), se actualiza el `.env`.
     - `VITE_APP_ENV` — `development | qa | production` (informativo).

@@ -4,6 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "build:tokens": "style-dictionary build",
+    "//style-dictionary": "dev-only: se retira en release a QA (TS-022, #627)",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -61,6 +63,7 @@
     "lint-staged": "17.6.0",
     "prettier": "3.9.9",
     "storybook": "10.6.1",
+    "style-dictionary": "5.8.0",
     "stylelint": "17.15.0",
     "stylelint-config-css-modules": "4.6.0",
     "stylelint-config-recess-order": "7.8.0",

@@ -110,6 +110,10 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
    - Plantillas obligatorias para crear CAP / FT / US / TS con la estructura mínima exigida (Contexto, Alcance/Entregable, Criterios de aceptación con códigos `CA_##`, Dependencias, Estimación). Ningún issue se crea sin seguir su plantilla. Además incluye `VALIDATION-template.sh`, base para los shells de validación de criterios de cada task.
    - Ruta: `docs/scrum/kanban/templates/`.
 
+8. **`docs/plantillasParaDocumentar/`**
+   - Scripts reutilizables de documentación. El script `agregar-diagrama-mermaid-en-documento.sh` inserta un bloque Mermaid bien formado en un `.md`, reemplazando una etiqueta de marcador (obligatorio por R15 en `prompt_inicial.md`).
+   - Ruta: `docs/plantillasParaDocumentar/`. Ver `docs/plantillasParaDocumentar/README.md` para uso completo.
+
 **Regla de solicitud de archivos**: cuando un agente (humano o IA) necesite contexto que no está en los documentos anteriores, DEBE solicitar los archivos concretos (ruta + motivo) antes de continuar. Nunca inventar endpoints, DTOs, campos, códigos de error ni estructuras. El procedimiento detallado vive en `docs/prompts/agente-frontend.md` sección 21 y en `docs/prompts/prompt_inicial.md` (Reglas generales para la IA, reglas 24-28).
 
 **Consistencia**: cualquier cambio en endpoints, DTOs, roles, códigos de error o convenciones de frontend debe reflejarse en el mismo PR en este README, en `prompt_inicial.md` y/o en el agente correspondiente.
@@ -1336,27 +1340,18 @@ actualizar `vite.config.ts` y `proxy-developer.md` en el mismo PR.
 
 **Storybook (`:3010`)** no hereda este proxy (no lee `vite.config.ts`).
 
+### Backup de branding (v0.1.14)
+
+Antes de la migración a DTCG + Style Dictionary (FT-002), los 5 CSS originales
+de `frontend/src/styles/branding/` se respaldaron en
+`frontend/src/styles/branding-backup-v0.1.14/`.
+
+**Rollback**: `cp frontend/src/styles/branding-backup-v0.1.14/*.css frontend/src/styles/branding/`
+
+**Flujo de tokens**: ver [`flujo-de-trabajo/figma/00_alcance.md`](docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/figma/00_alcance.md).
+**Benchmark**: ver [`convenciones/benchmark-tokens-2026.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/benchmark-tokens-2026.md).
+
 ### Stack Tecnológico del Frontend
-
-| Componente           | Versión                     | Notas                                                                                                           |
-| -------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| React                | 19.2.8                      | Versión estable activa                                                                                          |
-| React DOM            | 19.2.8                      | Sincronizado con React                                                                                          |
-| TypeScript           | 6.0.2                       | `strict: true` en `tsconfig.app.json` y `tsconfig.node.json`                                                    |
-| Vite                 | 8.3.4                       | Bundler y dev server (puerto 3000, `strictPort: true`)                                                          |
-| Node.js (build)      | 24.21.0                     | Fijado en `frontend/.nvmrc`                                                                                     |
-| ESLint               | 9.39.5                      | ⚠️ **EOL** — ver [ADR-0001](#adr-0001--eslint-9395-eol)                                                         |
-| Prettier             | 3.9.9                       | Formateo (`.prettierrc.json`)                                                                                   |
-| Stylelint            | 17.15.0                     | Lint CSS / CSS Modules (`.stylelintrc.json`)                                                                    |
-| ESLint plugins       | ver `frontend/package.json` | `jsx-a11y`, `import`, `simple-import-sort`, `react-hooks`, `react-refresh`                                      |
-| Stylelint configs    | ver `frontend/package.json` | `stylelint-config-standard`, `css-modules`, `recess-order`                                                      |
-| Vitest               | 5.0.5                       | Unitarias + integración (jsdom, coverage v8, thresholds 80%)                                                    |
-| Testing Library      | 16.3.3 (react)              | `@testing-library/react` + `jest-dom` 7.0.1 + `user-event` 14.6.8 + `dom` 10.4.2                                |
-| Playwright           | 1.64.1                      | E2E en 7 proyectos (`mobile-chrome`, `mobile-android`, `mobile-safari`, `tablet`, `desktop`, `tv-fhd`, `tv-4k`) |
-| @axe-core/playwright | 4.14.0                      | Auditoría a11y WCAG 2.2 AA en E2E                                                                               |
-
-**Pineo de versiones**: `frontend/.npmrc` con `save-exact=true`. Ninguna
-dependencia usa `^` ni `~` en `package.json`.
 
 ### Deudas Técnicas (ADR)
 
@@ -1906,6 +1901,9 @@ impacto real y gatillos de revisión) se documentan en:
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
     - **`prompts/`** - Fuentes de verdad y reglas por capa
       - `prompt_inicial.md` - Idea general del proyecto, reglas para la IA, directrices por capa
+  - **`plantillasParaDocumentar/`** - Scripts reutilizables de documentación
+    - `README.md` - Guía de uso de la plantilla de diagramas Mermaid
+    - `agregar-diagrama-mermaid-en-documento.sh` - Inserta bloques Mermaid en `.md` reemplazando etiquetas de marcador
       - `agente-frontend.md` - Reglas del frontend (estructura, vistas, design system, i18n, assets, testing, a11y, DoD)
       - `agente-backend.md` - Reglas del backend (arquitectura hexagonal, DTOs, errores, seguridad, ofuscación, auditoría, testing)
       - `agente-database.md` - Reglas de la base de datos (nomenclatura SQL, idempotencia, permisos, auditoría, migraciones)
@@ -1935,6 +1933,7 @@ impacto real y gatillos de revisión) se documentan en:
           - `validate-task-in-kanban.sh` - Wrapper genérico: valida CA_## de un issue contra su validator específico
           - **`validators/`** - Un validador específico por task
             - `validate-ts016.sh` - Validación CA_01..CA_17 de TS-016 (Husky + pre-commit)
+            - `validate-ts022.sh` - Validación TS-022 (creado en TS-022)
     - **`serverConfig/`**
       - `popOS22.04.md` - Guía de instalación en Pop!\_OS 22.04
     - **`tecnica/`** - Documentación técnica por capítulo del README
@@ -1967,6 +1966,7 @@ impacto real y gatillos de revisión) se documentan en:
           - `exclusiones-cobertura-tests.md` (ADR-0009)
         - **`convenciones/`**
           - `convenciones.md` - Convenciones de código del frontend
+          - `benchmark-tokens-2026.md` - Benchmark de 4 herramientas + DTCG base (creado en TS-022)
           - `storybook.md` - Guía de Storybook (creado en TS-008)
           - `pruebas.md` - Convenciones de testing (creado en TS-012)
           - `warnings-storybook.md` - Warnings aceptados de Storybook (creado en TS-009)
