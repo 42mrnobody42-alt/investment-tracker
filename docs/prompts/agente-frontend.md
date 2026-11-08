@@ -975,16 +975,15 @@ Reglas:
 
 Relacionado: [`proxy-developer.md`](../tecnica/04-frontend-react-css-moderno/convenciones/proxy-developer.md) (proxy `/api` → `:7700`).
 
-### Backup de branding y flujo Figma (FT-002)
+### Backup de branding y flujo de tokens (FT-002)
 
 Los 5 CSS de `frontend/src/styles/branding/` tienen backup en
 `frontend/src/styles/branding-backup-v0.1.14/` (rollback documentado).
 
-El flujo de autoría de tokens (Figma free + Tokens Studio free + export
-DTCG manual + Style Dictionary v5) está en
-`docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/figma/00_alcance.md`.
+El flujo de autoría de tokens (DTCG escrito a mano + Style Dictionary v5) está en
+`docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md`.
 
-Limitación free: 1 modo por colección en Figma → los temas viven en
+Los temas (light/dark/high-contrast) viven en
 `frontend/src/components/imported/themes/*.tokens.json`.
 
 ### 14.12 Proxy de desarrollo `/api` (`vite.config.ts`)

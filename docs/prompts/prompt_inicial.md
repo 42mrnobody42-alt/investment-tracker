@@ -473,7 +473,7 @@ Servicios para que el usuario autenticado consulte y modifique **su propio** per
     **Procedimiento obligatorio**:
 
     1. Agregar una **etiqueta de marcador** en el documento destino, en la
-       línea donde debe ir el diagrama. Ejemplo: `{pon aqui tu diagrama secuencia figma}`.
+       línea donde debe ir el diagrama. Ejemplo: `{pon aqui tu diagrama secuencia tokens}`.
     2. Copiar la plantilla a `/tmp/<nombre>.sh`.
     3. Rellenar las variables de configuración: `ARCHIVO`, `ETIQUETA` (o
        `LINEA` como override), `TIPO` (`sequence` | `flowchart`), `CONTENIDO`.

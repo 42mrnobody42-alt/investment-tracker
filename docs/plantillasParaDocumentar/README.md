@@ -18,7 +18,7 @@ docs/plantillasParaDocumentar/agregar-diagrama-mermaid-en-documento.sh
 1. **Agregar la etiqueta** en el documento destino, en la línea donde
    debe ir el diagrama. Ejemplo:
    ```
-   {pon aqui tu diagrama secuencia figma}
+   {pon aqui tu diagrama secuencia tokens}
    ```
 2. **Copiar la plantilla** a `/tmp/<nombre>.sh`.
 3. **Rellenar la configuración** del shell temporal:
@@ -48,7 +48,7 @@ docs/plantillasParaDocumentar/agregar-diagrama-mermaid-en-documento.sh
 ```bash
 ./agregar-diagrama-mermaid-en-documento.sh \
   --archivo docs/tecnica/04-.../00_alcance.md \
-  --etiqueta "{pon aqui tu diagrama secuencia figma}" \
+  --etiqueta "{pon aqui tu diagrama secuencia tokens}" \
   --tipo sequence \
   --contenido /tmp/bloque-sequence.md
 ```
@@ -61,7 +61,7 @@ cp docs/plantillasParaDocumentar/agregar-diagrama-mermaid-en-documento.sh /tmp/i
 
 # 2. Rellenar configuración (editar /tmp/insert-mi-diagrama.sh):
 ARCHIVO="docs/tecnica/04-.../00_alcance.md"
-ETIQUETA="{pon aqui tu diagrama secuencia figma}"
+ETIQUETA="{pon aqui tu diagrama secuencia tokens}"
 LINEA=""
 TIPO="sequence"
 CONTENIDO="/tmp/bloque-sequence.md"
