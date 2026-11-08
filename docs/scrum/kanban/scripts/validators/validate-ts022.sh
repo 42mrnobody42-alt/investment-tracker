@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# validate-ts022.sh — TS-022 (#627) — backup + benchmark + decision + Figma
+# validate-ts022.sh — TS-022 (#627) — backup + benchmark + decision + tokens-css
 # Invocado por ../validate-task-in-kanban.sh <issue-number>
 # Env: ISSUE_NUM, TS_CODE, LOG_FILE
 # ============================================================================
@@ -78,19 +78,18 @@ RESULT=0
 DEBUG="$(printf '$ ls -la %s\n%s\n$ ls %s/*.css | wc -l\n%s' "$BACKUP_DIR" "$(ls -la "$BACKUP_DIR" 2>&1 | head -10)" "$BACKUP_DIR" "$V_CSS")"
 check "CA_01" "backup branding + README rollback" "dir=yes readme=yes css=5" "$V" "$RESULT" "frontend/src/styles/branding-backup-v0.1.14/" "$DEBUG"
 
-# ── CA_02: benchmark 4 tools + videos ────────────────────────────────────
+# ── CA_02: benchmark (enfoques de tokens) ───────────────────────────────
 BENCH="$DOCS/tecnica/04-frontend-react-css-moderno/convenciones/benchmark-tokens-2026.md"
 V_EXIST=$([ -f "$BENCH" ] && echo yes || echo no)
 V_SD=$(grep -cF 'Style Dictionary v5' "$BENCH" 2>/dev/null || echo 0)
-V_TS=$(grep -cF 'Tokens Studio' "$BENCH" 2>/dev/null || echo 0)
-V_FV=$(grep -cF 'Figma Variables' "$BENCH" 2>/dev/null || echo 0)
 V_CSSP=$(grep -cF 'CSS custom properties' "$BENCH" 2>/dev/null || echo 0)
+V_DTCG=$(grep -cF 'DTCG escrito a mano' "$BENCH" 2>/dev/null || echo 0)
 V_VID=$(grep -cF 'Videos de referencia' "$BENCH" 2>/dev/null || echo 0)
-V="exist=$V_EXIST sd=$V_SD ts=$V_TS fv=$V_FV cssp=$V_CSSP vid=$V_VID"
+V="exist=$V_EXIST sd=$V_SD cssp=$V_CSSP dtcg=$V_DTCG vid=$V_VID"
 RESULT=0
-[ "$V_EXIST" = "yes" ] && [ "$V_SD" -ge 1 ] && [ "$V_TS" -ge 1 ] && [ "$V_FV" -ge 1 ] && [ "$V_CSSP" -ge 1 ] && [ "$V_VID" -ge 1 ] && RESULT=1
-DEBUG="$(grep -nE 'Style Dictionary v5|Tokens Studio|Figma Variables|CSS custom properties|Videos de referencia' "$BENCH" 2>&1 | head -5)"
-check "CA_02" "benchmark 4 tools + videos max 10 min" "exist=yes sd>=1 ts>=1 fv>=1 cssp>=1 vid>=1" "$V" "$RESULT" "docs/tecnica/.../convenciones/benchmark-tokens-2026.md" "$DEBUG"
+[ "$V_EXIST" = "yes" ] && [ "$V_SD" -ge 1 ] && [ "$V_CSSP" -ge 1 ] && [ "$V_DTCG" -ge 1 ] && [ "$V_VID" -ge 1 ] && RESULT=1
+DEBUG="$(grep -nE 'Style Dictionary v5|CSS custom properties|DTCG escrito a mano|Videos de referencia' "$BENCH" 2>&1 | head -5)"
+check "CA_02" "benchmark herramientas + videos max 10 min" "exist=yes sd>=1 cssp>=1 dtcg>=1 vid>=1" "$V" "$RESULT" "docs/tecnica/.../convenciones/benchmark-tokens-2026.md" "$DEBUG"
 
 # ── CA_03: benchmark 2+ DTCG + decision ──────────────────────────────────
 V_MGD=$(grep -cF 'Made Good Designs' "$BENCH" 2>/dev/null || echo 0)
@@ -114,21 +113,19 @@ RESULT=0
 DEBUG="$(printf '%s' "$BODY557" | grep -nE 'Style Dictionary|Made Good|imported/|TS-147' | head -5)"
 check "CA_04" "#557 decision tecnica completa" "sd>=1 mgd>=1 imp>=1 t147>=1" "$V" "$RESULT" "github.com/.../issues/557" "$DEBUG"
 
-# ── CA_05: doc Figma ─────────────────────────────────────────────────────
-FIGMA="$DOCS/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/figma/00_alcance.md"
-V_EXIST=$([ -f "$FIGMA" ] && echo yes || echo no)
-V_FF=$(grep -cF 'Figma free' "$FIGMA" 2>/dev/null || echo 0)
-V_1M=$(grep -cF '1 modo por coleccion' "$FIGMA" 2>/dev/null || echo 0)
-V_TS=$(grep -cF 'Tokens Studio free' "$FIGMA" 2>/dev/null || echo 0)
-V_SD=$(grep -cF 'Style Dictionary v5' "$FIGMA" 2>/dev/null || echo 0)
-V_IMP=$(grep -cF 'frontend/src/components/imported/' "$FIGMA" 2>/dev/null || echo 0)
-V_SEQ=$(grep -cF 'sequenceDiagram' "$FIGMA" 2>/dev/null || echo 0)
-V_FLOW=$(grep -cF 'flowchart LR' "$FIGMA" 2>/dev/null || echo 0)
-V="exist=$V_EXIST ff=$V_FF 1m=$V_1M ts=$V_TS sd=$V_SD imp=$V_IMP seq=$V_SEQ flow=$V_FLOW"
+# ── CA_05: doc tokens-css ────────────────────────────────────────────────
+TOKENS="$DOCS/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md"
+V_EXIST=$([ -f "$TOKENS" ] && echo yes || echo no)
+V_DTCG=$(grep -cF 'DTCG escrito a mano' "$TOKENS" 2>/dev/null || echo 0)
+V_IMP=$(grep -cF 'frontend/src/components/imported/' "$TOKENS" 2>/dev/null || echo 0)
+V_SD=$(grep -cF 'Style Dictionary v5' "$TOKENS" 2>/dev/null || echo 0)
+V_SEQ=$(grep -cF 'sequenceDiagram' "$TOKENS" 2>/dev/null || echo 0)
+V_FLOW=$(grep -cF 'flowchart LR' "$TOKENS" 2>/dev/null || echo 0)
+V="exist=$V_EXIST dtcg=$V_DTCG imp=$V_IMP sd=$V_SD seq=$V_SEQ flow=$V_FLOW"
 RESULT=0
-[ "$V_EXIST" = "yes" ] && [ "$V_FF" -ge 1 ] && [ "$V_1M" -ge 1 ] && [ "$V_TS" -ge 1 ] && [ "$V_SD" -ge 1 ] && [ "$V_IMP" -ge 1 ] && [ "$V_SEQ" -ge 1 ] && [ "$V_FLOW" -ge 1 ] && RESULT=1
-DEBUG="$(grep -nE 'Figma free|1 modo por coleccion|Tokens Studio free|Style Dictionary v5|frontend/src/components/imported/|sequenceDiagram|flowchart LR' "$FIGMA" 2>&1 | head -8)"
-check "CA_05" "doc Figma 00_alcance.md completo" "exist=yes ff>=1 1m>=1 ts>=1 sd>=1 imp>=1 seq>=1 flow>=1" "$V" "$RESULT" "docs/tecnica/.../flujo-de-trabajo/figma/00_alcance.md" "$DEBUG"
+[ "$V_EXIST" = "yes" ] && [ "$V_DTCG" -ge 1 ] && [ "$V_IMP" -ge 1 ] && [ "$V_SD" -ge 1 ] && [ "$V_SEQ" -ge 1 ] && [ "$V_FLOW" -ge 1 ] && RESULT=1
+DEBUG="$(grep -nE 'DTCG escrito a mano|frontend/src/components/imported/|Style Dictionary v5|sequenceDiagram|flowchart LR' "$TOKENS" 2>&1 | head -8)"
+check "CA_05" "doc tokens-css 00_alcance.md completo" "exist=yes dtcg>=1 imp>=1 sd>=1 seq>=1 flow>=1" "$V" "$RESULT" "docs/tecnica/.../flujo-de-trabajo/tokens-css/00_alcance.md" "$DEBUG"
 
 # ── CA_06: runner verde ─────────────────────────────────────────────────
 RUNNER_LOG=/tmp/validate-ts022-runner.log
@@ -150,15 +147,15 @@ RESULT=0
 DEBUG="$(grep -nE 'docs/plantillasParaDocumentar|### Plantillas para documentar' "$README" 2>&1 | head -5)"
 check "CA_07" "README item 8 + sin seccion duplicada" "item8>=1 plant_dup=0" "$V" "$RESULT" "README.md" "$DEBUG"
 
-# ── CA_08: agente-frontend backup + Figma doc ───────────────────────────
+# ── CA_08: agente-frontend backup + tokens-css doc ──────────────────────
 AGENTE="$DOCS/prompts/agente-frontend.md"
 V_BK=$(grep -cF 'branding-backup-v0.1.14' "$AGENTE" 2>/dev/null || echo 0)
-V_FIG=$(grep -cF 'flujo-de-trabajo/figma/00_alcance.md' "$AGENTE" 2>/dev/null || echo 0)
-V="backup=$V_BK figma=$V_FIG"
+V_TOKENS=$(grep -cF 'flujo-de-trabajo/tokens-css/00_alcance.md' "$AGENTE" 2>/dev/null || echo 0)
+V="backup=$V_BK tokens_css=$V_TOKENS"
 RESULT=0
-[ "$V_BK" -ge 1 ] && [ "$V_FIG" -ge 1 ] && RESULT=1
-DEBUG="$(grep -nE 'branding-backup-v0.1.14|flujo-de-trabajo/figma/00_alcance.md' "$AGENTE" 2>&1 | head -5)"
-check "CA_08" "agente-frontend backup + Figma doc" "backup>=1 figma>=1" "$V" "$RESULT" "docs/prompts/agente-frontend.md" "$DEBUG"
+[ "$V_BK" -ge 1 ] && [ "$V_TOKENS" -ge 1 ] && RESULT=1
+DEBUG="$(grep -nE 'branding-backup-v0.1.14|flujo-de-trabajo/tokens-css/00_alcance.md' "$AGENTE" 2>&1 | head -5)"
+check "CA_08" "agente-frontend backup + tokens-css doc" "backup>=1 tokens_css>=1" "$V" "$RESULT" "docs/prompts/agente-frontend.md" "$DEBUG"
 
 # ── SUMMARY ──────────────────────────────────────────────────────────────
 echo ""

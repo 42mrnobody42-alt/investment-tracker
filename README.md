@@ -1348,7 +1348,7 @@ de `frontend/src/styles/branding/` se respaldaron en
 
 **Rollback**: `cp frontend/src/styles/branding-backup-v0.1.14/*.css frontend/src/styles/branding/`
 
-**Flujo de tokens**: ver [`flujo-de-trabajo/figma/00_alcance.md`](docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/figma/00_alcance.md).
+**Flujo de tokens**: ver [`flujo-de-trabajo/tokens-css/00_alcance.md`](docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md).
 **Benchmark**: ver [`convenciones/benchmark-tokens-2026.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/benchmark-tokens-2026.md).
 
 ### Stack Tecnológico del Frontend
