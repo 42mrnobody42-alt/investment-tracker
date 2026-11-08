@@ -1,0 +1,33 @@
+{
+  "motion": {
+    "duration": {
+      "instant": { "$value": "100ms", "$type": "duration" },
+      "fast": { "$value": "150ms", "$type": "duration" },
+      "normal": { "$value": "250ms", "$type": "duration" },
+      "slow": { "$value": "400ms", "$type": "duration" },
+      "slower": { "$value": "600ms", "$type": "duration" }
+    },
+    "easing": {
+      "springSoft": {
+        "$value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "$type": "cubicBezier",
+        "$description": "spring suave"
+      },
+      "springMedium": {
+        "$value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "$type": "cubicBezier",
+        "$description": "dureza media"
+      },
+      "expoOut": {
+        "$value": "cubic-bezier(0, 0, 0.2, 1)",
+        "$type": "cubicBezier",
+        "$description": "expo out"
+      }
+    },
+    "stagger": {
+      "fast": { "$value": "60ms", "$type": "duration" },
+      "normal": { "$value": "120ms", "$type": "duration" },
+      "slow": { "$value": "200ms", "$type": "duration" }
+    }
+  }
+}

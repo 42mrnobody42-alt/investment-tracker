@@ -175,6 +175,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
   - [Proxy en desarrollo (`/api` → `:7700`)](#proxy-en-desarrollo-api--7700)
     - [Tipado con `vite-env.d.ts`](#tipado-con-vite-envdts)
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
+  - [Tokens DTCG y Style Dictionary (TS-023)](#tokens-dtcg-y-style-dictionary-ts-023)
   - [Deudas Técnicas (ADR)](#deudas-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
     - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
@@ -1351,6 +1352,25 @@ de `frontend/src/styles/branding/` se respaldaron en
 **Flujo de tokens**: ver [`flujo-de-trabajo/tokens-css/00_alcance.md`](docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md).
 **Benchmark**: ver [`convenciones/benchmark-tokens-2026.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/benchmark-tokens-2026.md).
 
+### Tokens DTCG y Style Dictionary (TS-023)
+
+Los design tokens se autoría en formato **DTCG 2025.10** (`$value`, `$type`) en `frontend/src/components/imported/`:
+
+- `brand-overrides/` — valores base (cyan `#00838f`, semánticos, tipografía, motion, border, opacity, shape).
+- `atoms/{buttons,cards,searchbar}/` — estructura de átomos (spacing, typography, radius, shadow).
+- `themes/{light,dark,high-contrast}/` — overrides por tema (bg, text, button, card, searchbar).
+- `layout/` — grid, spacing, z-index, breakpoints.
+
+**Pipeline**: `npm run build:tokens` convierte DTCG → formato legacy (`value`/`type`) → Style Dictionary v5 → CSS custom properties + TS.
+
+**Salida** (en `frontend/src/components/imported/generated/`):
+- `tokens.css` + `themes/{light,dark,high-contrast}.css` (gitignored)
+- `{light,dark,high-contrast}.ts` (commiteados, los consume `DesignTokens/Compare`)
+
+**Story**: `DesignTokens/Compare` en Storybook (2 columnas: branding actual vs tokens generados, selector de tema).
+
+**Decisión sobre Figma**: eliminado del flujo. Ver `docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md`.
+
 ### Stack Tecnológico del Frontend
 
 ### Deudas Técnicas (ADR)
@@ -1559,7 +1579,7 @@ Detalle completo, thresholds y árbol de grupos: [`pruebas.md`](docs/tecnica/04-
 **Unitarias (Vitest)** — 55 tests en 3 archivos:
 
 - `tests/unit/components/atoms/Button.test.tsx` — 18 tests (render, variantes, tamaños, estados, a11y, click handlers).
-- `tests/unit/components/atoms/DesignTokens.test.tsx` — 34 tests (Colors, Typography, Spacing, Radius, Shadows, Layout, Motion, Dark, HighContrast).
+- `tests/unit/components/DesignTokens.test.tsx` — 34 tests (Colors, Typography, Spacing, Radius, Shadows, Layout, Motion, Dark, HighContrast).
 - `tests/unit/shared/constants/assets.test.ts` — 3 tests (estructura del objeto `ASSETS`).
 
 **E2E (Playwright)** — 2 tests × 7 proyectos = 14 ejecuciones:

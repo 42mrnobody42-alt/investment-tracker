@@ -1,0 +1,8 @@
+{
+  "opacity": {
+    "disabled": { "$value": "0.5", "$type": "number", "$description": "estado deshabilitado" },
+    "hover": { "$value": "0.85", "$type": "number", "$description": "estado hover" },
+    "overlay": { "$value": "0.6", "$type": "number", "$description": "overlay de modal" },
+    "ghost": { "$value": "0.1", "$type": "number", "$description": "fondo ghost" }
+  }
+}

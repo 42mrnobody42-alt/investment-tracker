@@ -1,0 +1,5 @@
+{
+  "card": {
+    "shadow": { "$value": "{shadow.sm}", "$type": "shadow" }
+  }
+}

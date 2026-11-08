@@ -186,7 +186,7 @@ stories, actualizar esta tabla, eliminar el ADR y tachar la fila en la tabla del
 ### TS-010 (completado)
 
 Story `DesignTokens/Overview` (9 sub-stories). Componente `DesignTokens`
-(`frontend/src/components/atoms/DesignTokens/`) tratado como átomo del Design
+(`frontend/src/components/DesignTokens/`) tratado como átomo del Design
 System. Consume **todos** los tokens de `frontend/src/styles/branding/` y los lee
 con `getComputedStyle` para reflejar el tema activo (`data-theme`).
 
@@ -309,11 +309,11 @@ Junto al componente, en su carpeta:
 
 Y para el átomo DesignTokens (TS-010):
 
-- `frontend/src/components/atoms/DesignTokens/DesignTokens.tsx`
-- `frontend/src/components/atoms/DesignTokens/DesignTokens.module.css`
-- `frontend/src/components/atoms/DesignTokens/DesignTokens.types.ts`
-- `frontend/src/components/atoms/DesignTokens/DesignTokens.stories.tsx`
-- `frontend/src/components/atoms/DesignTokens/index.ts`
+- `frontend/src/components/DesignTokens/DesignTokens.tsx`
+- `frontend/src/components/DesignTokens/DesignTokens.module.css`
+- `frontend/src/components/DesignTokens/DesignTokens.types.ts`
+- `frontend/src/components/DesignTokens/DesignTokens.stories.tsx`
+- `frontend/src/components/DesignTokens/index.ts`
 
 ## Configuracion del glob
 

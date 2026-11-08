@@ -1,0 +1,10 @@
+{
+  "button": {
+    "spacing": {
+      "paddingSm": { "$value": "{space.2} {space.3}", "$type": "string" },
+      "paddingMd": { "$value": "{space.2} {space.4}", "$type": "string" },
+      "paddingLg": { "$value": "{space.3} {space.5}", "$type": "string" },
+      "gap": { "$value": "{space.2}", "$type": "dimension" }
+    }
+  }
+}

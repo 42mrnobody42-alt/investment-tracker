@@ -1,0 +1,14 @@
+{
+  "border": {
+    "width": {
+      "thin": { "$value": "1px", "$type": "dimension" },
+      "medium": { "$value": "2px", "$type": "dimension" },
+      "thick": { "$value": "4px", "$type": "dimension" }
+    },
+    "style": {
+      "solid": { "$value": "solid", "$type": "string" },
+      "dashed": { "$value": "dashed", "$type": "string" },
+      "none": { "$value": "none", "$type": "string" }
+    }
+  }
+}

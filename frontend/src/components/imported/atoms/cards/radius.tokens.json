@@ -1,0 +1,5 @@
+{
+  "card": {
+    "radius": { "$value": "{radius.xl}", "$type": "dimension" }
+  }
+}
