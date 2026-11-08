@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import type { DesignTokensSection } from '@components/atoms/DesignTokens';
-import { DesignTokens } from '@components/atoms/DesignTokens';
-import { TokenCard } from '@components/atoms/DesignTokens/DesignTokens';
+import type { DesignTokensSection } from '@components/DesignTokens';
+import { DesignTokens } from '@components/DesignTokens';
+import { TokenCard } from '@components/DesignTokens/DesignTokens';
 
 describe('DesignTokens', () => {
   describe('contrato base', () => {

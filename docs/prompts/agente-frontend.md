@@ -986,6 +986,24 @@ El flujo de autoría de tokens (DTCG escrito a mano + Style Dictionary v5) está
 Los temas (light/dark/high-contrast) viven en
 `frontend/src/components/imported/themes/*.tokens.json`.
 
+### Tokens DTCG y Style Dictionary (TS-023)
+
+Los design tokens se autoría en formato DTCG (`$value`/`$type`) en
+`frontend/src/components/imported/`. Style Dictionary v5 **no soporta
+completamente DTCG 2025.10**, por eso el pipeline convierte a formato legacy
+antes del build (script `frontend/scripts/convert-to-sd-format.mjs`).
+
+**Separación de responsabilidades**:
+
+- `brand-overrides/` — valores base de marca (cyan, semánticos, tipografía, motion).
+- `themes/` — overrides por tema (light/dark/high-contrast).
+- `atoms/` + `layout/` — estructura (no dependen del tema).
+- `generated/` — artefactos del build (CSS gitignored, TS commiteados).
+
+**Regla**: `frontend/src/styles/branding/` sigue siendo la fuente de verdad
+hasta TS-024. Los tokens generados son **paralelos**, no sustituyen al branding.
+El componente `DesignTokens/Compare` verifica la paridad visual.
+
 ### 14.12 Proxy de desarrollo `/api` (`vite.config.ts`)
 
 El frontend en dev (`:3000`) consume `/api/*` contra el backend (`:7700`) **a través

@@ -1,0 +1,52 @@
+{
+  "color": {
+    "bg": { "$value": "#f8fafc", "$type": "color" },
+    "surface": { "$value": "#ffffff", "$type": "color" },
+    "border": { "$value": "#e2e8f0", "$type": "color" },
+    "text": { "$value": "#0f172a", "$type": "color" },
+    "textMuted": { "$value": "#64748b", "$type": "color" },
+    "textInverse": { "$value": "#ffffff", "$type": "color" }
+  },
+  "button": {
+    "primary": {
+      "bg": { "$value": "{color.brand.primary}", "$type": "color" },
+      "bgHover": { "$value": "{color.brand.primaryHover}", "$type": "color" },
+      "fg": { "$value": "{color.textInverse}", "$type": "color" }
+    },
+    "secondary": {
+      "fg": { "$value": "{color.brand.primary}", "$type": "color" },
+      "border": { "$value": "{color.brand.primary}", "$type": "color" }
+    },
+    "ghost": { "fg": { "$value": "{color.textMuted}", "$type": "color" } },
+    "success": {
+      "bg": { "$value": "{color.semantic.success}", "$type": "color" },
+      "bgHover": { "$value": "{color.semantic.successHover}", "$type": "color" },
+      "fg": { "$value": "{color.textInverse}", "$type": "color" }
+    },
+    "danger": {
+      "bg": { "$value": "{color.semantic.danger}", "$type": "color" },
+      "bgHover": { "$value": "{color.semantic.dangerHover}", "$type": "color" },
+      "fg": { "$value": "{color.textInverse}", "$type": "color" }
+    },
+    "warning": {
+      "bg": { "$value": "{color.semantic.warning}", "$type": "color" },
+      "bgHover": { "$value": "{color.semantic.warningHover}", "$type": "color" },
+      "fg": { "$value": "{color.textInverse}", "$type": "color" }
+    },
+    "info": {
+      "bg": { "$value": "{color.semantic.info}", "$type": "color" },
+      "bgHover": { "$value": "{color.semantic.infoHover}", "$type": "color" },
+      "fg": { "$value": "{color.textInverse}", "$type": "color" }
+    }
+  },
+  "card": {
+    "bg": { "$value": "{color.surface}", "$type": "color" },
+    "border": { "$value": "{color.border}", "$type": "color" }
+  },
+  "searchbar": {
+    "bg": { "$value": "{color.surface}", "$type": "color" },
+    "border": { "$value": "{color.border}", "$type": "color" },
+    "text": { "$value": "{color.text}", "$type": "color" },
+    "placeholder": { "$value": "{color.textMuted}", "$type": "color" }
+  }
+}

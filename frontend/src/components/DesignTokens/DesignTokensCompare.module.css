@@ -1,0 +1,79 @@
+.container {
+  padding: 24px;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  color: var(--color-text, #0f172a);
+  background: var(--color-bg, #f8fafc);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionTitle {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 0 0 12px;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.diffCount {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted, #64748b);
+}
+
+.table {
+  width: 100%;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 6px 10px;
+  vertical-align: middle;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.table th {
+  font-weight: 600;
+  background: var(--color-surface, #fff);
+}
+
+.swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 4px;
+}
+
+.rowEqual {
+  background: transparent;
+}
+
+.rowDiff {
+  background: rgb(198 40 40 / 8%);
+}
+
+.rowDiff code {
+  color: var(--color-danger, #c62828);
+}

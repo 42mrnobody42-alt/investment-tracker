@@ -1,0 +1,9 @@
+{
+  "searchbar": {
+    "spacing": {
+      "padding": { "$value": "{space.2} {space.3}", "$type": "string" },
+      "gap": { "$value": "{space.2}", "$type": "dimension" },
+      "iconSize": { "$value": "1rem", "$type": "dimension" }
+    }
+  }
+}

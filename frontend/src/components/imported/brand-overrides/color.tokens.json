@@ -1,0 +1,21 @@
+{
+  "color": {
+    "brand": {
+      "primary": { "$value": "#00838f", "$type": "color" },
+      "primaryHover": { "$value": "#006978", "$type": "color" },
+      "primaryLight": { "$value": "#4dd0e1", "$type": "color" },
+      "accent": { "$value": "#00bcd4", "$type": "color" },
+      "accentHover": { "$value": "#0097a7", "$type": "color" }
+    },
+    "semantic": {
+      "success": { "$value": "#2e7d32", "$type": "color" },
+      "successHover": { "$value": "#1b5e20", "$type": "color" },
+      "danger": { "$value": "#c62828", "$type": "color" },
+      "dangerHover": { "$value": "#b71c1c", "$type": "color" },
+      "warning": { "$value": "#b45309", "$type": "color" },
+      "warningHover": { "$value": "#92400e", "$type": "color" },
+      "info": { "$value": "#0277bd", "$type": "color" },
+      "infoHover": { "$value": "#01579b", "$type": "color" }
+    }
+  }
+}

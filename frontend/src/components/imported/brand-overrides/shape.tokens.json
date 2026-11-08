@@ -1,0 +1,17 @@
+{
+  "radius": {
+    "sm": { "$value": "4px", "$type": "dimension" },
+    "md": { "$value": "8px", "$type": "dimension" },
+    "lg": { "$value": "12px", "$type": "dimension" },
+    "xl": { "$value": "16px", "$type": "dimension", "$description": "cards segun DESIGN.md" },
+    "full": { "$value": "9999px", "$type": "dimension" }
+  },
+  "shadow": {
+    "xs": { "$value": "0 1px 2px 0 rgba(15, 23, 42, 0.03)", "$type": "shadow" },
+    "sm": { "$value": "0 1px 2px 0 rgba(15, 23, 42, 0.05)", "$type": "shadow" },
+    "md": { "$value": "0 4px 6px -1px rgba(15, 23, 42, 0.08)", "$type": "shadow" },
+    "lg": { "$value": "0 10px 15px -3px rgba(15, 23, 42, 0.10)", "$type": "shadow" },
+    "xl": { "$value": "0 20px 40px -8px rgba(15, 23, 42, 0.35)", "$type": "shadow" },
+    "2xl": { "$value": "0 30px 60px -12px rgba(15, 23, 42, 0.60)", "$type": "shadow" }
+  }
+}

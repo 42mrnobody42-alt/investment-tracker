@@ -1,0 +1,11 @@
+{
+  "button": {
+    "typography": {
+      "fontSizeSm": { "$value": "{fontSize.sm}", "$type": "dimension" },
+      "fontSizeMd": { "$value": "{fontSize.base}", "$type": "dimension" },
+      "fontSizeLg": { "$value": "{fontSize.lg}", "$type": "dimension" },
+      "fontWeight": { "$value": "{fontWeight.medium}", "$type": "fontWeight" },
+      "letterSpacing": { "$value": "{letterSpacing.normal}", "$type": "dimension" }
+    }
+  }
+}

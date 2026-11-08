@@ -1,0 +1,9 @@
+{
+  "breakpoint": {
+    "sm": { "$value": "640px", "$type": "dimension", "$description": "mobile landscape" },
+    "md": { "$value": "768px", "$type": "dimension", "$description": "tablet portrait" },
+    "lg": { "$value": "1024px", "$type": "dimension", "$description": "tablet landscape / laptop" },
+    "xl": { "$value": "1280px", "$type": "dimension", "$description": "desktop" },
+    "2xl": { "$value": "1920px", "$type": "dimension", "$description": "smart TV" }
+  }
+}

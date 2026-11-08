@@ -1,0 +1,38 @@
+{
+  "font": {
+    "sans": {
+      "$value": "Inter, system-ui, -apple-system, Segoe UI, roboto, sans-serif",
+      "$type": "fontFamily"
+    },
+    "mono": {
+      "$value": "JetBrains Mono, Fira Code, ui-monospace, consolas, monospace",
+      "$type": "fontFamily"
+    }
+  },
+  "fontSize": {
+    "xs": { "$value": "0.75rem", "$type": "dimension", "$description": "12px" },
+    "sm": { "$value": "0.875rem", "$type": "dimension", "$description": "14px cuerpo" },
+    "base": { "$value": "1rem", "$type": "dimension", "$description": "16px" },
+    "lg": { "$value": "1.125rem", "$type": "dimension" },
+    "xl": { "$value": "1.25rem", "$type": "dimension" },
+    "2xl": { "$value": "1.5rem", "$type": "dimension", "$description": "24px titulos" },
+    "3xl": { "$value": "2rem", "$type": "dimension", "$description": "32px KPIs" },
+    "4xl": { "$value": "2.5rem", "$type": "dimension" }
+  },
+  "fontWeight": {
+    "regular": { "$value": 400, "$type": "fontWeight" },
+    "medium": { "$value": 500, "$type": "fontWeight" },
+    "semibold": { "$value": 600, "$type": "fontWeight" },
+    "bold": { "$value": 700, "$type": "fontWeight" }
+  },
+  "lineHeight": {
+    "tight": { "$value": 1.2, "$type": "number" },
+    "normal": { "$value": 1.5, "$type": "number" },
+    "relaxed": { "$value": 1.7, "$type": "number" }
+  },
+  "letterSpacing": {
+    "tight": { "$value": "-0.02em", "$type": "dimension" },
+    "normal": { "$value": "0", "$type": "dimension" },
+    "wide": { "$value": "0.05em", "$type": "dimension" }
+  }
+}

@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build:tokens": "style-dictionary build",
+    "build:tokens": "node scripts/convert-to-sd-format.mjs && node style-dictionary.config.js && rm -rf .tokens-sd-build",
     "//style-dictionary": "dev-only: se retira en release a QA (TS-022, #627)",
     "dev": "vite",
     "build": "tsc -b && vite build",
