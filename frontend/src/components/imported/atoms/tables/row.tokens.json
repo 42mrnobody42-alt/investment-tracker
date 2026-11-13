@@ -1,0 +1,8 @@
+{
+  "table": {
+    "row": {
+      "border": { "$value": "1px solid {color.border}", "$type": "string" },
+      "hoverBg": { "$value": "#f1f5f9", "$type": "color" }
+    }
+  }
+}

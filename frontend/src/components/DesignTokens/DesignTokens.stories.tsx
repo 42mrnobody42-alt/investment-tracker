@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { DesignTokens } from './DesignTokens';
@@ -7,8 +9,8 @@ import { DesignTokens } from './DesignTokens';
  *
  * Lee los tokens del tema activo (`data-theme`) desde
  * `frontend/src/styles/branding/`. Fuente de verdad:
- * `paleta-colores-corporativa.css`, `tipografia.css`, `layout.css`,
- * `estilos-componentes.css`, `motion.css`.
+ * `colors.css`, `typography.css`, `layout.css`,
+ * `components.css`, `motion.css`.
  */
 const meta: Meta<typeof DesignTokens> = {
   title: 'DesignTokens/Overview',
@@ -62,18 +64,37 @@ export const Motion: Story = {
   args: { section: 'motion' },
 };
 
+/**
+ * Aplica un tema al `documentElement` (no a un div local) para que
+ * `getComputedStyle(documentElement)` del componente vea los valores
+ * correctos. Los tokens de `themes/*.css` usan el selector
+ * `[data-theme='X']`, que requiere que el atributo esté en `<html>`.
+ */
+function ThemeWrapper({ theme, children }: { theme: string; children: React.ReactNode }) {
+  useEffect(() => {
+    const prev = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', theme);
+    return () => {
+      if (prev) document.documentElement.setAttribute('data-theme', prev);
+      else document.documentElement.removeAttribute('data-theme');
+    };
+  }, [theme]);
+
+  return <>{children}</>;
+}
+
 export const Dark: Story = {
   render: () => (
-    <div data-theme="dark">
+    <ThemeWrapper theme="dark">
       <DesignTokens />
-    </div>
+    </ThemeWrapper>
   ),
 };
 
 export const HighContrast: Story = {
   render: () => (
-    <div data-theme="high-contrast">
+    <ThemeWrapper theme="high-contrast">
       <DesignTokens />
-    </div>
+    </ThemeWrapper>
   ),
 };

@@ -1,0 +1,24 @@
+/* Generado por Style Dictionary. NO editar. */
+:root,
+[data-theme='light'] {
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 3%);
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 5%);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 8%);
+  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 10%);
+  --shadow-xl: 0 20px 40px -8px rgb(15 23 42 / 35%);
+  --shadow-2xl: 0 30px 60px -12px rgb(15 23 42 / 60%);
+  --table-row-hover-bg: #f1f5f9;
+  --table-row-border: 1px solid #e2e8f0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --alert-padding: 12px 16px;
+  --alert-radius: 8px;
+  --alert-border-left-width: 4px;
+  --alert-bg-tint: #ff453a;
+  --card-padding: 20px;
+  --card-radius: 16px;
+  --card-shadow: 0 1px 2px 0 rgb(15 23 42 / 5%);
+}

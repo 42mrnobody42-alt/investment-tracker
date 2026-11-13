@@ -25,7 +25,7 @@ aquí para no perder la trazabilidad.
 
 ## Decisión 1 — No forzar `var(--...)` en valores de color
 
-**Problema**: el proyecto usa **CSS Custom Properties** (`var(--color-primary)`)
+**Problema**: el proyecto usa **CSS Custom Properties** (`var(--color-brand-primary)`)
 como tokens de diseño. Sería deseable que Stylelint rechazara valores de color
 hardcodeados (`color: #ff0000`, `background: rgb(255 0 0)`).
 

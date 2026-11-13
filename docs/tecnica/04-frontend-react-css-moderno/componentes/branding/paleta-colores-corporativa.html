@@ -8,9 +8,9 @@
 <!-- CSS importados desde frontend/src/styles/branding/           -->
 <!-- Cualquier cambio en esos archivos se refleja aqui.           -->
 <!-- ============================================================ -->
-<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/paleta-colores-corporativa.css">
-<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/tipografia.css">
-<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/estilos-componentes.css">
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/colors.css">
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/typography.css">
+<link rel="stylesheet" href="../../../../../frontend/src/styles/branding/components.css">
 <link rel="stylesheet" href="../../../../../frontend/src/styles/branding/layout.css">
 <link rel="stylesheet" href="../../../../../frontend/src/styles/branding/motion.css">
 
@@ -27,7 +27,7 @@
     max-width: 1280px;
     margin: 0 auto;
     background: var(--color-bg);
-    transition: background-color var(--duration-normal), color var(--duration-normal);
+    transition: background-color var(--motion-duration-normal), color var(--motion-duration-normal);
   }
 
   header {
@@ -52,9 +52,9 @@
     font-family: inherit;
     font-size: var(--font-size-sm);
     cursor: pointer;
-    transition: all var(--duration-fast) var(--ease-out);
+    transition: all var(--motion-duration-fast) var(--motion-easing-out);
   }
-  .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  .theme-toggle:hover { border-color: var(--color-brand-primary); color: var(--color-brand-primary); }
 
   section { margin-bottom: var(--space-8); }
   section h2 {
@@ -119,7 +119,7 @@
   .type-h1 { font-size: var(--font-size-3xl); font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
   .type-h2 { font-size: var(--font-size-2xl); font-weight: 600; line-height: 1.2; }
   .type-h3 { font-size: var(--font-size-xl); font-weight: 600; line-height: 1.2; }
-  .type-kpi { font-family: var(--font-mono); font-size: var(--font-size-3xl); font-weight: 700; color: var(--color-primary); }
+  .type-kpi { font-family: var(--font-mono); font-size: var(--font-size-3xl); font-weight: 700; color: var(--color-brand-primary); }
   .type-body { font-size: var(--font-size-sm); line-height: 1.5; }
   .type-mono { font-family: var(--font-mono); font-size: var(--font-size-sm); }
 
@@ -135,7 +135,7 @@
     font-family: var(--font-mono);
     font-size: var(--font-size-3xl);
     font-weight: 700;
-    color: var(--color-primary);
+    color: var(--color-brand-primary);
     margin: var(--space-2) 0;
   }
   .card-demo .label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
@@ -159,22 +159,22 @@
     font-weight: 500;
     border: 1px solid transparent;
     cursor: pointer;
-    transition: all var(--duration-fast) var(--ease-out);
+    transition: all var(--motion-duration-fast) var(--motion-easing-out);
   }
-  .btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-fg); }
-  .btn-primary:hover { background: var(--btn-primary-bg-hover); }
-  .btn-secondary { background: transparent; color: var(--btn-secondary-fg); border-color: var(--btn-secondary-border); }
-  .btn-secondary:hover { background: color-mix(in srgb, var(--btn-secondary-fg) 12%, transparent); }
-  .btn-ghost { background: transparent; color: var(--btn-ghost-fg); }
+  .btn-primary { background: var(--button-primary-bg); color: var(--button-primary-fg); }
+  .btn-primary:hover { background: var(--button-primary-bg-hover); }
+  .btn-secondary { background: transparent; color: var(--button-secondary-fg); border-color: var(--button-secondary-border); }
+  .btn-secondary:hover { background: color-mix(in srgb, var(--button-secondary-fg) 12%, transparent); }
+  .btn-ghost { background: transparent; color: var(--button-ghost-fg); }
   .btn-ghost:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
-  .btn-success { background: var(--btn-success-bg); color: var(--btn-success-fg); }
-  .btn-success:hover { background: var(--btn-success-bg-hover); }
-  .btn-danger { background: var(--btn-danger-bg); color: var(--btn-danger-fg); }
-  .btn-danger:hover { background: var(--btn-danger-bg-hover); }
-  .btn-warning { background: var(--btn-warning-bg); color: var(--btn-warning-fg); }
-  .btn-warning:hover { background: var(--btn-warning-bg-hover); }
-  .btn-info { background: var(--btn-info-bg); color: var(--btn-info-fg); }
-  .btn-info:hover { background: var(--btn-info-bg-hover); }
+  .btn-success { background: var(--button-success-bg); color: var(--button-success-fg); }
+  .btn-success:hover { background: var(--button-success-bg-hover); }
+  .btn-danger { background: var(--button-danger-bg); color: var(--button-danger-fg); }
+  .btn-danger:hover { background: var(--button-danger-bg-hover); }
+  .btn-warning { background: var(--button-warning-bg); color: var(--button-warning-fg); }
+  .btn-warning:hover { background: var(--button-warning-bg-hover); }
+  .btn-info { background: var(--button-info-bg); color: var(--button-info-fg); }
+  .btn-info:hover { background: var(--button-info-bg-hover); }
 
   /* Table */
   .table-demo {
@@ -200,8 +200,8 @@
   .table-demo tr:hover td { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
   .table-demo tr:last-child td { border-bottom: none; }
   .table-demo .mono { font-family: var(--font-mono); }
-  .table-demo .positive { color: var(--color-success); font-weight: 600; }
-  .table-demo .negative { color: var(--color-danger); font-weight: 600; }
+  .table-demo .positive { color: var(--color-semantic-success); font-weight: 600; }
+  .table-demo .negative { color: var(--color-semantic-danger); font-weight: 600; }
 
   /* Alerts */
   .alert {
@@ -211,17 +211,17 @@
     margin-bottom: var(--space-3);
     font-size: var(--font-size-sm);
   }
-  .alert-info { background: color-mix(in srgb, var(--color-info) 10%, transparent); border-color: var(--color-info); }
-  .alert-success { background: color-mix(in srgb, var(--color-success) 10%, transparent); border-color: var(--color-success); }
-  .alert-warning { background: color-mix(in srgb, var(--color-warning) 10%, transparent); border-color: var(--color-warning); }
-  .alert-danger { background: color-mix(in srgb, var(--color-danger) 10%, transparent); border-color: var(--color-danger); }
+  .alert-info { background: color-mix(in srgb, var(--color-semantic-info) 10%, transparent); border-color: var(--color-semantic-info); }
+  .alert-success { background: color-mix(in srgb, var(--color-semantic-success) 10%, transparent); border-color: var(--color-semantic-success); }
+  .alert-warning { background: color-mix(in srgb, var(--color-semantic-warning) 10%, transparent); border-color: var(--color-semantic-warning); }
+  .alert-danger { background: color-mix(in srgb, var(--color-semantic-danger) 10%, transparent); border-color: var(--color-semantic-danger); }
   .alert strong { display: block; margin-bottom: 4px; }
 
   /* Layout */
   .grid-demo { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--space-2); margin-bottom: var(--space-4); }
   .grid-cell {
-    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-    border: 1px solid var(--color-primary);
+    background: color-mix(in srgb, var(--color-brand-primary) 20%, transparent);
+    border: 1px solid var(--color-brand-primary);
     height: 32px;
     border-radius: var(--radius-sm);
     display: flex;
@@ -229,12 +229,12 @@
     justify-content: center;
     font-family: var(--font-mono);
     font-size: 10px;
-    color: var(--color-primary);
+    color: var(--color-brand-primary);
     font-weight: 600;
   }
   .spacing-demo { display: flex; align-items: flex-end; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
   .spacing-item { text-align: center; }
-  .spacing-bar { background: var(--color-primary); width: 48px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+  .spacing-bar { background: var(--color-brand-primary); width: 48px; border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
   .spacing-label { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-2); display: block; }
 
   /* Motion */
@@ -254,16 +254,16 @@
     width: 32px;
     height: 32px;
     border-radius: var(--radius-full);
-    background: var(--color-primary);
+    background: var(--color-brand-primary);
     transition-property: transform;
-    transition-duration: var(--duration-slow);
+    transition-duration: var(--motion-duration-slow);
   }
   .motion-card:hover .motion-dot { transform: translateX(140px); }
   .motion-card.ease-linear .motion-dot { transition-timing-function: linear; }
-  .motion-card.ease-in .motion-dot { transition-timing-function: var(--ease-in); }
-  .motion-card.ease-out .motion-dot { transition-timing-function: var(--ease-out); }
-  .motion-card.ease-in-out .motion-dot { transition-timing-function: var(--ease-in-out); }
-  .motion-card.ease-spring .motion-dot { transition-timing-function: var(--ease-spring); }
+  .motion-card.ease-in .motion-dot { transition-timing-function: var(--motion-easing-in); }
+  .motion-card.ease-out .motion-dot { transition-timing-function: var(--motion-easing-out); }
+  .motion-card.ease-in-out .motion-dot { transition-timing-function: var(--motion-easing-in-out); }
+  .motion-card.ease-spring .motion-dot { transition-timing-function: var(--motion-easing-spring); }
 
   /* Vista comparativa Light / Dark */
   .compare-grid {
@@ -294,7 +294,7 @@
   .note {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-left: 4px solid var(--color-info);
+    border-left: 4px solid var(--color-semantic-info);
     border-radius: var(--radius-md);
     padding: var(--space-3) var(--space-4);
     font-size: var(--font-size-sm);
@@ -345,32 +345,32 @@
   <p class="description">
     Paleta corporativa adaptada a WCAG 2.2 AA en light y dark.
     Los hex se leen en runtime desde el CSS real; cambian automáticamente según el tema.
-    Fuente: <code>frontend/src/styles/branding/paleta-colores-corporativa.css</code>.
+    Fuente: <code>frontend/src/styles/branding/colors.css</code>.
   </p>
 
   <h3>Marca</h3>
   <div class="swatch-grid">
-    <div class="swatch" data-token="--color-primary">
-      <div class="swatch-color" style="background: var(--color-primary);"></div>
+    <div class="swatch" data-token="--color-brand-primary">
+      <div class="swatch-color" style="background: var(--color-brand-primary);"></div>
       <div class="swatch-body">
         <span class="swatch-name">Primary</span>
-        <span class="swatch-token">--color-primary</span>
+        <span class="swatch-token">--color-brand-primary</span>
         <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch" data-token="--color-primary-hover">
-      <div class="swatch-color" style="background: var(--color-primary-hover);"></div>
+    <div class="swatch" data-token="--color-brand-primary-hover">
+      <div class="swatch-color" style="background: var(--color-brand-primary-hover);"></div>
       <div class="swatch-body">
         <span class="swatch-name">Primary Hover</span>
-        <span class="swatch-token">--color-primary-hover</span>
+        <span class="swatch-token">--color-brand-primary-hover</span>
         <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch" data-token="--color-primary-light">
-      <div class="swatch-color" style="background: var(--color-primary-light);"></div>
+    <div class="swatch" data-token="--color-brand-primary-light">
+      <div class="swatch-color" style="background: var(--color-brand-primary-light);"></div>
       <div class="swatch-body">
         <span class="swatch-name">Primary Light</span>
-        <span class="swatch-token">--color-primary-light</span>
+        <span class="swatch-token">--color-brand-primary-light</span>
         <span class="swatch-hex">—</span>
       </div>
     </div>
@@ -386,35 +386,35 @@
 
   <h3>Semánticos</h3>
   <div class="swatch-grid">
-    <div class="swatch" data-token="--color-success">
-      <div class="swatch-color" style="background: var(--color-success);"></div>
+    <div class="swatch" data-token="--color-semantic-success">
+      <div class="swatch-color" style="background: var(--color-semantic-success);"></div>
       <div class="swatch-body">
         <span class="swatch-name">Success</span>
-        <span class="swatch-token">--color-success</span>
+        <span class="swatch-token">--color-semantic-success</span>
         <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch" data-token="--color-danger">
-      <div class="swatch-color" style="background: var(--color-danger);"></div>
+    <div class="swatch" data-token="--color-semantic-danger">
+      <div class="swatch-color" style="background: var(--color-semantic-danger);"></div>
       <div class="swatch-body">
         <span class="swatch-name">Danger</span>
-        <span class="swatch-token">--color-danger</span>
+        <span class="swatch-token">--color-semantic-danger</span>
         <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch" data-token="--color-warning">
-      <div class="swatch-color" style="background: var(--color-warning);"></div>
+    <div class="swatch" data-token="--color-semantic-warning">
+      <div class="swatch-color" style="background: var(--color-semantic-warning);"></div>
       <div class="swatch-body">
         <span class="swatch-name">Warning</span>
-        <span class="swatch-token">--color-warning</span>
+        <span class="swatch-token">--color-semantic-warning</span>
         <span class="swatch-hex">—</span>
       </div>
     </div>
-    <div class="swatch" data-token="--color-info">
-      <div class="swatch-color" style="background: var(--color-info);"></div>
+    <div class="swatch" data-token="--color-semantic-info">
+      <div class="swatch-color" style="background: var(--color-semantic-info);"></div>
       <div class="swatch-body">
         <span class="swatch-name">Info</span>
-        <span class="swatch-token">--color-info</span>
+        <span class="swatch-token">--color-semantic-info</span>
         <span class="swatch-hex">—</span>
       </div>
     </div>
@@ -472,7 +472,7 @@
   <h2>2. Tipografía</h2>
   <p class="description">
     Inter para UI + JetBrains Mono para métricas.
-    Fuente: <code>frontend/src/styles/branding/tipografia.css</code>.
+    Fuente: <code>frontend/src/styles/branding/typography.css</code>.
   </p>
 
   <div class="type-sample">
@@ -518,7 +518,7 @@
   <h2>3. Estilos de componentes</h2>
   <p class="description">
     Radius, sombras y estilos base para cards, tablas y alertas.
-    Fuente: <code>frontend/src/styles/branding/estilos-componentes.css</code>.
+    Fuente: <code>frontend/src/styles/branding/components.css</code>.
   </p>
 
   <h3>Card con KPI (16px radius)</h3>
@@ -636,27 +636,27 @@
   <h3>Easings (pasa el mouse sobre cada card)</h3>
   <div class="motion-grid">
     <div class="motion-card ease-linear">
-      <span class="name">--ease-linear</span>
+      <span class="name">--motion-easing-linear</span>
       <span class="value">linear</span>
       <div class="motion-track"><div class="motion-dot"></div></div>
     </div>
     <div class="motion-card ease-in">
-      <span class="name">--ease-in</span>
+      <span class="name">--motion-easing-in</span>
       <span class="value">cubic-bezier(0.4, 0, 1, 1)</span>
       <div class="motion-track"><div class="motion-dot"></div></div>
     </div>
     <div class="motion-card ease-out">
-      <span class="name">--ease-out</span>
+      <span class="name">--motion-easing-out</span>
       <span class="value">cubic-bezier(0, 0, 0.2, 1)</span>
       <div class="motion-track"><div class="motion-dot"></div></div>
     </div>
     <div class="motion-card ease-in-out">
-      <span class="name">--ease-in-out</span>
+      <span class="name">--motion-easing-in-out</span>
       <span class="value">cubic-bezier(0.4, 0, 0.2, 1)</span>
       <div class="motion-track"><div class="motion-dot"></div></div>
     </div>
     <div class="motion-card ease-spring">
-      <span class="name">--ease-spring</span>
+      <span class="name">--motion-easing-spring</span>
       <span class="value">cubic-bezier(0.34, 1.56, 0.64, 1)</span>
       <div class="motion-track"><div class="motion-dot"></div></div>
     </div>
@@ -669,11 +669,11 @@
         <tr><th>Token</th><th>Valor</th><th>Uso</th></tr>
       </thead>
       <tbody>
-        <tr><td class="mono">--duration-instant</td><td class="mono">100ms</td><td>Feedback inmediato (hover de íconos)</td></tr>
-        <tr><td class="mono">--duration-fast</td><td class="mono">150ms</td><td>Hover de botones, links</td></tr>
-        <tr><td class="mono">--duration-normal</td><td class="mono">250ms</td><td>Transiciones de tema, fade</td></tr>
-        <tr><td class="mono">--duration-slow</td><td class="mono">400ms</td><td>Aparición de modales</td></tr>
-        <tr><td class="mono">--duration-slower</td><td class="mono">600ms</td><td>Scroll reveal, marquee</td></tr>
+        <tr><td class="mono">--motion-duration-instant</td><td class="mono">100ms</td><td>Feedback inmediato (hover de íconos)</td></tr>
+        <tr><td class="mono">--motion-duration-fast</td><td class="mono">150ms</td><td>Hover de botones, links</td></tr>
+        <tr><td class="mono">--motion-duration-normal</td><td class="mono">250ms</td><td>Transiciones de tema, fade</td></tr>
+        <tr><td class="mono">--motion-duration-slow</td><td class="mono">400ms</td><td>Aparición de modales</td></tr>
+        <tr><td class="mono">--motion-duration-slower</td><td class="mono">600ms</td><td>Scroll reveal, marquee</td></tr>
       </tbody>
     </table>
   </div>
@@ -805,7 +805,7 @@
 
   // Detector: si los CSS importados no cargaron, avisar.
   setTimeout(() => {
-    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--color-brand-primary').trim();
     if (!primary) {
       document.body.insertAdjacentHTML('afterbegin',
         '<div style="background:#fee;color:#900;padding:14px 18px;border-left:4px solid #c00;margin-bottom:20px;font-family:sans-serif;">' +

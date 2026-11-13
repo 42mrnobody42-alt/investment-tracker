@@ -1,0 +1,8 @@
+{
+  "alert": {
+    "padding": { "$value": "12px 16px", "$type": "string" },
+    "radius": { "$value": "{radius.md}", "$type": "dimension" },
+    "borderLeftWidth": { "$value": { "value": 4, "unit": "px" }, "$type": "dimension" },
+    "bgTint": { "$value": "rgb(255 69 58 / 10%)", "$type": "color" }
+  }
+}

@@ -59,8 +59,8 @@ describe('DesignTokens', () => {
 
     it('cada token aparece como <code>', () => {
       render(<DesignTokens section="colors" />);
-      expect(screen.getAllByText('--color-primary').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('--color-success').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('--color-brand-primary').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('--color-semantic-success').length).toBeGreaterThan(0);
       expect(screen.getAllByText('--color-bg').length).toBeGreaterThan(0);
     });
   });
@@ -150,8 +150,8 @@ describe('DesignTokens', () => {
 
     it('z-index muestra los 8 tokens en la tabla', () => {
       render(<DesignTokens section="layout" />);
-      expect(screen.getByText('--z-base')).toBeInTheDocument();
-      expect(screen.getByText('--z-toast')).toBeInTheDocument();
+      expect(screen.getByText('--z-index-base')).toBeInTheDocument();
+      expect(screen.getByText('--z-index-toast')).toBeInTheDocument();
     });
   });
 
@@ -168,19 +168,19 @@ describe('DesignTokens', () => {
 
     it('Durations muestra los 5 tokens', () => {
       render(<DesignTokens section="motion" />);
-      expect(screen.getByText('--duration-instant')).toBeInTheDocument();
-      expect(screen.getAllByText('--duration-slower').length).toBeGreaterThan(0);
+      expect(screen.getByText('--motion-duration-instant')).toBeInTheDocument();
+      expect(screen.getAllByText('--motion-duration-slower').length).toBeGreaterThan(0);
     });
 
     it('Easings muestra los 5 tokens y las 2 pendulums', () => {
       render(<DesignTokens section="motion" />);
-      expect(screen.getByText('--ease-linear')).toBeInTheDocument();
-      expect(screen.getByText('--ease-spring')).toBeInTheDocument();
-      expect(screen.getAllByText('--ease-pendulum').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('--ease-pendulum-damped').length).toBeGreaterThan(0);
+      expect(screen.getByText('--motion-easing-linear')).toBeInTheDocument();
+      expect(screen.getByText('--motion-easing-spring')).toBeInTheDocument();
+      expect(screen.getAllByText('--motion-easing-pendulum').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('--motion-easing-pendulum-damped').length).toBeGreaterThan(0);
     });
 
-    it('Easings muestra la nota de --pendulum-amplitude (2 veces: una por péndulo)', () => {
+    it('Easings muestra la nota de --motion-pendulum-amplitude (2 veces: una por péndulo)', () => {
       render(<DesignTokens section="motion" />);
       const notes = screen.getAllByText(/la amplitud de ambos péndulos/);
       expect(notes.length).toBe(2);
@@ -188,9 +188,9 @@ describe('DesignTokens', () => {
 
     it('Stagger muestra los 3 tokens', () => {
       render(<DesignTokens section="motion" />);
-      expect(screen.getByText('--stagger-fast')).toBeInTheDocument();
-      expect(screen.getByText('--stagger-normal')).toBeInTheDocument();
-      expect(screen.getByText('--stagger-slow')).toBeInTheDocument();
+      expect(screen.getByText('--motion-stagger-fast')).toBeInTheDocument();
+      expect(screen.getByText('--motion-stagger-normal')).toBeInTheDocument();
+      expect(screen.getByText('--motion-stagger-slow')).toBeInTheDocument();
     });
 
     it('Barrido de página renderiza los 4 bloques con su clase CSS', () => {
@@ -201,11 +201,11 @@ describe('DesignTokens', () => {
       expect(screen.getByText(/sweepCellBrTl/)).toBeInTheDocument();
     });
 
-    it('Barrido de página muestra el bloque de info con --pasar-pagina y --duration-slow', () => {
+    it('Barrido de página muestra el bloque de info con --motion-pasar-pagina y --motion-duration-slow', () => {
       render(<DesignTokens section="motion" />);
-      expect(screen.getByText('--pasar-pagina (retardo por paso)')).toBeInTheDocument();
-      expect(screen.getByText('--duration-slow (duración por celda)')).toBeInTheDocument();
-      expect(screen.getByText('--ease-out (curva)')).toBeInTheDocument();
+      expect(screen.getByText('--motion-pasar-pagina (retardo por paso)')).toBeInTheDocument();
+      expect(screen.getByText('--motion-duration-slow (duración por celda)')).toBeInTheDocument();
+      expect(screen.getByText('--motion-easing-out (curva)')).toBeInTheDocument();
     });
 
     it('los botones Replay son clickeables y no rompen', async () => {
@@ -222,7 +222,7 @@ describe('DesignTokens', () => {
 
 describe('TokenCard (componente interno)', () => {
   it('variant="swatch" renderiza el div con clase swatch', () => {
-    const { container } = render(<TokenCard name="--color-primary" variant="swatch" />);
+    const { container } = render(<TokenCard name="--color-brand-primary" variant="swatch" />);
     expect(container.querySelector('.swatch')).toBeInTheDocument();
   });
 

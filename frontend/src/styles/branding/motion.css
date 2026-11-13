@@ -1,71 +1,24 @@
-/**
- * Motion — Investment Tracker Pro
- *
- * Tokens de duracion y easing para animaciones. Los componentes que consumen
- * estos tokens se construyen en FT-007 (InitPage) siguiendo la seccion 24 del
- * agente-frontend.md (Motion System).
- *
- * NOTA: este archivo solo define tokens. No incluye animaciones ni keyframes.
- * La implementacion (hooks + componentes) se hace cuando exista la vista
- * que los use.
- *
- * Preview: docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html
- */
-
-:root {
-  /* --- Duraciones --- */
-  --duration-instant: 100ms;
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --duration-slow: 400ms;
-  --duration-slower: 600ms;
-
-  /* --- Easings (curvas CSS) --- */
-  --ease-linear: linear;
-  --ease-in: cubic-bezier(0.4, 0, 1, 1);
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  /* --- Easings compuestos (péndulos) ---
-   * No son cubic-bezier; se implementan con @keyframes.
-   * Se exponen como tokens globales para que todo componente los consuma.
-   */
-  --ease-pendulum: pendulum;
-  --ease-pendulum-damped: pendulum-damped;
-
-  /* --- Amplitud de péndulos (configurable) ---
-   * Amplitud base de la oscilación. Modificar este token ajusta
-   * automáticamente todos los consumidores que usan las easings
-   * compuestas. El péndulo amortiguado aplica factores fijos por
-   * ciclo (80%, 55%, 30%, 12.5% y 0) sobre este valor.
-   * Default: 120px (doble del valor original).
-   */
-  --pendulum-amplitude: 120px;
-
-  /* --- Easings GSAP (documentados como referencia) --- */
-
-  /* power2.out   -> equivalente a --ease-out */
-
-  /* power3.inOut -> equivalente a --ease-in-out */
-
-  /* back.out     -> equivalente a --ease-spring */
-
-  /* --- Stagger --- */
-  --stagger-fast: 60ms;
-  --stagger-normal: 120ms;
-  --stagger-slow: 200ms;
-
-  /* --- Barrido diagonal de página ---
-   * Retardo por paso diagonal: cada celda se retrasa según (fila + columna).
-   * Simula el barrido de una página al cambiar de vista. Se lee en diagonal.
-   * Usado por DesignTokens sección Motion → "Barrido de página".
-   */
-  --pasar-pagina: 40ms;
-
-  /* --- Motion preferences --- */
-
-  /* El agente frontend exige respetar prefers-reduced-motion: reduce */
-
-  /* Los componentes de motion deben leerlo via matchMedia, no CSS-only. */
+/* Generado por Style Dictionary. NO editar. */
+:root,
+[data-theme='light'] {
+  --motion-duration-instant: 0.1s;
+  --motion-duration-fast: 0.15s;
+  --motion-duration-normal: 0.25s;
+  --motion-duration-slow: 0.4s;
+  --motion-duration-slower: 0.6s;
+  --motion-easing-linear: linear;
+  --motion-easing-in: cubic-bezier(0.4, 0, 1, 1);
+  --motion-easing-out: cubic-bezier(0, 0, 0.2, 1);
+  --motion-easing-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-easing-spring-soft: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-easing-spring-medium: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-easing-expo-out: cubic-bezier(0, 0, 0.2, 1);
+  --motion-easing-pendulum: pendulum;
+  --motion-easing-pendulum-damped: pendulum-damped;
+  --motion-stagger-fast: 0.06s;
+  --motion-stagger-normal: 0.12s;
+  --motion-stagger-slow: 0.2s;
+  --motion-pendulum-amplitude: 120px;
+  --motion-pasar-pagina: 0.04s;
 }

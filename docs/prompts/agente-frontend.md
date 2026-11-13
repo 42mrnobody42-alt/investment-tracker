@@ -686,11 +686,11 @@ Los assets viven en dos ubicaciones según su propósito. Ver ADR-0003
 
 - CSS moderno: custom properties, clamp(), min(), max(), container queries, :has(), color-mix(), nesting nativo.
 - Todos los design tokens viven en `frontend/src/styles/branding/` (creados en TS-144):
-  - `paleta-colores-corporativa.css` — colores (`--color-*`, `--btn-*`). Temas light, dark y **high-contrast** vía `[data-theme]`.
-  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing. Importa `../fuentes/fuentes.css` que declara los `@font-face` (Inter + JetBrains Mono).
+  - `colors.css` — colores (`--color-*`, `--button-*`). Temas light, dark y **high-contrast** vía `[data-theme]`.
+  - `typography.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing. Importa `../fuentes/fuentes.css` que declara los `@font-face` (Inter + JetBrains Mono).
   - `layout.css` — grid, spacing (`--space-*`), breakpoints, z-index.
-  - `estilos-componentes.css` — radius, shadows, cards, tables, alerts.
-  - `motion.css` — duraciones, easings y stagger (ver §24). Incluye los easings compuestos de péndulo (`--ease-pendulum`, `--ease-pendulum-damped`, amplitud parametrizable vía `--pendulum-amplitude`) y el retardo de barrido de página (`--pasar-pagina`, con 4 direcciones diagonales: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
+  - `components.css` — radius, shadows, cards, tables, alerts.
+  - `motion.css` — duraciones, easings y stagger (ver §24). Incluye los easings compuestos de péndulo (`--motion-easing-pendulum`, `--motion-easing-pendulum-damped`, amplitud parametrizable vía `--motion-pendulum-amplitude`) y el retardo de barrido de página (`--motion-pasar-pagina`, con 4 direcciones diagonales: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
 - **No existe `styles/tokens.css`** — la estructura `tokens.css` + `themes/` fue reemplazada por los 5 archivos de `styles/branding/`.
 - **Temas light/dark/high-contrast** con `data-theme` en `<html>`. Todos viven dentro de `paleta-colores-corporativa.css` (no existe `themes/`).
 - Breakpoints definidos una sola vez en frontend/src/shared/constants/breakpoints.ts y expuestos como custom properties.
@@ -978,7 +978,7 @@ Relacionado: [`proxy-developer.md`](../tecnica/04-frontend-react-css-moderno/con
 ### Backup de branding y flujo de tokens (FT-002)
 
 Los 5 CSS de `frontend/src/styles/branding/` tienen backup en
-`frontend/src/styles/branding-backup-v0.1.14/` (rollback documentado).
+`frontend/src/styles/branding/` (rollback documentado).
 
 El flujo de autoría de tokens (DTCG escrito a mano + Style Dictionary v5) está en
 `docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md`.
@@ -1003,6 +1003,13 @@ antes del build (script `frontend/scripts/convert-to-sd-format.mjs`).
 **Regla**: `frontend/src/styles/branding/` sigue siendo la fuente de verdad
 hasta TS-024. Los tokens generados son **paralelos**, no sustituyen al branding.
 El componente `DesignTokens/Compare` verifica la paridad visual.
+
+### ThemeProvider y tokens.ts (TS-024)
+
+- **`frontend/src/app/providers/ThemeProvider.tsx`**: obligatorio para cualquier vista que necesite cambiar el tema. Expone `useTheme()` con `{ theme, setTheme, toggleTheme }`. Persiste en `localStorage` (`investment-tracker-theme`) y respeta `prefers-color-scheme` en primer mount.
+- **`frontend/src/shared/types/tokens.ts`**: autogenerado. El union `TokenName` lista los 111 tokens válidos. Importar `TokenName` cuando se necesite type-safety en nombres de custom property.
+- **`frontend/src/styles/branding/`**: 5 archivos (`colors.css`, `typography.css`, `layout.css`, `components.css`, `motion.css`) + 3 themes (`themes/{light,dark,high-contrast}.css`). **No editar a mano**, se regeneran con `npm run build:tokens`.
+- **Regla**: ningún componente nuevo puede usar nombres de token viejos (`--color-brand-primary`, `--button-*`, `--z-*`, etc.). Usar los nombres DTCG (`--color-brand-primary`, `--button-*`, `--z-index-*`, etc.).
 
 ### 14.12 Proxy de desarrollo `/api` (`vite.config.ts`)
 

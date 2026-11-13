@@ -187,7 +187,7 @@ stories, actualizar esta tabla, eliminar el ADR y tachar la fila en la tabla del
 
 Story `DesignTokens/Overview` (9 sub-stories). Componente `DesignTokens`
 (`frontend/src/components/DesignTokens/`) tratado como átomo del Design
-System. Consume **todos** los tokens de `frontend/src/styles/branding/` y los lee
+System. Consume **todos** los tokens de `frontend/src/styles/branding/` + `branding/themes/{light,dark,high-contrast}.css` y los lee
 con `getComputedStyle` para reflejar el tema activo (`data-theme`).
 
 #### Sub-stories y sus subgrupos
@@ -195,8 +195,8 @@ con `getComputedStyle` para reflejar el tema activo (`data-theme`).
 **`Colors`** — 3 bloques por tema (`light`, `dark`, `high-contrast`), cada uno con
 3 subgrupos:
 
-- `Brand` — 5 tokens (`--color-primary`, `--color-primary-hover`,
-  `--color-primary-light`, `--color-accent`, `--color-accent-hover`).
+- `Brand` — 5 tokens (`--color-brand-primary`, `--color-brand-primary-hover`,
+  `--color-brand-primary-light`, `--color-brand-accent`, `--color-brand-accent-hover`).
 - `Semantic` — 8 tokens (success, danger, warning, info + variantes `-hover`).
 - `Neutral` — 6 tokens (bg, surface, border, text, text-muted, text-inverse).
 
@@ -219,7 +219,7 @@ hacer visible el salto entre intensidades.
 **`Layout`** — 3 subgrupos:
 
 - `Grid` — `--grid-columns`, `--grid-gutter` (ejemplo visual de espaciado entre
-  celdas), `--container-max-width`.
+  celdas), `--grid-container-max-width`.
 - `Breakpoints` — 5 tokens (`sm` → `2xl`) con barra escalada.
 - `Z-index` — 8 tokens (`base` → `toast`) con pila visual + tabla lateral
   (Token / Profundidad / Valor).
@@ -228,11 +228,11 @@ hacer visible el salto entre intensidades.
 
 - `Durations` — 5 tokens (`instant` → `slower`) con replay animado.
 - `Easings` — 5 curvas (`linear`, `in`, `out`, `in-out`, `spring`) con SVG + bola
-  animada, más 2 easings compuestos: `--ease-pendulum` y `--ease-pendulum-damped`
-  (amplitud parametrizable vía `--pendulum-amplitude`).
+  animada, más 2 easings compuestos: `--motion-easing-pendulum` y `--motion-easing-pendulum-damped`
+  (amplitud parametrizable vía `--motion-pendulum-amplitude`).
 - `Stagger` — 3 tokens (`fast`, `normal`, `slow`) con 5 puntos que aparecen
   escalonados.
-- `Barrido de página (4 direcciones)` — basado en `--pasar-pagina`, con grid 8×4 y
+- `Barrido de página (4 direcciones)` — basado en `--motion-pasar-pagina`, con grid 8×4 y
   4 variantes diagonales: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`,
   `sweepCellBrTl`. Cada bloque muestra la dirección + el nombre de la clase CSS
   aplicable.
@@ -245,8 +245,8 @@ hacer visible el salto entre intensidades.
 
 - Comando `npm run build-storybook` genera `storybook-static/` (~8.5 MB).
 - `storybook-static/` está en `frontend/.gitignore` (no versionado; reproducible con el comando).
-- Fuentes self-hosted movidas a `src/styles/fuentes/` (Inter + JetBrains Mono), importadas vía `tipografia.css`.
-- `preview-head.html` eliminado (no era necesario; las fuentes se cargan vía `preview.tsx` → `tipografia.css` → `fuentes.css`).
+- Fuentes self-hosted movidas a `src/styles/fuentes/` (Inter + JetBrains Mono), importadas vía `typography.css`.
+- `preview-head.html` eliminado (no era necesario; las fuentes se cargan vía `preview.tsx` → `typography.css` → `fuentes.css`).
 - Warnings conocidos y aceptados: `Skipping docgen` + `chunkSizeWarningLimit` (internos de Storybook).
 
 ### Pendiente
@@ -330,7 +330,7 @@ Las fuentes de la plataforma viven en \`frontend/src/styles/fuentes/\`:
 - \`fuentes.css\` — declara los \`@font-face\` para \`Inter\` (400/500/600/700) y \`JetBrains Mono\` (400/500).
 - \`Inter-*.woff2\`, \`JetBrainsMono-*.woff2\` — archivos referenciados con rutas relativas.
 
-Storybook los carga vía \`preview.tsx\` → \`branding/tipografia.css\` → \`fuentes/fuentes.css\`.
+Storybook los carga vía \`preview.tsx\` → \`branding/typography.css\` → \`fuentes/fuentes.css\`.
 Vite los hashea al build (\`Inter-Regular-<hash>.woff2\`), aplicando cache inmutable.
 
 ### Verificar que las fuentes cargan

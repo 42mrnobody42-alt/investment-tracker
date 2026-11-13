@@ -1,33 +1,30 @@
 {
   "motion": {
     "duration": {
-      "instant": { "$value": "100ms", "$type": "duration" },
-      "fast": { "$value": "150ms", "$type": "duration" },
-      "normal": { "$value": "250ms", "$type": "duration" },
-      "slow": { "$value": "400ms", "$type": "duration" },
-      "slower": { "$value": "600ms", "$type": "duration" }
+      "instant": { "$value": { "value": 100, "unit": "ms" }, "$type": "duration" },
+      "fast": { "$value": { "value": 150, "unit": "ms" }, "$type": "duration" },
+      "normal": { "$value": { "value": 250, "unit": "ms" }, "$type": "duration" },
+      "slow": { "$value": { "value": 400, "unit": "ms" }, "$type": "duration" },
+      "slower": { "$value": { "value": 600, "unit": "ms" }, "$type": "duration" }
     },
     "easing": {
-      "springSoft": {
-        "$value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        "$type": "cubicBezier",
-        "$description": "spring suave"
-      },
-      "springMedium": {
-        "$value": "cubic-bezier(0.4, 0, 0.2, 1)",
-        "$type": "cubicBezier",
-        "$description": "dureza media"
-      },
-      "expoOut": {
-        "$value": "cubic-bezier(0, 0, 0.2, 1)",
-        "$type": "cubicBezier",
-        "$description": "expo out"
-      }
+      "linear": { "$value": "linear", "$type": "string" },
+      "in": { "$value": [0.4, 0, 1, 1], "$type": "cubicBezier" },
+      "out": { "$value": [0, 0, 0.2, 1], "$type": "cubicBezier" },
+      "inOut": { "$value": [0.4, 0, 0.2, 1], "$type": "cubicBezier" },
+      "spring": { "$value": [0.34, 1.56, 0.64, 1], "$type": "cubicBezier" },
+      "springSoft": { "$value": [0.34, 1.56, 0.64, 1], "$type": "cubicBezier" },
+      "springMedium": { "$value": [0.4, 0, 0.2, 1], "$type": "cubicBezier" },
+      "expoOut": { "$value": [0, 0, 0.2, 1], "$type": "cubicBezier" },
+      "pendulum": { "$value": "pendulum", "$type": "string" },
+      "pendulumDamped": { "$value": "pendulum-damped", "$type": "string" }
     },
     "stagger": {
-      "fast": { "$value": "60ms", "$type": "duration" },
-      "normal": { "$value": "120ms", "$type": "duration" },
-      "slow": { "$value": "200ms", "$type": "duration" }
-    }
+      "fast": { "$value": { "value": 60, "unit": "ms" }, "$type": "duration" },
+      "normal": { "$value": { "value": 120, "unit": "ms" }, "$type": "duration" },
+      "slow": { "$value": { "value": 200, "unit": "ms" }, "$type": "duration" }
+    },
+    "pendulumAmplitude": { "$value": { "value": 120, "unit": "px" }, "$type": "dimension" },
+    "pasarPagina": { "$value": { "value": 40, "unit": "ms" }, "$type": "duration" }
   }
 }
