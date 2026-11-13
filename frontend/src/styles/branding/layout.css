@@ -1,20 +1,15 @@
-/**
- * Layout — Investment Tracker Pro
- *
- * Grid 12 columnas, espaciado en multiplos de 8px, breakpoints.
- * Basado en DESIGN.md de WattVision.
- *
- * Preview: docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html
- */
-
-:root {
-  /* --- Grid --- */
+/* Generado por Style Dictionary. NO editar. */
+:root,
+[data-theme='light'] {
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1920px;
   --grid-columns: 12;
   --grid-gutter: 16px;
-  --container-max-width: 1280px;
-
-  /* --- Spacing (multiplos de 8px) --- */
-  --space-1: 4px; /* excepcion — mini */
+  --grid-container-max-width: 1280px;
+  --space-1: 4px;
   --space-2: 8px;
   --space-3: 16px;
   --space-4: 24px;
@@ -22,21 +17,12 @@
   --space-6: 40px;
   --space-8: 64px;
   --space-10: 80px;
-
-  /* --- Breakpoints (usar con @media o @container) --- */
-  --breakpoint-sm: 640px; /* mobile landscape */
-  --breakpoint-md: 768px; /* tablet portrait */
-  --breakpoint-lg: 1024px; /* tablet landscape / laptop */
-  --breakpoint-xl: 1280px; /* desktop */
-  --breakpoint-2xl: 1920px; /* smart TV */
-
-  /* --- Z-index --- */
-  --z-base: 0;
-  --z-dropdown: 1000;
-  --z-sticky: 1100;
-  --z-overlay: 1200;
-  --z-modal: 1300;
-  --z-popover: 1400;
-  --z-tooltip: 1500;
-  --z-toast: 1600;
+  --z-index-base: 0;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1100;
+  --z-index-overlay: 1200;
+  --z-index-modal: 1300;
+  --z-index-popover: 1400;
+  --z-index-tooltip: 1500;
+  --z-index-toast: 1600;
 }

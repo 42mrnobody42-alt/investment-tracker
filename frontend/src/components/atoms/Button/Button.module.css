@@ -7,9 +7,9 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 1;
-  color: var(--btn-primary-fg);
+  color: var(--button-primary-fg);
   cursor: pointer;
-  background-color: var(--btn-primary-bg);
+  background-color: var(--button-primary-bg);
   border: 1px solid transparent;
   border-radius: 6px;
   transition:
@@ -24,26 +24,26 @@
 }
 
 .primary {
-  color: var(--btn-primary-fg);
-  background-color: var(--btn-primary-bg);
+  color: var(--button-primary-fg);
+  background-color: var(--button-primary-bg);
 }
 
 .primary:hover:not(:disabled) {
-  background-color: var(--btn-primary-bg-hover);
+  background-color: var(--button-primary-bg-hover);
 }
 
 .secondary {
-  color: var(--btn-secondary-fg);
+  color: var(--button-secondary-fg);
   background-color: transparent;
-  border-color: var(--btn-secondary-border);
+  border-color: var(--button-secondary-border);
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--btn-secondary-fg) 15%, transparent);
+  background-color: color-mix(in srgb, var(--button-secondary-fg) 15%, transparent);
 }
 
 .ghost {
-  color: var(--btn-ghost-fg);
+  color: var(--button-ghost-fg);
   background-color: transparent;
 }
 
@@ -52,12 +52,12 @@
 }
 
 .danger {
-  color: var(--btn-danger-fg);
-  background-color: var(--btn-danger-bg);
+  color: var(--button-danger-fg);
+  background-color: var(--button-danger-bg);
 }
 
 .danger:hover:not(:disabled) {
-  background-color: var(--btn-danger-bg-hover);
+  background-color: var(--button-danger-bg-hover);
 }
 
 .sm {

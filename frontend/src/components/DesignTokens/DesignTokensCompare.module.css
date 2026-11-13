@@ -75,5 +75,5 @@
 }
 
 .rowDiff code {
-  color: var(--color-danger, #c62828);
+  color: var(--color-semantic-danger, #c62828);
 }

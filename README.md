@@ -176,6 +176,7 @@ Este README es la fuente principal del proyecto, pero existen documentos complem
     - [Tipado con `vite-env.d.ts`](#tipado-con-vite-envdts)
   - [Stack Tecnológico del Frontend](#stack-tecnológico-del-frontend)
   - [Tokens DTCG y Style Dictionary (TS-023)](#tokens-dtcg-y-style-dictionary-ts-023)
+  - [ThemeProvider y tokens.ts (TS-024)](#themeprovider-y-tokensts-ts-024)
   - [Deudas Técnicas (ADR)](#deudas-técnicas-adr)
     - [ADR-0001 — ESLint 9.39.5 (EOL)](#adr-0001--eslint-9395-eol)
     - [ADR-0002 — Alcance de Stylelint: colores y separación de scripts](#adr-0002--alcance-de-stylelint-colores-y-separación-de-scripts)
@@ -1274,11 +1275,11 @@ en `docs/tecnica/04-frontend-react-css-moderno/`.
 **Principios rectores** (detalle completo en `docs/prompts/agente-frontend.md`):
 
 - **Design tokens de la identidad corporativa** centralizados en `frontend/src/styles/branding/` (creados en TS-144):
-  - `paleta-colores-corporativa.css` — colores (`--color-*`, `--btn-*`). Temas **light**, **dark** y **high-contrast** vía `[data-theme]`. Aprobada en TS-009 con accesibilidad WCAG 2.2 AA validada.
-  - `tipografia.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing. Importa `../fuentes/fuentes.css` (declara `@font-face` de Inter y JetBrains Mono).
+  - `colors.css` — colores (`--color-*`, `--button-*`). Temas **light**, **dark** y **high-contrast** vía `[data-theme]`. Aprobada en TS-009 con accesibilidad WCAG 2.2 AA validada.
+  - `typography.css` — familias (`--font-sans`, `--font-mono`), escalas (`--font-size-*`), pesos, line-heights, letter-spacing. Importa `../fuentes/fuentes.css` (declara `@font-face` de Inter y JetBrains Mono).
   - `layout.css` — grid, spacing (`--space-*`), breakpoints, z-index.
-  - `estilos-componentes.css` — radius, shadows, cards, tables, alerts.
-  - `motion.css` — duraciones, easings y stagger. Incluye los easings compuestos de péndulo (`--ease-pendulum`, `--ease-pendulum-damped`, con amplitud parametrizable vía `--pendulum-amplitude`) y el retardo de barrido de página (`--pasar-pagina`, con 4 direcciones: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
+  - `components.css` — radius, shadows, cards, tables, alerts.
+  - `motion.css` — duraciones, easings y stagger. Incluye los easings compuestos de péndulo (`--motion-easing-pendulum`, `--motion-easing-pendulum-damped`, con amplitud parametrizable vía `--motion-pendulum-amplitude`) y el retardo de barrido de página (`--motion-pasar-pagina`, con 4 direcciones: `sweepCellTlBr`, `sweepCellTrBl`, `sweepCellBlTr`, `sweepCellBrTl`).
   - **Preview visual**: [paleta-colores-corporativa.html](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html).
 - Separación por orientación: `views/horizontal/` (PC, tablet apaisada, Smart TV)
   y `views/vertical/` (móvil, tablet retrato). Sin mezclas.
@@ -1341,17 +1342,6 @@ actualizar `vite.config.ts` y `proxy-developer.md` en el mismo PR.
 
 **Storybook (`:3010`)** no hereda este proxy (no lee `vite.config.ts`).
 
-### Backup de branding (v0.1.14)
-
-Antes de la migración a DTCG + Style Dictionary (FT-002), los 5 CSS originales
-de `frontend/src/styles/branding/` se respaldaron en
-`frontend/src/styles/branding-backup-v0.1.14/`.
-
-**Rollback**: `cp frontend/src/styles/branding-backup-v0.1.14/*.css frontend/src/styles/branding/`
-
-**Flujo de tokens**: ver [`flujo-de-trabajo/tokens-css/00_alcance.md`](docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md).
-**Benchmark**: ver [`convenciones/benchmark-tokens-2026.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/benchmark-tokens-2026.md).
-
 ### Tokens DTCG y Style Dictionary (TS-023)
 
 Los design tokens se autoría en formato **DTCG 2025.10** (`$value`, `$type`) en `frontend/src/components/imported/`:
@@ -1370,6 +1360,14 @@ Los design tokens se autoría en formato **DTCG 2025.10** (`$value`, `$type`) en
 **Story**: `DesignTokens/Compare` en Storybook (2 columnas: branding actual vs tokens generados, selector de tema).
 
 **Decisión sobre Figma**: eliminado del flujo. Ver `docs/tecnica/04-frontend-react-css-moderno/flujo-de-trabajo/tokens-css/00_alcance.md`.
+
+### ThemeProvider y tokens.ts (TS-024)
+
+- `frontend/src/app/providers/ThemeProvider.tsx`: gestiona el tema activo (`light | dark | high-contrast`) con persistencia en `localStorage` (clave `investment-tracker-theme`) y respeto a `prefers-color-scheme` si no hay preferencia guardada.
+- `frontend/src/shared/types/tokens.ts`: **autogenerado** por `npm run build:tokens`. Exporta el union `TokenName` con los 111 tokens válidos y el array `TOKEN_NAMES`.
+- Los 5 CSS de `branding/` (`colors.css`, `typography.css`, `layout.css`, `components.css`, `motion.css`) y `branding/themes/{light,dark,high-contrast}.css` son **generados** por Style Dictionary. No editar a mano.
+- `index.css` importa los 5 CSS + 3 themes.
+- **Story**: `Providers/ThemeProvider` + `DesignTokens/Overview` + `DesignTokens/Compare`.
 
 ### Stack Tecnológico del Frontend
 
@@ -1914,8 +1912,8 @@ impacto real y gatillos de revisión) se documentan en:
       - **`styles/`** - Estilos globales
         - `index.css` - Entry point (importa todos los branding)
         - `app/` - Estilos del starter/demo (`app.css`)
-        - `branding/` - Design tokens de la identidad corporativa (TS-144): `paleta-colores-corporativa.css`, `tipografia.css`, `layout.css`, `estilos-componentes.css`, `motion.css`
-        - `fuentes/` - Fuentes self-hosted (TS-011): `fuentes.css` + `.woff2` (Inter + JetBrains Mono), importadas por `branding/tipografia.css`
+        - `branding/` - Design tokens de la identidad corporativa (TS-144): `colors.css`, `typography.css`, `layout.css`, `components.css`, `motion.css`
+        - `fuentes/` - Fuentes self-hosted (TS-011): `fuentes.css` + `.woff2` (Inter + JetBrains Mono), importadas por `branding/typography.css`
       - **`assets/`** - Iconos técnicos e imágenes acopladas (import de bundler)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
@@ -2030,7 +2028,7 @@ impacto real y gatillos de revisión) se documentan en:
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
-- **Design tokens del frontend**: `frontend/src/styles/branding/` — `paleta-colores-corporativa.css` (colores light+dark+high-contrast), `tipografia.css`, `layout.css`, `estilos-componentes.css`, `motion.css`. Paleta aprobada en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada.
+- **Design tokens del frontend**: `frontend/src/styles/branding/` — `colors.css` (color + button), `typography.css`, `layout.css`, `components.css`, `motion.css` + `themes/{light,dark,high-contrast}.css`. Paleta aprobada en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada.
 - **Storybook frontend**: 10.6.1 (puerto dev `3010`), autodocs global, 3 decoradores activos (`withPadding`, `withBackground`, `withViewport`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
 - **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md).
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)

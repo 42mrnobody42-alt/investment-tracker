@@ -10,21 +10,21 @@ type TokenVariant = 'swatch' | 'bar' | 'radius' | 'text';
 
 const TOKENS = {
   brand: [
-    '--color-primary',
-    '--color-primary-hover',
-    '--color-primary-light',
+    '--color-brand-primary',
+    '--color-brand-primary-hover',
+    '--color-brand-primary-light',
     '--color-accent',
     '--color-accent-hover',
   ],
   semantic: [
-    '--color-success',
-    '--color-success-hover',
-    '--color-danger',
-    '--color-danger-hover',
-    '--color-warning',
-    '--color-warning-hover',
-    '--color-info',
-    '--color-info-hover',
+    '--color-semantic-success',
+    '--color-semantic-success-hover',
+    '--color-semantic-danger',
+    '--color-semantic-danger-hover',
+    '--color-semantic-warning',
+    '--color-semantic-warning-hover',
+    '--color-semantic-info',
+    '--color-semantic-info-hover',
   ],
   neutral: [
     '--color-bg',
@@ -72,7 +72,7 @@ const TOKENS = {
     '--shadow-xl',
     '--shadow-2xl',
   ],
-  grid: ['--grid-columns', '--grid-gutter', '--container-max-width'],
+  grid: ['--grid-columns', '--grid-gutter', '--grid-container-max-width'],
   breakpoints: [
     '--breakpoint-sm',
     '--breakpoint-md',
@@ -81,35 +81,41 @@ const TOKENS = {
     '--breakpoint-2xl',
   ],
   zIndex: [
-    '--z-base',
-    '--z-dropdown',
-    '--z-sticky',
-    '--z-overlay',
-    '--z-modal',
-    '--z-popover',
-    '--z-tooltip',
-    '--z-toast',
+    '--z-index-base',
+    '--z-index-dropdown',
+    '--z-index-sticky',
+    '--z-index-overlay',
+    '--z-index-modal',
+    '--z-index-popover',
+    '--z-index-tooltip',
+    '--z-index-toast',
   ],
   durations: [
-    '--duration-instant',
-    '--duration-fast',
-    '--duration-normal',
-    '--duration-slow',
-    '--duration-slower',
+    '--motion-duration-instant',
+    '--motion-duration-fast',
+    '--motion-duration-normal',
+    '--motion-duration-slow',
+    '--motion-duration-slower',
   ],
-  easings: ['--ease-linear', '--ease-in', '--ease-out', '--ease-in-out', '--ease-spring'],
-  stagger: ['--stagger-fast', '--stagger-normal', '--stagger-slow'],
+  easings: [
+    '--motion-easing-linear',
+    '--motion-easing-in',
+    '--motion-easing-out',
+    '--motion-easing-in-out',
+    '--motion-easing-spring',
+  ],
+  stagger: ['--motion-stagger-fast', '--motion-stagger-normal', '--motion-stagger-slow'],
 } as const;
 
 const THEMES = ['light', 'dark', 'high-contrast'] as const;
 type ThemeName = (typeof THEMES)[number];
 
 const EASING_PATHS: Record<string, string> = {
-  '--ease-linear': 'M 0 100 L 100 0',
-  '--ease-in': 'M 0 100 C 40 100, 100 0, 100 0',
-  '--ease-out': 'M 0 100 C 0 100, 20 0, 100 0',
-  '--ease-in-out': 'M 0 100 C 40 100, 20 0, 100 0',
-  '--ease-spring': 'M 0 100 C 34 -56, 64 0, 100 0',
+  '--motion-easing-linear': 'M 0 100 L 100 0',
+  '--motion-easing-in': 'M 0 100 C 40 100, 100 0, 100 0',
+  '--motion-easing-out': 'M 0 100 C 0 100, 20 0, 100 0',
+  '--motion-easing-in-out': 'M 0 100 C 40 100, 20 0, 100 0',
+  '--motion-easing-spring': 'M 0 100 C 34 -56, 64 0, 100 0',
 };
 
 const PENDULUM_PATHS = {
@@ -301,15 +307,15 @@ function GridSection(): ReactElement {
         </div>
       </div>
       <div className={styles.containerRow}>
-        <code className={styles.containerLabel}>--container-max-width</code>
+        <code className={styles.containerLabel}>--grid-container-max-width</code>
         <div className={styles.containerTrack}>
           <div
             className={styles.containerBar}
-            style={{ width: `min(var(--container-max-width), 100%)` }}
+            style={{ width: `min(var(--grid-container-max-width), 100%)` }}
           />
         </div>
         <span className={styles.containerValue}>
-          <TokenValue name="--container-max-width" />
+          <TokenValue name="--grid-container-max-width" />
         </span>
       </div>
       <div className={styles.containerRow}>
@@ -435,10 +441,11 @@ function EasingDemo(): ReactElement {
     <Section title="Easings">
       <p className={styles.easingIntro}>
         El <strong>easing</strong> define la <em>forma</em> del movimiento en el tiempo. Todos los
-        ejemplos usan <code>--duration-slower</code> (misma duración); lo que cambia es la curva de
-        velocidad. Las 5 primeras usan <code>cubic-bezier</code> estándar. Las 2 últimas usan
-        keyframes compuestos ( <code>--ease-pendulum</code> y <code>--ease-pendulum-damped</code>)
-        que simulan el comportamiento de un péndulo físico.
+        ejemplos usan <code>--motion-duration-slower</code> (misma duración); lo que cambia es la
+        curva de velocidad. Las 5 primeras usan <code>cubic-bezier</code> estándar. Las 2 últimas
+        usan keyframes compuestos ( <code>--motion-easing-pendulum</code> y{' '}
+        <code>--motion-easing-pendulum-damped</code>) que simulan el comportamiento de un péndulo
+        físico.
       </p>
       <button type="button" className={styles.replayButton} onClick={() => setKey((k) => k + 1)}>
         Replay (todos a la misma duración)
@@ -466,12 +473,12 @@ function EasingDemo(): ReactElement {
 
       <p className={styles.amplitudeNote}>
         <strong>Nota:</strong> la amplitud de ambos péndulos se controla con el token global
-        <code>--pendulum-amplitude</code> (por defecto 120px). Cambiar ese token ajusta la
+        <code>--motion-pendulum-amplitude</code> (por defecto 120px). Cambiar ese token ajusta la
         oscilación de todos los consumidores. El péndulo amortiguado aplica factores fijos por ciclo
         (80%, 55%, 30%, 12.5% y 0) sobre la amplitud configurada.
       </p>
       <div className={styles.pendulumRow}>
-        <code className={styles.easingLabel}>--ease-pendulum</code>
+        <code className={styles.easingLabel}>--motion-easing-pendulum</code>
         <svg className={styles.pendulumSvg} viewBox="0 0 100 100" aria-hidden="true">
           <path className={styles.pendulumPath} d={PENDULUM_PATHS.pendulum} />
         </svg>
@@ -483,12 +490,12 @@ function EasingDemo(): ReactElement {
 
       <p className={styles.amplitudeNote}>
         <strong>Nota:</strong> la amplitud de ambos péndulos se controla con el token global
-        <code>--pendulum-amplitude</code> (por defecto 120px). Cambiar ese token ajusta la
+        <code>--motion-pendulum-amplitude</code> (por defecto 120px). Cambiar ese token ajusta la
         oscilación de todos los consumidores. El péndulo amortiguado aplica factores fijos por ciclo
         (80%, 55%, 30%, 12.5% y 0) sobre la amplitud configurada.
       </p>
       <div className={styles.pendulumRow}>
-        <code className={styles.easingLabel}>--ease-pendulum-damped</code>
+        <code className={styles.easingLabel}>--motion-easing-pendulum-damped</code>
         <svg className={styles.pendulumSvg} viewBox="0 0 100 100" aria-hidden="true">
           <path className={styles.pendulumPath} d={PENDULUM_PATHS['pendulum-damped']} />
         </svg>
@@ -566,28 +573,30 @@ function StaggerDemo(): ReactElement {
 
       <Section title="Barrido de página (4 direcciones)">
         <p className={styles.sweepIntro}>
-          Barrido diagonal basado en <code>--pasar-pagina</code>: cada celda se retrasa según su
-          posición en el grid. Se lee como una página que se recorre en diagonal — útil para
+          Barrido diagonal basado en <code>--motion-pasar-pagina</code>: cada celda se retrasa según
+          su posición en el grid. Se lee como una página que se recorre en diagonal — útil para
           transiciones de cambio de vista o carga de grids. Se ofrecen las 4 direcciones diagonales.
         </p>
 
         <div className={styles.sweepInfoGrid}>
           <div className={styles.sweepInfoItem}>
-            <span className={styles.sweepInfoLabel}>--pasar-pagina (retardo por paso)</span>
+            <span className={styles.sweepInfoLabel}>--motion-pasar-pagina (retardo por paso)</span>
             <span className={styles.sweepInfoValue}>
-              <TokenValue name="--pasar-pagina" />
+              <TokenValue name="--motion-pasar-pagina" />
             </span>
           </div>
           <div className={styles.sweepInfoItem}>
-            <span className={styles.sweepInfoLabel}>--duration-slow (duración por celda)</span>
+            <span className={styles.sweepInfoLabel}>
+              --motion-duration-slow (duración por celda)
+            </span>
             <span className={styles.sweepInfoValue}>
-              <TokenValue name="--duration-slow" />
+              <TokenValue name="--motion-duration-slow" />
             </span>
           </div>
           <div className={styles.sweepInfoItem}>
-            <span className={styles.sweepInfoLabel}>--ease-out (curva)</span>
+            <span className={styles.sweepInfoLabel}>--motion-easing-out (curva)</span>
             <span className={styles.sweepInfoValue}>
-              <TokenValue name="--ease-out" />
+              <TokenValue name="--motion-easing-out" />
             </span>
           </div>
         </div>
@@ -599,7 +608,7 @@ function StaggerDemo(): ReactElement {
         {sweepVariants.map((variant) => (
           <div key={variant.id} className={styles.sweepBlock}>
             <code className={styles.sweepDirectionLabel}>
-              {variant.label} | --pasar-pagina ({variant.classNameText})
+              {variant.label} | --motion-pasar-pagina ({variant.classNameText})
             </code>
             <div className={styles.sweepGrid}>
               {Array.from({ length: total }, (_, i) => {
@@ -610,7 +619,7 @@ function StaggerDemo(): ReactElement {
                     key={`${variant.id}-${i}-${key}`}
                     className={`${styles.sweepCell} ${variant.className}`}
                     style={{
-                      animationDelay: `calc(var(--pasar-pagina) * ${variant.getDelay(row, col)})`,
+                      animationDelay: `calc(var(--motion-pasar-pagina) * ${variant.getDelay(row, col)})`,
                     }}
                   />
                 );

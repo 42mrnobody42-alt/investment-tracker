@@ -1,5 +1,22 @@
 {
   "color": {
+    "brand": {
+      "primary": { "$value": "#00838f", "$type": "color" },
+      "primaryHover": { "$value": "#006978", "$type": "color" },
+      "primaryLight": { "$value": "#4dd0e1", "$type": "color" },
+      "accent": { "$value": "#00bcd4", "$type": "color" },
+      "accentHover": { "$value": "#0097a7", "$type": "color" }
+    },
+    "semantic": {
+      "success": { "$value": "#2e7d32", "$type": "color" },
+      "successHover": { "$value": "#1b5e20", "$type": "color" },
+      "danger": { "$value": "#c62828", "$type": "color" },
+      "dangerHover": { "$value": "#b71c1c", "$type": "color" },
+      "warning": { "$value": "#b45309", "$type": "color" },
+      "warningHover": { "$value": "#92400e", "$type": "color" },
+      "info": { "$value": "#0277bd", "$type": "color" },
+      "infoHover": { "$value": "#01579b", "$type": "color" }
+    },
     "bg": { "$value": "#f8fafc", "$type": "color" },
     "surface": { "$value": "#ffffff", "$type": "color" },
     "border": { "$value": "#e2e8f0", "$type": "color" },
@@ -7,46 +24,13 @@
     "textMuted": { "$value": "#64748b", "$type": "color" },
     "textInverse": { "$value": "#ffffff", "$type": "color" }
   },
-  "button": {
-    "primary": {
-      "bg": { "$value": "{color.brand.primary}", "$type": "color" },
-      "bgHover": { "$value": "{color.brand.primaryHover}", "$type": "color" },
-      "fg": { "$value": "{color.textInverse}", "$type": "color" }
-    },
-    "secondary": {
-      "fg": { "$value": "{color.brand.primary}", "$type": "color" },
-      "border": { "$value": "{color.brand.primary}", "$type": "color" }
-    },
-    "ghost": { "fg": { "$value": "{color.textMuted}", "$type": "color" } },
-    "success": {
-      "bg": { "$value": "{color.semantic.success}", "$type": "color" },
-      "bgHover": { "$value": "{color.semantic.successHover}", "$type": "color" },
-      "fg": { "$value": "{color.textInverse}", "$type": "color" }
-    },
-    "danger": {
-      "bg": { "$value": "{color.semantic.danger}", "$type": "color" },
-      "bgHover": { "$value": "{color.semantic.dangerHover}", "$type": "color" },
-      "fg": { "$value": "{color.textInverse}", "$type": "color" }
-    },
-    "warning": {
-      "bg": { "$value": "{color.semantic.warning}", "$type": "color" },
-      "bgHover": { "$value": "{color.semantic.warningHover}", "$type": "color" },
-      "fg": { "$value": "{color.textInverse}", "$type": "color" }
-    },
-    "info": {
-      "bg": { "$value": "{color.semantic.info}", "$type": "color" },
-      "bgHover": { "$value": "{color.semantic.infoHover}", "$type": "color" },
-      "fg": { "$value": "{color.textInverse}", "$type": "color" }
-    }
+  "shadow": {
+    "xs": { "$value": "0 1px 2px 0 rgb(15 23 42 / 3%)", "$type": "shadow" },
+    "sm": { "$value": "0 1px 2px 0 rgb(15 23 42 / 5%)", "$type": "shadow" },
+    "md": { "$value": "0 4px 6px -1px rgb(15 23 42 / 8%)", "$type": "shadow" },
+    "lg": { "$value": "0 10px 15px -3px rgb(15 23 42 / 10%)", "$type": "shadow" },
+    "xl": { "$value": "0 20px 40px -8px rgb(15 23 42 / 35%)", "$type": "shadow" },
+    "2xl": { "$value": "0 30px 60px -12px rgb(15 23 42 / 60%)", "$type": "shadow" }
   },
-  "card": {
-    "bg": { "$value": "{color.surface}", "$type": "color" },
-    "border": { "$value": "{color.border}", "$type": "color" }
-  },
-  "searchbar": {
-    "bg": { "$value": "{color.surface}", "$type": "color" },
-    "border": { "$value": "{color.border}", "$type": "color" },
-    "text": { "$value": "{color.text}", "$type": "color" },
-    "placeholder": { "$value": "{color.textMuted}", "$type": "color" }
-  }
+  "table": { "row": { "hoverBg": { "$value": "#f1f5f9", "$type": "color" } } }
 }

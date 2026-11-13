@@ -1,0 +1,32 @@
+/* Generado por Style Dictionary. NO editar. */
+:root,
+[data-theme='light'] {
+  --color-brand-primary: #00838f;
+  --color-brand-primary-hover: #006978;
+  --color-brand-primary-light: #4dd0e1;
+  --color-brand-accent: #00bcd4;
+  --color-brand-accent-hover: #0097a7;
+  --color-semantic-success: #2e7d32;
+  --color-semantic-success-hover: #1b5e20;
+  --color-semantic-danger: #c62828;
+  --color-semantic-danger-hover: #b71c1c;
+  --color-semantic-warning: #b45309;
+  --color-semantic-warning-hover: #92400e;
+  --color-semantic-info: #0277bd;
+  --color-semantic-info-hover: #01579b;
+  --color-bg: #f8fafc;
+  --color-surface: #fff;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #fff;
+  --button-spacing-padding-sm: 8px 16px;
+  --button-spacing-padding-md: 8px 24px;
+  --button-spacing-padding-lg: 16px 32px;
+  --button-spacing-gap: 8px;
+  --button-typography-font-size-sm: 0.875rem;
+  --button-typography-font-size-md: 1rem;
+  --button-typography-font-size-lg: 1.125rem;
+  --button-typography-font-weight: 500;
+  --button-typography-letter-spacing: 0;
+}

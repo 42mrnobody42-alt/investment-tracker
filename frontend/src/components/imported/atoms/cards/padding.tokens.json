@@ -1,0 +1,5 @@
+{
+  "card": {
+    "padding": { "$value": { "value": 20, "unit": "px" }, "$type": "dimension" }
+  }
+}

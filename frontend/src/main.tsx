@@ -1,6 +1,6 @@
-import '@styles/branding/paleta-colores-corporativa.css';
-import '@styles/branding/tipografia.css';
-import '@styles/branding/estilos-componentes.css';
+import '@styles/branding/colors.css';
+import '@styles/branding/typography.css';
+import '@styles/branding/components.css';
 import '@styles/branding/layout.css';
 import '@styles/branding/motion.css';
 import '@styles/index.css';

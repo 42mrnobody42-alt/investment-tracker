@@ -1,26 +1,13 @@
-import '../src/styles/branding/estilos-componentes.css';
+import '../src/styles/branding/colors.css';
+import '../src/styles/branding/typography.css';
 import '../src/styles/branding/layout.css';
+import '../src/styles/branding/components.css';
 import '../src/styles/branding/motion.css';
-import '../src/styles/branding/paleta-colores-corporativa.css';
-import '../src/styles/branding/tipografia.css';
+import '../src/styles/branding/themes/light.css';
+import '../src/styles/branding/themes/dark.css';
+import '../src/styles/branding/themes/high-contrast.css';
 
 import type { Decorator, Preview } from '@storybook/react-vite';
-
-// ============================================================================
-// Decoradores globales
-// ============================================================================
-//
-// Decoradores activos (TS-009):
-//   - withPadding:      padding uniforme para que el componente no toque bordes.
-//   - withBackground:   fondo claro/oscuro segun el parametro `backgrounds`.
-//   - withViewport:     ancho fijo segun el parametro `viewport`.
-//
-// Decoradores pendientes (registrados como ADRs en `deuda-tecnica/`):
-//   - withTheme:   requiere `ThemeProvider` (TS-024 #629, ADR-0005).
-//   - withI18n:    requiere `I18nextProvider` (TS-026 #631, ADR-0006).
-//   - withRouter:  requiere React Router (TS-070 #675, ADR-0007).
-//
-// Al resolver cada ADR, agregar el decorador aqui y eliminar el ADR.
 
 const withPadding: Decorator = (Story) => (
   <div style={{ padding: '24px' }}>
@@ -55,9 +42,6 @@ const withViewport: Decorator = (Story, context) => {
 };
 
 const preview: Preview = {
-  // Autodocs global: aplica la generacion automatica de documentacion a
-  // TODAS las stories del proyecto, sin necesidad de declarar
-  // `tags: ['autodocs']` en cada archivo .stories.tsx.
   tags: ['autodocs'],
   decorators: [withPadding, withBackground, withViewport],
   parameters: {
