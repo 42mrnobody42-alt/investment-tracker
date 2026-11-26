@@ -378,3 +378,31 @@ Storybook muestra en cada build:
 - Storybook docs: https://storybook.js.org/docs
 - Autodocs: https://storybook.js.org/docs/writing-docs/autodocs
 - Warning aceptado: [`warnings-storybook.md`](./warnings-storybook.md)
+
+---
+
+## Motion demos del Button (TS-147)
+
+Los 3 componentes de motion del Button tienen stories por dispositivo, con
+valores estáticos de `size` y `fontSize` basados en los estándares del proyecto:
+
+| Story | Viewport | `size` | `fontSize` | Fuente |
+| --- | --- | --- | --- | --- |
+| `Default` | — | `m` | (size) | — |
+| `Mobile` | 393×873 | `s` | `sm` | `mobile-chrome` / `mobile-android` / `mobile-safari` |
+| `Tablet` | 768×1024 | `m` | `base` | `tablet` (iPad portrait) |
+| `Desktop` | 1920×1080 | `m` | `base` | `desktop` |
+| `TvFhd` | 1920×1080 | `l` | `lg` | `tv-fhd` (fuente ≥18px, target ≥48px) |
+| `Tv4k` | 3840×2160 | `xl` | `xl` | `tv-4k` |
+
+**Criterio "usuario elige"**: los 3 componentes se evalúan visualmente en
+Storybook (`Atoms/ButtonMotionShine`, `Atoms/ButtonMotionWave`,
+`Atoms/ButtonMotionVibrate`); el elegido se promueve a componente estable y los
+otros 2 se conservan como referencia.
+
+**Props personalizables** (comunes a los 3): `variant`, `size`, `radius`,
+`shadow`, `fontFamily`, `fontSize`, `fontWeight`, `lineHeight`,
+`letterSpacing`, `theme` (`light`/`dark`/`high-contrast`), `children`.
+
+**Tema dark + ghost**: el texto usa `--color-brand-primary` (cian en dark) para
+no perderse sobre el fondo oscuro.

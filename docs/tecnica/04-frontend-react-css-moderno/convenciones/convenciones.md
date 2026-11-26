@@ -193,3 +193,20 @@ verificación con `fetch('/api/test/health')` y nota sobre Storybook.
 4. `target` sincronizado con `backend/src/main/resources/application.yml → server.port`.
 5. Storybook (`:3010`) no hereda el proxy.
 6. Código React: `fetch('/api/...')` o `import.meta.env.VITE_API_URL`. Nunca `http://localhost:7700/...`.
+
+---
+
+## Motion demos del Button (TS-147)
+
+Los 3 componentes de motion del Button están documentados en:
+
+- [`componentes/atoms/buttons/button.md`](../componentes/atoms/buttons/button.md) — API del `Button` base (props, sizes, variants, theme).
+- [`componentes/atoms/buttons/button-motion.md`](../componentes/atoms/buttons/button-motion.md) — API de los 3 componentes de motion (`ButtonMotionShine`, `ButtonMotionWave`, `ButtonMotionVibrate`), props comunes, efectos, duraciones y trade-offs.
+
+**Reglas comunes** (resumen):
+
+- Solo `transform` y `opacity` (`agente-frontend.md` §24.5).
+- `prefers-reduced-motion: reduce` desactiva las animaciones.
+- Los 3 componentes son independientes: **no extienden `Button`** (`agente-frontend.md` §24.3.1).
+- Duración de vibrate: **2s** (`--motion-duration-vibrate`).
+

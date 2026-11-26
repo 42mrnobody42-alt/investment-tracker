@@ -1,30 +1,253 @@
 {
   "motion": {
     "duration": {
-      "instant": { "$value": { "value": 100, "unit": "ms" }, "$type": "duration" },
-      "fast": { "$value": { "value": 150, "unit": "ms" }, "$type": "duration" },
-      "normal": { "$value": { "value": 250, "unit": "ms" }, "$type": "duration" },
-      "slow": { "$value": { "value": 400, "unit": "ms" }, "$type": "duration" },
-      "slower": { "$value": { "value": 600, "unit": "ms" }, "$type": "duration" }
+      "instant": {
+        "$value": {
+          "value": 100,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "fast": {
+        "$value": {
+          "value": 150,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "normal": {
+        "$value": {
+          "value": 250,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "slow": {
+        "$value": {
+          "value": 400,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "slower": {
+        "$value": {
+          "value": 600,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "d1": {
+        "$value": {
+          "value": 100,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "d2": {
+        "$value": {
+          "value": 1,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d3": {
+        "$value": {
+          "value": 2,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d4": {
+        "$value": {
+          "value": 3,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d5": {
+        "$value": {
+          "value": 4,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d6": {
+        "$value": {
+          "value": 5,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d7": {
+        "$value": {
+          "value": 6,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d8": {
+        "$value": {
+          "value": 7,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d9": {
+        "$value": {
+          "value": 8,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d10": {
+        "$value": {
+          "value": 9,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "d11": {
+        "$value": {
+          "value": 10,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "fast1": {
+        "$value": {
+          "value": 150,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "fast2": {
+        "$value": {
+          "value": 200,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "fast3": {
+        "$value": {
+          "value": 250,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "fast4": {
+        "$value": {
+          "value": 300,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "fast5": {
+        "$value": {
+          "value": 400,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "shine": {
+        "$value": {
+          "value": 2,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "wave": {
+        "$value": {
+          "value": 4,
+          "unit": "s"
+        },
+        "$type": "duration"
+      },
+      "vibrate": {
+        "$value": {
+          "value": 2,
+          "unit": "s"
+        },
+        "$type": "duration"
+      }
     },
     "easing": {
-      "linear": { "$value": "linear", "$type": "string" },
-      "in": { "$value": [0.4, 0, 1, 1], "$type": "cubicBezier" },
-      "out": { "$value": [0, 0, 0.2, 1], "$type": "cubicBezier" },
-      "inOut": { "$value": [0.4, 0, 0.2, 1], "$type": "cubicBezier" },
-      "spring": { "$value": [0.34, 1.56, 0.64, 1], "$type": "cubicBezier" },
-      "springSoft": { "$value": [0.34, 1.56, 0.64, 1], "$type": "cubicBezier" },
-      "springMedium": { "$value": [0.4, 0, 0.2, 1], "$type": "cubicBezier" },
-      "expoOut": { "$value": [0, 0, 0.2, 1], "$type": "cubicBezier" },
-      "pendulum": { "$value": "pendulum", "$type": "string" },
-      "pendulumDamped": { "$value": "pendulum-damped", "$type": "string" }
+      "linear": {
+        "$value": "linear",
+        "$type": "string"
+      },
+      "in": {
+        "$value": [0.4, 0, 1, 1],
+        "$type": "cubicBezier"
+      },
+      "out": {
+        "$value": [0, 0, 0.2, 1],
+        "$type": "cubicBezier"
+      },
+      "inOut": {
+        "$value": [0.4, 0, 0.2, 1],
+        "$type": "cubicBezier"
+      },
+      "spring": {
+        "$value": [0.34, 1.56, 0.64, 1],
+        "$type": "cubicBezier"
+      },
+      "springSoft": {
+        "$value": [0.34, 1.56, 0.64, 1],
+        "$type": "cubicBezier"
+      },
+      "springMedium": {
+        "$value": [0.4, 0, 0.2, 1],
+        "$type": "cubicBezier"
+      },
+      "expoOut": {
+        "$value": [0, 0, 0.2, 1],
+        "$type": "cubicBezier"
+      },
+      "pendulum": {
+        "$value": "pendulum",
+        "$type": "string"
+      },
+      "pendulumDamped": {
+        "$value": "pendulum-damped",
+        "$type": "string"
+      }
     },
     "stagger": {
-      "fast": { "$value": { "value": 60, "unit": "ms" }, "$type": "duration" },
-      "normal": { "$value": { "value": 120, "unit": "ms" }, "$type": "duration" },
-      "slow": { "$value": { "value": 200, "unit": "ms" }, "$type": "duration" }
+      "fast": {
+        "$value": {
+          "value": 60,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "normal": {
+        "$value": {
+          "value": 120,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      },
+      "slow": {
+        "$value": {
+          "value": 200,
+          "unit": "ms"
+        },
+        "$type": "duration"
+      }
     },
-    "pendulumAmplitude": { "$value": { "value": 120, "unit": "px" }, "$type": "dimension" },
-    "pasarPagina": { "$value": { "value": 40, "unit": "ms" }, "$type": "duration" }
+    "pendulumAmplitude": {
+      "$value": {
+        "value": 120,
+        "unit": "px"
+      },
+      "$type": "dimension"
+    },
+    "pasarPagina": {
+      "$value": {
+        "value": 40,
+        "unit": "ms"
+      },
+      "$type": "duration"
+    }
   }
 }

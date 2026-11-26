@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Button } from '@components/atoms/Button';
+import { Button } from '@components/atoms/buttons/Button';
 
 describe('Button', () => {
   it('renderiza los children', () => {
@@ -33,14 +33,14 @@ describe('Button', () => {
     },
   );
 
-  it.each([['sm'], ['md'], ['lg']] as const)('aplica la clase de tamaño %s', (size) => {
+  it.each([['s'], ['m'], ['l']] as const)('aplica la clase de tamaño %s', (size) => {
     render(<Button size={size}>Click</Button>);
     expect(screen.getByRole('button').className).toContain(size);
   });
 
-  it('usa tamaño md por defecto', () => {
+  it('usa tamaño m por defecto', () => {
     render(<Button>Click</Button>);
-    expect(screen.getByRole('button').className).toContain('md');
+    expect(screen.getByRole('button').className).toContain('m');
   });
 
   it('aplica className externa sumada a las internas', () => {

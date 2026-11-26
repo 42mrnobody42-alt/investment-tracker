@@ -24,3 +24,6 @@ public/
 # Archivos minificados
 
 *.min.css
+
+# CSS generados por Style Dictionary (build:tokens) — no se editan a mano
+src/styles/branding/**/*.css

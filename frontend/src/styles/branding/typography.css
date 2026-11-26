@@ -1,7 +1,7 @@
 /* Generado por Style Dictionary. NO editar. */
 :root,
 [data-theme='light'] {
-  --font-sans: inter, system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
+  --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, consolas, monospace;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;

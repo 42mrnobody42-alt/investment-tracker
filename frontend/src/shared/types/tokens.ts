@@ -1,5 +1,5 @@
 // Generado por generate-tokens-types.mjs — NO editar.
-// Total: 125 tokens.
+// Total: 158 tokens.
 
 export type TokenName =
   | '--color-brand-primary'
@@ -40,6 +40,25 @@ export type TokenName =
   | '--motion-duration-normal'
   | '--motion-duration-slow'
   | '--motion-duration-slower'
+  | '--motion-duration-d1'
+  | '--motion-duration-d2'
+  | '--motion-duration-d3'
+  | '--motion-duration-d4'
+  | '--motion-duration-d5'
+  | '--motion-duration-d6'
+  | '--motion-duration-d7'
+  | '--motion-duration-d8'
+  | '--motion-duration-d9'
+  | '--motion-duration-d10'
+  | '--motion-duration-d11'
+  | '--motion-duration-fast1'
+  | '--motion-duration-fast2'
+  | '--motion-duration-fast3'
+  | '--motion-duration-fast4'
+  | '--motion-duration-fast5'
+  | '--motion-duration-shine'
+  | '--motion-duration-wave'
+  | '--motion-duration-vibrate'
   | '--motion-easing-linear'
   | '--motion-easing-in'
   | '--motion-easing-out'
@@ -92,11 +111,25 @@ export type TokenName =
   | '--button-spacing-padding-md'
   | '--button-spacing-padding-lg'
   | '--button-spacing-gap'
+  | '--button-spacing-padding-xxs'
+  | '--button-spacing-padding-xs'
+  | '--button-spacing-padding-xl'
+  | '--button-spacing-padding-xxl'
+  | '--button-spacing-padding-s'
+  | '--button-spacing-padding-m'
+  | '--button-spacing-padding-l'
   | '--button-typography-font-size-sm'
   | '--button-typography-font-size-md'
   | '--button-typography-font-size-lg'
   | '--button-typography-font-weight'
   | '--button-typography-letter-spacing'
+  | '--button-typography-font-size-xxs'
+  | '--button-typography-font-size-xs'
+  | '--button-typography-font-size-xl'
+  | '--button-typography-font-size-xxl'
+  | '--button-typography-font-size-s'
+  | '--button-typography-font-size-m'
+  | '--button-typography-font-size-l'
   | '--card-padding'
   | '--card-radius'
   | '--card-shadow'
@@ -167,6 +200,25 @@ export const TOKEN_NAMES: readonly TokenName[] = [
   '--motion-duration-normal',
   '--motion-duration-slow',
   '--motion-duration-slower',
+  '--motion-duration-d1',
+  '--motion-duration-d2',
+  '--motion-duration-d3',
+  '--motion-duration-d4',
+  '--motion-duration-d5',
+  '--motion-duration-d6',
+  '--motion-duration-d7',
+  '--motion-duration-d8',
+  '--motion-duration-d9',
+  '--motion-duration-d10',
+  '--motion-duration-d11',
+  '--motion-duration-fast1',
+  '--motion-duration-fast2',
+  '--motion-duration-fast3',
+  '--motion-duration-fast4',
+  '--motion-duration-fast5',
+  '--motion-duration-shine',
+  '--motion-duration-wave',
+  '--motion-duration-vibrate',
   '--motion-easing-linear',
   '--motion-easing-in',
   '--motion-easing-out',
@@ -219,11 +271,25 @@ export const TOKEN_NAMES: readonly TokenName[] = [
   '--button-spacing-padding-md',
   '--button-spacing-padding-lg',
   '--button-spacing-gap',
+  '--button-spacing-padding-xxs',
+  '--button-spacing-padding-xs',
+  '--button-spacing-padding-xl',
+  '--button-spacing-padding-xxl',
+  '--button-spacing-padding-s',
+  '--button-spacing-padding-m',
+  '--button-spacing-padding-l',
   '--button-typography-font-size-sm',
   '--button-typography-font-size-md',
   '--button-typography-font-size-lg',
   '--button-typography-font-weight',
   '--button-typography-letter-spacing',
+  '--button-typography-font-size-xxs',
+  '--button-typography-font-size-xs',
+  '--button-typography-font-size-xl',
+  '--button-typography-font-size-xxl',
+  '--button-typography-font-size-s',
+  '--button-typography-font-size-m',
+  '--button-typography-font-size-l',
   '--card-padding',
   '--card-radius',
   '--card-shadow',

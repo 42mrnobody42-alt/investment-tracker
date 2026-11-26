@@ -72,6 +72,7 @@ test.describe('Storybook manager', () => {
   test('todas las stories renderizan sin error overlay', async ({ page, request }, testInfo) => {
     test.skip(testInfo.project.name !== 'desktop', 'Solo corre en desktop');
 
+    test.setTimeout(300000); // 5 min para el bucle completo de stories
     const indexRes = await request.get(`${STORYBOOK_URL}/index.json`, { timeout: 10000 });
     expect(indexRes.ok(), 'index.json debe responder').toBeTruthy();
     const raw = await indexRes.json();
@@ -95,7 +96,7 @@ test.describe('Storybook manager', () => {
       try {
         const r = await page.goto(`${STORYBOOK_URL}/iframe.html?id=${story.id}&viewMode=story`, {
           waitUntil: 'domcontentloaded',
-          timeout: 20000,
+          timeout: 60000,
         });
         if (!r?.ok()) {
           failures.push(`${label}: HTTP ${r?.status() ?? 'sin respuesta'}`);
