@@ -1364,7 +1364,7 @@ Los design tokens se autoría en formato **DTCG 2025.10** (`$value`, `$type`) en
 ### ThemeProvider y tokens.ts (TS-024)
 
 - `frontend/src/app/providers/ThemeProvider.tsx`: gestiona el tema activo (`light | dark | high-contrast`) con persistencia en `localStorage` (clave `investment-tracker-theme`) y respeto a `prefers-color-scheme` si no hay preferencia guardada.
-- `frontend/src/shared/types/tokens.ts`: **autogenerado** por `npm run build:tokens`. Exporta el union `TokenName` con los 111 tokens válidos y el array `TOKEN_NAMES`.
+- `frontend/src/shared/types/tokens.ts`: **autogenerado** por `npm run build:tokens`. Exporta el union `TokenName` con los 158 tokens válidos y el array `TOKEN_NAMES` (actualizado en TS-147: +14 tokens de duración y spacing).
 - Los 5 CSS de `branding/` (`colors.css`, `typography.css`, `layout.css`, `components.css`, `motion.css`) y `branding/themes/{light,dark,high-contrast}.css` son **generados** por Style Dictionary. No editar a mano.
 - `index.css` importa los 5 CSS + 3 themes.
 - **Story**: `Providers/ThemeProvider` + `DesignTokens/Overview` + `DesignTokens/Compare`.
@@ -1576,7 +1576,7 @@ Detalle completo, thresholds y árbol de grupos: [`pruebas.md`](docs/tecnica/04-
 
 **Unitarias (Vitest)** — 55 tests en 3 archivos:
 
-- `tests/unit/components/atoms/Button.test.tsx` — 18 tests (render, variantes, tamaños, estados, a11y, click handlers).
+- `tests/unit/components/atoms/Button.test.tsx` — 18 tests (render, variantes, sizes xxs..xxl, estados, a11y, click handlers, theme).
 - `tests/unit/components/DesignTokens.test.tsx` — 34 tests (Colors, Typography, Spacing, Radius, Shadows, Layout, Motion, Dark, HighContrast).
 - `tests/unit/shared/constants/assets.test.ts` — 3 tests (estructura del objeto `ASSETS`).
 
@@ -1902,18 +1902,27 @@ impacto real y gatillos de revisión) se documentan en:
     - **`public/`** - Assets de branding (URL estable, editable post-deploy)
       - `assets/images/starter/` - Imágenes del starter (hero)
       - `favicon.svg`, `icons.svg` - Iconos de app
-    - **`src/`** - Código fuente
+    - **`src/`** - Código fuente (`.tsx`, `.ts`, `.css`, `.module.css`, `.json`, `.d.ts`)
       - `main.tsx` - Entry point
-      - **`app/`** - Núcleo (App.tsx, router/, providers/, store/)
-      - **`components/`** - Design System (atoms, molecules, organisms, layout)
-      - **`views/`** - Vistas por orientación (horizontal, vertical)
-      - **`shared/`** - Transversales (hooks, utils, constants, types, services)
-      - **`i18n/`** - Internacionalización (es, en)
-      - **`styles/`** - Estilos globales
-        - `index.css` - Entry point (importa todos los branding)
-        - `app/` - Estilos del starter/demo (`app.css`)
-        - `branding/` - Design tokens de la identidad corporativa (TS-144): `colors.css`, `typography.css`, `layout.css`, `components.css`, `motion.css`
-        - `fuentes/` - Fuentes self-hosted (TS-011): `fuentes.css` + `.woff2` (Inter + JetBrains Mono), importadas por `branding/typography.css`
+      - `vite-env.d.ts` - Tipos de Vite
+      - **`app/`** - Núcleo: `App.tsx`, `providers/` (`.tsx`, `.ts`), `router/` (pendiente), `store/` (pendiente)
+      - **`assets/`** - Iconos e imágenes acopladas al bundle (`.svg`, `.png`, `.webp`)
+      - **`components/`** - Design System
+        - **`atoms/`** - Átomos
+          - **`buttons/`** - Botones (`.tsx`, `.module.css`, `.types.ts`, `.test.tsx`, `.stories.tsx`, `index.ts`): `Button/`, `ButtonMotionShine/`, `ButtonMotionWave/`, `ButtonMotionVibrate/`
+          - **`DesignTokens/`** - Catálogo visual de tokens
+          - **`imported/`** - Tokens DTCG (`.tokens.json`) + generados (`.ts`, `.css`)
+        - **`layout/`** - Layout (pendiente)
+        - **`molecules/`** - Moléculas (pendiente)
+        - **`organisms/`** - Organismos (pendiente)
+      - **`views/`** - Vistas por orientación (`.tsx`, `.module.css`): `horizontal/`, `vertical/`
+      - **`shared/`** - Transversales: `constants/` (`.ts`), `types/` (`.ts`, `.d.ts`), `hooks/`, `services/`, `utils/` (pendientes)
+      - **`i18n/`** - Internacionalización (`.json`, `.ts`): `es/`, `en/`
+      - **`styles/`** - Estilos globales (`.css`)
+        - `index.css` - Entry point
+        - `app/app.css` - Estilos del starter
+        - **`branding/`** - Design tokens: `colors.css`, `typography.css`, `layout.css`, `components.css`, `motion.css`, `themes/{light,dark,high-contrast}.css`
+        - **`fuentes/`** - Fuentes self-hosted: `fuentes.css` + `.woff2` (Inter + JetBrains Mono)
       - **`assets/`** - Iconos técnicos e imágenes acopladas (import de bundler)
   - **`docs/`** - Documentación
     - `README_IdeaICompletaDeArchivos.md` - Idea completa de arquitectura
@@ -1991,7 +2000,9 @@ impacto real y gatillos de revisión) se documentan en:
           - `proxy-developer.md` - Proxy `/api` en dev (creado en TS-020)
         - **`componentes/`**
           - **`atoms/`**
-            - `button.md` - Documentación del componente Button (ejemplo TS-007)
+            - **`buttons/`**
+              - `button.md` - Documentación del componente Button (TS-007, actualizada en TS-147)
+              - `button-motion.md` - Documentación de los 3 componentes de motion (ButtonMotionShine, ButtonMotionWave, ButtonMotionVibrate)
           - **`branding/`**
             - `paleta-colores-corporativa.html` - Preview visual de la paleta corporativa
         - **`seguridad/`**
@@ -2028,7 +2039,7 @@ impacto real y gatillos de revisión) se documentan en:
 - **Strict mode TS**: activado en `tsconfig.app.json` y `tsconfig.node.json` (`strict: true`, `noImplicitReturns`, `noImplicitOverride`, `forceConsistentCasingInFileNames`)
 - **Resolución de alias frontend**: nativa en Vite 8 (`resolve.tsconfigPaths: true`) + `frontend/tsconfig.paths.json`. Alias: `@app`, `@components`, `@views`, `@shared`, `@i18n`, `@styles`. Funcionan tanto para módulos TS/TSX como para CSS (gracias al soporte nativo de Vite 8).
 - **Pineo frontend**: `frontend/.npmrc` con `save-exact=true`
-- **Design tokens del frontend**: `frontend/src/styles/branding/` — `colors.css` (color + button), `typography.css`, `layout.css`, `components.css`, `motion.css` + `themes/{light,dark,high-contrast}.css`. Paleta aprobada en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada.
+- **Design tokens del frontend**: `frontend/src/styles/branding/` — `colors.css` (color + button + 7 spacing + 7 font-size), `typography.css`, `layout.css`, `components.css`, `motion.css` (11 niveles de duración + 5 subniveles + shine/wave/vibrate) + `themes/{light,dark,high-contrast}.css`. Paleta aprobada en TS-009. Preview visual: [`paleta-colores-corporativa.html`](docs/tecnica/04-frontend-react-css-moderno/componentes/branding/paleta-colores-corporativa.html). Accesibilidad WCAG 2.2 AA validada. Actualizado en TS-147.
 - **Storybook frontend**: 10.6.1 (puerto dev `3010`), autodocs global, 3 decoradores activos (`withPadding`, `withBackground`, `withViewport`) — ver [`docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md`](docs/tecnica/04-frontend-react-css-moderno/convenciones/storybook.md)
 - **Política de seguridad frontend**: 🚫 **NO ejecutar** `npm audit fix --force` ni `--legacy-peer-deps`. Vulnerabilidades aceptadas en [`docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md`](docs/tecnica/04-frontend-react-css-moderno/seguridad/cvss-deuda-seguridad.md). Política completa en [ADR-0004](docs/tecnica/04-frontend-react-css-moderno/deuda-tecnica/vulnerabilidades-policy.md).
 - **Servidor Web**: Tomcat 10 (embebido en Spring Boot)

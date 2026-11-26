@@ -1,0 +1,274 @@
+.button {
+  position: relative;
+  z-index: var(--z-index-base);
+  display: inline-flex;
+  gap: var(--button-spacing-gap);
+  align-items: center;
+  justify-content: center;
+  padding: var(--button-spacing-padding-m);
+  font-family: var(--font-sans);
+  font-size: var(--button-typography-font-size-m);
+  font-weight: var(--button-typography-font-weight);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-inverse);
+  letter-spacing: var(--letter-spacing-normal);
+  cursor: pointer;
+  background-color: var(--color-brand-primary);
+  border: 1px solid var(--color-brand-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition:
+    color var(--motion-duration-fast) var(--motion-easing-out),
+    background-color var(--motion-duration-fast) var(--motion-easing-out),
+    border-color var(--motion-duration-fast) var(--motion-easing-out),
+    transform var(--motion-duration-fast) var(--motion-easing-out);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-brand-primary-hover);
+  outline-offset: 2px;
+}
+
+.primary {
+  color: var(--color-text-inverse);
+  background-color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
+}
+
+.secondary {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: var(--color-bg);
+  border-color: var(--color-text-muted);
+}
+
+.ghost {
+  color: var(--color-text);
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* stylelint-disable no-descending-specificity -- falso positivo con :global() en CSS Modules (Stylelint #8287); el bloque toca color, el hover base toca background; no hay conflicto real */
+
+/* Ghost en dark: texto cian para no perderse sobre fondo oscuro.
+   Cubre dos casos:
+   - Botón con data-theme='dark' propio (prop theme='dark')
+   - Botón dentro de un ancestro con data-theme='dark' (decorator)
+
+   ⚠️  ORDEN OBLIGATORIO: este bloque DEBE ir ANTES de .ghost:hover:not(:disabled).
+   Motivo: Stylelint `no-descending-specificity` exige que los selectores más
+   específicos vayan primero. :global([data-theme='dark']) .ghost tiene mayor
+   especificidad que .ghost:hover, así que debe ir antes. No hay conflicto real
+   de cascada porque este bloque toca `color` y el hover base toca
+   `background-color` (propiedades distintas). */
+:global([data-theme='dark']) .ghost,
+.ghost[data-theme='dark'] {
+  color: var(--color-brand-primary);
+}
+
+/* Hover base: primero el selector menos específico */
+.ghost:hover:not(:disabled) {
+  background-color: var(--color-bg);
+}
+
+/* Hover del tema oscuro: después el selector más específico */
+:global([data-theme='dark']) .ghost:hover:not(:disabled),
+.ghost[data-theme='dark']:hover:not(:disabled) {
+  color: var(--color-brand-primary-hover);
+}
+
+.danger {
+  color: var(--color-text-inverse);
+  background-color: var(--color-semantic-danger);
+  border-color: var(--color-semantic-danger);
+}
+
+.danger:hover:not(:disabled) {
+  background-color: var(--color-semantic-danger-hover);
+  border-color: var(--color-semantic-danger-hover);
+}
+
+.xxs {
+  padding: var(--button-spacing-padding-xxs);
+  font-size: var(--button-typography-font-size-xxs);
+}
+
+.xs {
+  padding: var(--button-spacing-padding-xs);
+  font-size: var(--button-typography-font-size-xs);
+}
+
+.s {
+  padding: var(--button-spacing-padding-s);
+  font-size: var(--button-typography-font-size-s);
+}
+
+.m {
+  padding: var(--button-spacing-padding-m);
+  font-size: var(--button-typography-font-size-m);
+}
+
+.l {
+  padding: var(--button-spacing-padding-l);
+  font-size: var(--button-typography-font-size-l);
+}
+
+.xl {
+  padding: var(--button-spacing-padding-xl);
+  font-size: var(--button-typography-font-size-xl);
+}
+
+.xxl {
+  padding: var(--button-spacing-padding-xxl);
+  font-size: var(--button-typography-font-size-xxl);
+}
+
+/* Radius (components.css) */
+.radiusNone {
+  border-radius: 0;
+}
+
+.radiusSm {
+  border-radius: var(--radius-sm);
+}
+
+.radiusMd {
+  border-radius: var(--radius-md);
+}
+
+.radiusLg {
+  border-radius: var(--radius-lg);
+}
+
+.radiusXl {
+  border-radius: var(--radius-xl);
+}
+
+.radiusFull {
+  border-radius: var(--radius-full);
+}
+
+/* Shadow (components.css) */
+.shadowNone {
+  box-shadow: none;
+}
+
+.shadowXs {
+  box-shadow: var(--shadow-xs);
+}
+
+.shadowSm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadowMd {
+  box-shadow: var(--shadow-md);
+}
+
+.shadowLg {
+  box-shadow: var(--shadow-lg);
+}
+
+.shadowXl {
+  box-shadow: var(--shadow-xl);
+}
+
+.shadow2xl {
+  box-shadow: var(--shadow-2xl);
+}
+
+/* Font family (typography.css) */
+.fontSans {
+  font-family: var(--font-sans);
+}
+
+.fontMono {
+  font-family: var(--font-mono);
+}
+
+/* Font size (typography.css) — override del size */
+.fsXs {
+  font-size: var(--font-size-xs);
+}
+
+.fsSm {
+  font-size: var(--font-size-sm);
+}
+
+.fsBase {
+  font-size: var(--font-size-base);
+}
+
+.fsLg {
+  font-size: var(--font-size-lg);
+}
+
+.fsXl {
+  font-size: var(--font-size-xl);
+}
+
+.fs2xl {
+  font-size: var(--font-size-2xl);
+}
+
+/* Font weight (typography.css) */
+.weightRegular {
+  font-weight: var(--font-weight-regular);
+}
+
+.weightMedium {
+  font-weight: var(--font-weight-medium);
+}
+
+.weightSemibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.weightBold {
+  font-weight: var(--font-weight-bold);
+}
+
+/* Line height (typography.css) */
+.lhTight {
+  line-height: var(--line-height-tight);
+}
+
+.lhNormal {
+  line-height: var(--line-height-normal);
+}
+
+.lhRelaxed {
+  line-height: var(--line-height-relaxed);
+}
+
+/* Letter spacing (typography.css) */
+.lsTight {
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.lsNormal {
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.lsWide {
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+}

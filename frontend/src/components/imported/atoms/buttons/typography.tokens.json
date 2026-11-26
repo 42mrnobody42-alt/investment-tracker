@@ -1,11 +1,54 @@
 {
   "button": {
     "typography": {
-      "fontSizeSm": { "$value": "{fontSize.sm}", "$type": "dimension" },
-      "fontSizeMd": { "$value": "{fontSize.base}", "$type": "dimension" },
-      "fontSizeLg": { "$value": "{fontSize.lg}", "$type": "dimension" },
-      "fontWeight": { "$value": "{fontWeight.medium}", "$type": "fontWeight" },
-      "letterSpacing": { "$value": "{letterSpacing.normal}", "$type": "dimension" }
+      "fontSizeSm": {
+        "$value": "{fontSize.sm}",
+        "$type": "dimension"
+      },
+      "fontSizeMd": {
+        "$value": "{fontSize.base}",
+        "$type": "dimension"
+      },
+      "fontSizeLg": {
+        "$value": "{fontSize.lg}",
+        "$type": "dimension"
+      },
+      "fontWeight": {
+        "$value": "{fontWeight.medium}",
+        "$type": "fontWeight"
+      },
+      "letterSpacing": {
+        "$value": "{letterSpacing.normal}",
+        "$type": "dimension"
+      },
+      "fontSizeXxs": {
+        "$value": "0.75rem",
+        "$type": "string"
+      },
+      "fontSizeXs": {
+        "$value": "0.8125rem",
+        "$type": "string"
+      },
+      "fontSizeXl": {
+        "$value": "1.25rem",
+        "$type": "string"
+      },
+      "fontSizeXxl": {
+        "$value": "1.375rem",
+        "$type": "string"
+      },
+      "fontSizeS": {
+        "$value": "0.875rem",
+        "$type": "string"
+      },
+      "fontSizeM": {
+        "$value": "1rem",
+        "$type": "string"
+      },
+      "fontSizeL": {
+        "$value": "1.125rem",
+        "$type": "string"
+      }
     }
   }
 }

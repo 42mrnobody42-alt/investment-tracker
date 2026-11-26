@@ -1516,6 +1516,28 @@ Reglas de implementación:
 - En `prefers-reduced-motion: reduce` o en táctil (si `visibleOnTouch: false`), no se monta y se usa el cursor nativo.
 - Stories obligatorias: `Default`, `Dot`, `Square`, `Blob`, `BlendModeDifference`, `WithBorder`, `CustomShadow`, `ReducedMotion`.
 
+#### 24.3.5 Motion demos del Button (TS-147)
+
+Tres componentes de motion separados, lado a lado en Storybook, para que el
+usuario elija:
+
+- `frontend/src/components/atoms/buttons/ButtonMotionShine/` — shine sweep diagonal + lift `translateY(-1px)` en hover y `:focus-visible`.
+- `frontend/src/components/atoms/buttons/ButtonMotionWave/` — onda expansiva (anillo grueso→fino) desde la posición del click.
+- `frontend/src/components/atoms/buttons/ButtonMotionVibrate/` — vibración lateral (±4px, 2s) en click, con re-disparo.
+
+**Criterio "usuario elige"**: los 3 se evalúan visualmente en Storybook
+(`Atoms/ButtonMotionShine`, `Atoms/ButtonMotionWave`,
+`Atoms/ButtonMotionVibrate`); el elegido se promueve a componente estable y
+los otros 2 se conservan como referencia.
+
+Los 3 son independientes: **no extienden `Button`** (§24.3.1). Cumplen §24.5
+(solo `transform`/`opacity`) y §24.6 (`prefers-reduced-motion`).
+
+**Documentación detallada**:
+
+- API del `Button` base: [`docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/buttons/button.md`](../tecnica/04-frontend-react-css-moderno/componentes/atoms/buttons/button.md).
+- API de los 3 motion: [`docs/tecnica/04-frontend-react-css-moderno/componentes/atoms/buttons/button-motion.md`](../tecnica/04-frontend-react-css-moderno/componentes/atoms/buttons/button-motion.md).
+
 ### 24.4 Provider de scroll suave
 
 Lenis se inicializa **una sola vez** a nivel de aplicación, dentro de `app/providers/`.

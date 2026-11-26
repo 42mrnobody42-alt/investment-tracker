@@ -1,10 +1,50 @@
 {
   "button": {
     "spacing": {
-      "paddingSm": { "$value": "{space.2} {space.3}", "$type": "string" },
-      "paddingMd": { "$value": "{space.2} {space.4}", "$type": "string" },
-      "paddingLg": { "$value": "{space.3} {space.5}", "$type": "string" },
-      "gap": { "$value": "{space.2}", "$type": "dimension" }
+      "paddingSm": {
+        "$value": "{space.2} {space.3}",
+        "$type": "string"
+      },
+      "paddingMd": {
+        "$value": "{space.2} {space.4}",
+        "$type": "string"
+      },
+      "paddingLg": {
+        "$value": "{space.3} {space.5}",
+        "$type": "string"
+      },
+      "gap": {
+        "$value": "{space.2}",
+        "$type": "dimension"
+      },
+      "paddingXxs": {
+        "$value": "4px 8px",
+        "$type": "string"
+      },
+      "paddingXs": {
+        "$value": "6px 12px",
+        "$type": "string"
+      },
+      "paddingXl": {
+        "$value": "16px 40px",
+        "$type": "string"
+      },
+      "paddingXxl": {
+        "$value": "20px 48px",
+        "$type": "string"
+      },
+      "paddingS": {
+        "$value": "8px 16px",
+        "$type": "string"
+      },
+      "paddingM": {
+        "$value": "8px 24px",
+        "$type": "string"
+      },
+      "paddingL": {
+        "$value": "16px 32px",
+        "$type": "string"
+      }
     }
   }
 }
